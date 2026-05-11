@@ -1,0 +1,13 @@
+# Pacotes e artefatos locais
+*.zip
+
+# PDFs e prévias usados só no croqui
+frontpage-pdf/*.pdf
+frontpage-pdf/*.png
+frontpage-pdf/edge-profile*/
+
+# Logs locais
+*.log
+
+# Cache de ferramentas
+.vercel

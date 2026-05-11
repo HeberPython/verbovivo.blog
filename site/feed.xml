@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Verbo Vivo</title>
+    <link>https://verbovivo.blog/</link>
+    <description>Reflexões cristãs para fortalecer a fé e iluminar a caminhada.</description>
+
+    <item>
+      <title>Depois da Festa: onde ficou Jesus?</title>
+      <link>https://verbovivo.blog/artigos/depois-da-festa-onde-ficou-jesus.html</link>
+      <guid>https://verbovivo.blog/artigos/depois-da-festa-onde-ficou-jesus.html</guid>
+      <description>Uma reflexão sobre o contraste entre celebrar Cristo em público e acolhê-lo no cotidiano, quando os aplausos cessam.</description>
+      <pubDate>Sun, 10 May 2026 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Feitos para brilhar pela Palavra da Vida</title>
+      <link>https://verbovivo.blog/artigos/feitos-para-brilhar-pela-palavra-da-vida.html</link>
+      <guid>https://verbovivo.blog/artigos/feitos-para-brilhar-pela-palavra-da-vida.html</guid>
+      <description>Um estudo em Filipenses 2 sobre murmuração, pureza, testemunho e firme apego à Palavra em uma geração escura.</description>
+      <pubDate>Sun, 10 May 2026 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>O coração desordenado</title>
+      <link>https://verbovivo.blog/artigos/o-coracao-desordenado.html</link>
+      <guid>https://verbovivo.blog/artigos/o-coracao-desordenado.html</guid>
+      <description>Quando o interior perde sua ordem diante de Deus, a vida externa começa a revelar fragmentos da alma.</description>
+      <pubDate>Sun, 10 May 2026 00:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>

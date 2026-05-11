@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Depois da Festa: onde ficou Jesus?",
+    "slug": "depois-da-festa-onde-ficou-jesus",
+    "sourcePdf": "C:\\Users\\Heber\\Documents\\verbovivo.blog\\DEPOIS DA FESTA.pdf",
+    "category": "Vida Cristã",
+    "excerpt": "Uma reflexão sobre o contraste entre celebrar Cristo em público e acolhê-lo no cotidiano, quando os aplausos cessam.",
+    "coverImage": "/images/articles/depois-da-festa.png",
+    "imageAlt": "Rua antiga vazia ao anoitecer com ramos no chão e uma casa iluminada ao fundo",
+    "status": "draft"
+  },
+  {
+    "title": "Feitos para brilhar pela Palavra da Vida",
+    "slug": "feitos-para-brilhar-pela-palavra-da-vida",
+    "sourcePdf": "C:\\Users\\Heber\\Documents\\verbovivo.blog\\FILIPENSES - FEITOS PARA BRILHAR - Palestra - Heber.pdf",
+    "category": "Estudo Bíblico",
+    "excerpt": "Um estudo em Filipenses 2 sobre murmuração, pureza, testemunho e firme apego à Palavra em uma geração escura.",
+    "coverImage": "/images/articles/feitos-para-brilhar.png",
+    "imageAlt": "Bíblia aberta sobre mesa sob céu estrelado antes do amanhecer",
+    "status": "draft"
+  },
+  {
+    "title": "O coração desordenado",
+    "slug": "o-coracao-desordenado",
+    "sourcePdf": "C:\\Users\\Heber\\Documents\\verbovivo.blog\\LIÇÃO - CORAÇÃO DESORDENADO.pdf",
+    "category": "Formação Interior",
+    "excerpt": "Quando o interior perde sua ordem diante de Deus, a vida externa começa a revelar fragmentos da alma.",
+    "coverImage": "/images/articles/coracao-desordenado.png",
+    "imageAlt": "Mesa de estudo com Bíblia aberta, papéis e vaso de barro rachado derramando água",
+    "status": "draft"
+  }
+]
