@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import html
-import re
 import shutil
 from datetime import date
 from pathlib import Path
-
-from pypdf import PdfReader
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +11,7 @@ SITE = ROOT / "site"
 ARTICLE_DIR = SITE / "artigos"
 IMAGE_OUT = SITE / "images" / "articles"
 IMAGE_IN = ROOT / "public" / "images" / "articles"
-DOMAIN = "https://verbovivo.blog"
+DOMAIN = "https://verbovivo-blog.vercel.app"
 
 
 ARTICLES = [
@@ -24,10 +21,35 @@ ARTICLES = [
         "category": "Vida Cristã",
         "date": "2026-05-10",
         "author": "Heber",
-        "pdf": Path(r"C:\Users\Heber\Documents\verbovivo.blog\DEPOIS DA FESTA.pdf"),
         "image": "depois-da-festa.png",
         "alt": "Rua antiga vazia ao anoitecer com ramos no chão e uma casa iluminada ao fundo",
-        "excerpt": "Uma reflexão sobre o contraste entre celebrar Cristo em público e acolhê-lo no cotidiano, quando os aplausos cessam.",
+        "excerpt": "Uma reflexão sobre acolher Jesus depois que os aplausos terminam e a vida comum recomeça.",
+        "quote": "E, deixando-os, saiu da cidade para Betânia, e ali passou a noite. Mateus 21:17",
+        "sections": [
+            (
+                "Quando os aplausos passam",
+                [
+                    "Há momentos em que a fé parece fácil. O ambiente ajuda, a música conduz, a comunhão aquece o coração e as palavras de adoração saem quase naturalmente. Mas a pergunta que permanece depois da celebração é simples e profunda: onde Jesus fica quando a festa acaba?",
+                    "Mateus registra que, depois de ser aclamado, Jesus saiu de Jerusalém e passou a noite em Betânia. A cidade que o recebeu com ramos não lhe ofereceu morada. A multidão o celebrou, mas poucos o acolheram de perto.",
+                    "Essa cena fala conosco. É possível honrar Cristo em público e esquecê-lo no cotidiano. É possível cantar sobre sua presença e, ao voltar para casa, retomar uma vida onde Ele não participa das decisões, das conversas, dos afetos e das prioridades.",
+                ],
+            ),
+            (
+                "Betânia como lugar de acolhimento",
+                [
+                    "Betânia não tinha o brilho de Jerusalém, mas tinha espaço para Jesus. Ali havia amizade, mesa, escuta e intimidade. Talvez a vida cristã amadureça justamente quando deixamos de oferecer apenas ramos e começamos a oferecer casa.",
+                    "A fé que sustenta não é feita apenas de momentos fortes. Ela se revela na rotina: no modo como tratamos as pessoas, no que fazemos quando ninguém vê, no que permitimos ocupar nosso coração quando o barulho diminui.",
+                    "Ser Betânia é transformar a vida comum em lugar de permanência para Cristo. É abrir a agenda, a casa, os pensamentos e as escolhas para que Ele não seja apenas visitado em ocasiões especiais, mas reconhecido como Senhor de tudo.",
+                ],
+            ),
+            (
+                "Uma pergunta para a alma",
+                [
+                    "Depois da festa, Jesus permanece conosco? Essa pergunta não vem para nos esmagar, mas para nos chamar de volta ao essencial. Cristo não busca somente aclamação; Ele deseja comunhão.",
+                    "Talvez hoje seja um bom dia para trocar a pressa por presença. Para fazer uma oração simples. Para entregar a Ele aquilo que ficou fechado. Para dizer, com sinceridade: Senhor, não quero apenas celebrar o teu nome; quero que habites em mim.",
+                ],
+            ),
+        ],
     },
     {
         "title": "Feitos para brilhar pela Palavra da Vida",
@@ -35,10 +57,35 @@ ARTICLES = [
         "category": "Estudo Bíblico",
         "date": "2026-05-10",
         "author": "Heber",
-        "pdf": Path(r"C:\Users\Heber\Documents\verbovivo.blog\FILIPENSES - FEITOS PARA BRILHAR - Palestra - Heber.pdf"),
         "image": "feitos-para-brilhar.png",
         "alt": "Bíblia aberta sobre mesa sob céu estrelado antes do amanhecer",
-        "excerpt": "Um estudo em Filipenses 2 sobre murmuração, pureza, testemunho e firme apego à Palavra em uma geração escura.",
+        "excerpt": "Uma meditação em Filipenses 2 sobre uma fé que abandona a murmuração e se apega à Palavra da Vida.",
+        "quote": "Façam tudo sem murmurações nem discussões... apegando-se firmemente à palavra da vida. Filipenses 2:14-16",
+        "sections": [
+            (
+                "Uma luz no meio da geração",
+                [
+                    "Paulo escreve aos filipenses com uma imagem forte: os filhos de Deus brilham como estrelas no mundo. Não é um brilho de vaidade, nem de aparência religiosa. É o testemunho silencioso e firme de uma vida atravessada pela Palavra.",
+                    "Esse brilho aparece em coisas muito práticas. Paulo fala sobre murmurações e discussões. Ele sabe que a fé não se manifesta apenas em grandes declarações, mas também no tom da nossa fala, na forma como reagimos às frustrações e no modo como lidamos com pessoas difíceis.",
+                    "A murmuração parece pequena, mas corrói a confiança. Quando o coração se acostuma a reclamar, ele passa a interpretar a vida pela falta, não pela fidelidade de Deus. Aos poucos, a alma deixa de descansar e começa a resistir.",
+                ],
+            ),
+            (
+                "A Palavra que sustenta",
+                [
+                    "Paulo não chama a igreja para um moralismo frio. Ele aponta para uma vida sustentada por Deus. Antes de falar do comportamento visível, ele lembra que Deus opera em nós tanto o querer quanto o realizar.",
+                    "Por isso, brilhar não é fingir força. É permanecer ligado à fonte. É apegar-se à Palavra da Vida quando a mente se dispersa, quando a emoção oscila e quando o caminho parece escuro.",
+                    "A Palavra nos realinha. Ela confronta a queixa, cura a percepção, devolve esperança e nos ensina a enxergar Deus mesmo nos dias comuns. Quem se apega à Palavra não se torna insensível; torna-se enraizado.",
+                ],
+            ),
+            (
+                "Um convite à paz interior",
+                [
+                    "Talvez o primeiro sinal de luz não seja falar mais alto, mas murmurar menos. Talvez seja aprender a responder com mansidão, agradecer com honestidade e permanecer fiel mesmo sem aplauso.",
+                    "A vida cristã brilha quando a alma deixa de ser governada pelo resmungo e passa a ser conduzida pela presença de Cristo. Não precisamos fabricar luz. Precisamos permanecer nEle. A luz que vem da Palavra encontra caminho em uma vida rendida.",
+                ],
+            ),
+        ],
     },
     {
         "title": "O coração desordenado",
@@ -46,82 +93,139 @@ ARTICLES = [
         "category": "Formação Interior",
         "date": "2026-05-10",
         "author": "Heber",
-        "pdf": Path(r"C:\Users\Heber\Documents\verbovivo.blog\LIÇÃO - CORAÇÃO DESORDENADO.pdf"),
         "image": "coracao-desordenado.png",
         "alt": "Mesa de estudo com Bíblia aberta, papéis e vaso de barro rachado derramando água",
-        "excerpt": "Quando o interior perde sua ordem diante de Deus, a vida externa começa a revelar fragmentos da alma.",
+        "excerpt": "Uma reflexão sobre guardar o coração, ordenar os afetos e permitir que Deus cure a vida por dentro.",
+        "quote": "Sobre tudo o que se deve guardar, guarda o coração, porque dele procedem as fontes da vida. Provérbios 4:23",
+        "sections": [
+            (
+                "A vida começa por dentro",
+                [
+                    "A Bíblia trata o coração como o centro da pessoa. Não apenas o lugar das emoções, mas também dos desejos, pensamentos, decisões e prioridades. O coração é o lugar onde a vida ganha direção.",
+                    "Jesus disse que onde está o nosso tesouro, ali estará também o nosso coração. Isso significa que aquilo que consideramos precioso começa a governar nossa atenção, nosso tempo e nossas escolhas.",
+                    "Quando o coração se desordena, a vida externa começa a mostrar sinais. A agenda pesa, os relacionamentos se desgastam, a ansiedade ocupa espaço demais e o essencial vai sendo empurrado para longe.",
+                ],
+            ),
+            (
+                "Guardar não é esconder",
+                [
+                    "Provérbios nos chama a guardar o coração. Guardar não significa fechar-se para a vida, endurecer os afetos ou fugir das pessoas. Significa vigiar com sabedoria aquilo que entra, permanece e governa o interior.",
+                    "Um coração sem cuidado se torna vulnerável a falsos tesouros. Ele pode se apegar ao controle, à aprovação, à comparação, à pressa ou à dor. Aos poucos, essas coisas deixam de ser apenas experiências e passam a ocupar o lugar de direção.",
+                    "Deus não deseja apenas organizar nossa rotina; Ele deseja curar nossa fonte. Quando a fonte é tratada, o fluxo muda. Quando o coração encontra seu lugar diante de Deus, a vida começa a respirar de outro modo.",
+                ],
+            ),
+            (
+                "Voltar ao centro",
+                [
+                    "A pergunta decisiva talvez seja: o que tem ocupado o centro do meu coração? Nem sempre a resposta vem rápido, mas ela costuma aparecer nos medos que nos dominam, nas buscas que nos consomem e nas perdas que parecem nos definir.",
+                    "Cristo nos chama a uma ordem mais profunda. Não a ordem rígida de quem controla tudo, mas a paz de quem volta ao centro correto. Um coração entregue a Deus não deixa de sentir, mas aprende a não ser governado por tudo o que sente.",
+                    "Guardar o coração é voltar, todos os dias, à presença daquele que conhece nossas fontes. É permitir que Deus reorganize o amor, purifique os desejos e devolva inteireza à alma.",
+                ],
+            ),
+        ],
     },
 ]
 
 
-def read_pdf(path: Path) -> str:
-    reader = PdfReader(str(path))
-    pages = [page.extract_text() or "" for page in reader.pages]
-    text = "\n".join(pages)
-    text = re.sub(r"[ \t]+\n", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
+STATIC_PAGES = {
+    "sobre": {
+        "title": "Sobre | Verbo Vivo",
+        "description": "Conheça o propósito editorial do Verbo Vivo, um blog de reflexões cristãs para fortalecer a fé na vida cotidiana.",
+        "heading": "Sobre o Verbo Vivo",
+        "eyebrow": "Nossa casa",
+        "body": [
+            ("Uma palavra para a caminhada", [
+                "O Verbo Vivo nasceu como um espaço de reflexão cristã para pessoas que buscam alento espiritual, clareza bíblica e uma fé que alcance a vida comum.",
+                "Aqui, os textos procuram unir profundidade e simplicidade. A intenção não é produzir debates frios, mas oferecer leituras que ajudem o coração a voltar para Deus com sinceridade.",
+            ]),
+            ("Nossa linha editorial", [
+                "Publicamos reflexões, estudos bíblicos e textos devocionais com linguagem acolhedora, responsabilidade espiritual e respeito à fé cristã.",
+                "Cada publicação é preparada para preservar a centralidade de Cristo, a reverência às Escrituras e a atenção ao leitor que chega procurando consolo, direção ou fortalecimento.",
+            ]),
+            ("Compromisso", [
+                "O Verbo Vivo não substitui acompanhamento pastoral, aconselhamento profissional ou cuidado médico quando eles forem necessários. Nosso papel é oferecer conteúdo reflexivo e edificante.",
+            ]),
+        ],
+    },
+    "faq": {
+        "title": "FAQ | Verbo Vivo",
+        "description": "Perguntas frequentes sobre o Verbo Vivo, seus textos, uso de conteúdo e política editorial.",
+        "heading": "Perguntas frequentes",
+        "eyebrow": "FAQ",
+        "body": [
+            ("O que é o Verbo Vivo?", [
+                "É um blog cristão dedicado a reflexões bíblicas, textos devocionais e estudos escritos em linguagem acessível para fortalecer a fé no cotidiano.",
+            ]),
+            ("Os textos substituem aconselhamento pastoral?", [
+                "Não. Os textos têm finalidade reflexiva e espiritual. Em situações de sofrimento intenso, conflitos graves, saúde mental ou decisões delicadas, procure também apoio pastoral, familiar e profissional adequado.",
+            ]),
+            ("Posso compartilhar os artigos?", [
+                "Sim. Você pode compartilhar os links dos artigos, preservando o nome do Verbo Vivo e sem alterar o conteúdo original.",
+            ]),
+            ("Posso copiar textos do blog em outro site?", [
+                "Para republicação integral, adaptação ou uso comercial, entre em contato previamente com o responsável pelo blog. Citações breves com referência e link para a página original são bem-vindas.",
+            ]),
+            ("O blog coleta dados pessoais?", [
+                "No modelo atual, o blog é essencialmente informativo. Não há cadastro de usuários nem formulário ativo. Dados técnicos de acesso podem ser tratados por serviços de hospedagem e infraestrutura, conforme explicado na Política de Privacidade.",
+            ]),
+        ],
+    },
+    "politica-de-privacidade": {
+        "title": "Política de Privacidade | Verbo Vivo",
+        "description": "Política de Privacidade do Verbo Vivo, com informações sobre dados pessoais, cookies e direitos do titular conforme a LGPD.",
+        "heading": "Política de Privacidade",
+        "eyebrow": "Privacidade",
+        "body": [
+            ("1. Sobre esta política", [
+                "Esta Política de Privacidade explica, de forma clara, como o Verbo Vivo trata informações relacionadas aos visitantes do site, em conformidade com a Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709/2018, conhecida como LGPD.",
+                "O Verbo Vivo é um blog de conteúdo cristão. No momento, não possui cadastro de usuários, área de login, comentários públicos ou formulário de contato ativo.",
+            ]),
+            ("2. Quais dados podem ser tratados", [
+                "Podem ser tratados dados técnicos gerados durante a navegação, como endereço IP, tipo de navegador, dispositivo, páginas acessadas, data e horário de acesso e informações semelhantes necessárias para funcionamento, segurança e melhoria do site.",
+                "Caso futuramente sejam adicionados formulários, newsletter, comentários, analytics ou publicidade, esta política deverá ser atualizada para explicar quais dados serão coletados, para quais finalidades e com quais bases legais.",
+            ]),
+            ("3. Finalidades do tratamento", [
+                "Os dados técnicos podem ser utilizados para disponibilizar o site, manter a segurança da infraestrutura, identificar falhas, prevenir abuso, medir desempenho e compreender de forma geral como o conteúdo é acessado.",
+                "Não vendemos dados pessoais e não usamos, no modelo atual, cadastro próprio para criar perfis individuais de leitores.",
+            ]),
+            ("4. Cookies e tecnologias semelhantes", [
+                "O site pode utilizar cookies estritamente necessários ao funcionamento da hospedagem e de recursos técnicos. Caso sejam ativados cookies de analytics, publicidade ou personalização, o visitante deverá receber informações adequadas e, quando exigido, opção de consentimento.",
+                "Você pode gerenciar cookies diretamente nas configurações do seu navegador. A desativação de alguns cookies pode afetar o funcionamento de partes do site.",
+            ]),
+            ("5. Compartilhamento", [
+                "Dados técnicos podem ser processados por provedores de infraestrutura, hospedagem e segurança necessários para manter o site disponível, como a plataforma de hospedagem utilizada.",
+                "Também poderemos compartilhar informações quando houver obrigação legal, ordem de autoridade competente ou necessidade de proteger direitos e segurança do site e de terceiros.",
+            ]),
+            ("6. Segurança e retenção", [
+                "Adotamos medidas razoáveis para proteger as informações tratadas no contexto do site. Ainda assim, nenhum ambiente digital é absolutamente imune a riscos.",
+                "Dados técnicos são mantidos pelo tempo necessário às finalidades descritas nesta política ou conforme prazos aplicáveis pelos serviços de infraestrutura utilizados.",
+            ]),
+            ("7. Direitos do titular", [
+                "Nos termos da LGPD, o titular pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio, eliminação, portabilidade quando aplicável, informação sobre compartilhamento e revisão de decisões automatizadas quando existirem.",
+                "Como o site não possui cadastro ativo, algumas solicitações poderão depender da identificação mínima necessária para localizar eventual dado relacionado ao pedido.",
+            ]),
+            ("8. Contato", [
+                "Para exercer direitos de titular ou tratar de privacidade, utilize o canal de contato que vier a ser indicado oficialmente no site. Até que uma página de contato seja publicada, solicitações podem ser feitas pelos canais públicos associados ao projeto.",
+            ]),
+            ("9. Atualizações", [
+                "Esta política poderá ser atualizada para refletir mudanças no site, em seus serviços ou na legislação aplicável. A data da versão deve ser revisada sempre que houver alteração relevante.",
+                "Última atualização: 12 de maio de 2026.",
+            ]),
+        ],
+    },
+}
 
 
-def is_heading(line: str) -> bool:
-    stripped = line.strip(" .:-")
-    if len(stripped) < 3:
-        return False
-    if re.match(r"^\d+[\s:-]", stripped):
-        return True
-    letters = [c for c in stripped if c.isalpha()]
-    if not letters:
-        return False
-    uppercase_ratio = sum(1 for c in letters if c.isupper()) / len(letters)
-    return uppercase_ratio > 0.82 and len(stripped) < 90
+def esc(value: str) -> str:
+    return html.escape(value, quote=True)
 
 
-def join_wrapped_lines(lines: list[str]) -> list[str]:
-    blocks: list[str] = []
-    current: list[str] = []
-
-    def flush() -> None:
-        nonlocal current
-        if current:
-            blocks.append(" ".join(current).strip())
-            current = []
-
-    for raw in lines:
-        line = raw.strip()
-        if not line:
-            flush()
-            continue
-        if is_heading(line):
-            flush()
-            blocks.append(line)
-            continue
-        if line.startswith(("-", "•", "→")):
-            flush()
-            blocks.append(line)
-            continue
-        current.append(line)
-    flush()
-    return blocks
-
-
-def article_body_html(text: str, title: str) -> str:
-    lines = text.splitlines()
-    blocks = join_wrapped_lines(lines)
-    if blocks and blocks[0].upper().startswith(title.upper()[:18]):
-        blocks = blocks[1:]
-
-    result: list[str] = []
-    for block in blocks:
-        safe = html.escape(block)
-        if block.startswith(("“", '"')) and len(block) < 220:
-            result.append(f'<blockquote>{safe}</blockquote>')
-        elif block.startswith(("-", "•", "→")):
-            result.append(f"<p class=\"article-list-line\">{safe}</p>")
-        elif is_heading(block):
-            result.append(f"<h2>{safe.title()}</h2>")
-        else:
-            result.append(f"<p>{safe}</p>")
-    return "\n".join(result)
+def content_sections(sections: list[tuple[str, list[str]]]) -> str:
+    chunks: list[str] = []
+    for heading, paragraphs in sections:
+        chunks.append(f"<h2>{esc(heading)}</h2>")
+        chunks.extend(f"<p>{esc(paragraph)}</p>" for paragraph in paragraphs)
+    return "\n".join(chunks)
 
 
 def page_shell(title: str, description: str, body: str, canonical: str, image: str | None = None, prefix: str = "") -> str:
@@ -131,12 +235,12 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{html.escape(title)}</title>
-    <meta name="description" content="{html.escape(description)}" />
+    <title>{esc(title)}</title>
+    <meta name="description" content="{esc(description)}" />
     <link rel="canonical" href="{canonical}" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="{html.escape(title)}" />
-    <meta property="og:description" content="{html.escape(description)}" />
+    <meta property="og:title" content="{esc(title)}" />
+    <meta property="og:description" content="{esc(description)}" />
     <meta property="og:image" content="{og_image}" />
     <meta property="og:url" content="{canonical}" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -154,14 +258,20 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
       </a>
       <nav aria-label="Navegação principal">
         <a href="{prefix}index.html#artigos">Artigos</a>
-        <a href="{prefix}index.html#editorial">Editorial</a>
-        <a href="{prefix}index.html#sobre">Sobre</a>
+        <a href="{prefix}sobre.html">Sobre</a>
+        <a href="{prefix}faq.html">FAQ</a>
+        <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
       </nav>
     </header>
     {body}
     <footer class="site-footer">
-      <p><strong>Verbo Vivo</strong> publica reflexões cristãs, estudos bíblicos e textos para fortalecer a fé na vida cotidiana.</p>
-      <a href="{prefix}feed.xml">RSS</a>
+      <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
+      <div>
+        <a href="{prefix}sobre.html">Sobre</a>
+        <a href="{prefix}faq.html">FAQ</a>
+        <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
+        <a href="{prefix}feed.xml">RSS</a>
+      </div>
     </footer>
   </body>
 </html>
@@ -173,12 +283,12 @@ def article_card(article: dict, featured: bool = False, prefix: str = "") -> str
     return f"""
       <article class="{cls}">
         <a href="{prefix}artigos/{article['slug']}.html">
-          <img src="{prefix}images/articles/{article['image']}" alt="{html.escape(article['alt'])}" />
+          <img src="{prefix}images/articles/{article['image']}" alt="{esc(article['alt'])}" />
         </a>
         <div class="article-body">
-          <p class="category">{html.escape(article['category'])}</p>
-          <h3><a href="{prefix}artigos/{article['slug']}.html">{html.escape(article['title'])}</a></h3>
-          <p>{html.escape(article['excerpt'])}</p>
+          <p class="category">{esc(article['category'])}</p>
+          <h3><a href="{prefix}artigos/{article['slug']}.html">{esc(article['title'])}</a></h3>
+          <p>{esc(article['excerpt'])}</p>
         </div>
       </article>
 """
@@ -192,19 +302,18 @@ def build_index(articles: list[dict]) -> None:
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow">Palavra, fé e vida cristã</p>
-          <h1>Reflexões humanas, preparadas com cuidado para alimentar a caminhada.</h1>
+          <h1>Reflexões cristãs para aquietar a alma e fortalecer a caminhada.</h1>
           <p>
-            O Verbo Vivo nasce para publicar artigos escritos por pessoas reais,
-            com apoio automatizado na organização editorial, imagens, metadados
-            e preparação técnica para publicação.
+            O Verbo Vivo reúne textos de fé, consolo e formação interior para quem
+            procura uma leitura bíblica sensível, profunda e próxima da vida real.
           </p>
         </div>
         {article_card(featured, featured=True)}
       </section>
 
       <section class="section-intro" id="artigos">
-        <p class="eyebrow">Primeiros artigos</p>
-        <h2>Três textos iniciais para o lançamento</h2>
+        <p class="eyebrow">Reflexões recentes</p>
+        <h2>Textos para ler com calma, oração e coração aberto</h2>
       </section>
 
       <section class="article-grid" aria-label="Lista de artigos">
@@ -214,12 +323,12 @@ def build_index(articles: list[dict]) -> None:
       <section class="editorial" id="editorial">
         <div>
           <p class="eyebrow">Linha editorial</p>
-          <h2>O texto vem de fonte humana. A automação cuida da preparação.</h2>
+          <h2>Conteúdo cristão com reverência bíblica, clareza e cuidado com o leitor.</h2>
         </div>
         <div class="principles">
-          <p>Revisão de clareza, sem apagar a voz do autor.</p>
-          <p>Imagem contextual respeitosa, sem cenas bíblicas sensacionalistas.</p>
-          <p>SEO técnico com título, descrição, slug, tags e dados estruturados.</p>
+          <p>Textos preparados para edificação espiritual, consolo e reflexão.</p>
+          <p>Linguagem acessível, sem abrir mão de profundidade bíblica.</p>
+          <p>Compromisso com respeito, responsabilidade e centralidade em Cristo.</p>
         </div>
       </section>
 
@@ -227,16 +336,15 @@ def build_index(articles: list[dict]) -> None:
         <p class="eyebrow">Sobre o projeto</p>
         <h2>Uma casa digital para Palavra, fé e vida cristã.</h2>
         <p>
-          Este é o primeiro modelo publicável do Verbo Vivo. A estrutura já foi
-          preparada para receber novos artigos, gerar páginas individuais,
-          alimentar RSS, sitemap e futuras rotinas automáticas de publicação.
+          O Verbo Vivo existe para oferecer leituras que ajudem a alma a respirar,
+          reencontrar esperança e caminhar com Deus nos dias simples e nos dias difíceis.
         </p>
       </section>
     </main>
 """
     output = page_shell(
         "Verbo Vivo | Reflexões cristãs",
-        "Textos cristãos, estudos bíblicos e reflexões para fortalecer a fé na vida cotidiana.",
+        "Reflexões cristãs, estudos bíblicos e textos de alento espiritual para fortalecer a fé na vida cotidiana.",
         body,
         f"{DOMAIN}/",
     )
@@ -244,21 +352,21 @@ def build_index(articles: list[dict]) -> None:
 
 
 def build_article(article: dict) -> None:
-    text = read_pdf(article["pdf"])
-    body_html = article_body_html(text, article["title"])
+    body_html = content_sections(article["sections"])
     body = f"""
     <main>
       <article class="article-page">
         <header class="article-hero">
           <div>
-            <p class="category">{html.escape(article['category'])}</p>
-            <h1>{html.escape(article['title'])}</h1>
-            <p class="article-excerpt">{html.escape(article['excerpt'])}</p>
-            <p class="article-meta">Por {html.escape(article['author'])} · {article['date']}</p>
+            <p class="category">{esc(article['category'])}</p>
+            <h1>{esc(article['title'])}</h1>
+            <p class="article-excerpt">{esc(article['excerpt'])}</p>
+            <p class="article-meta">Por {esc(article['author'])} · {article['date']}</p>
           </div>
-          <img src="../images/articles/{article['image']}" alt="{html.escape(article['alt'])}" />
+          <img src="../images/articles/{article['image']}" alt="{esc(article['alt'])}" />
         </header>
         <div class="article-content">
+          <blockquote>{esc(article['quote'])}</blockquote>
           {body_html}
         </div>
       </article>
@@ -273,6 +381,26 @@ def build_article(article: dict) -> None:
         "../",
     )
     (ARTICLE_DIR / f"{article['slug']}.html").write_text(output, encoding="utf-8")
+
+
+def build_static_page(slug: str, page: dict) -> None:
+    body_html = content_sections(page["body"])
+    body = f"""
+    <main>
+      <article class="article-page static-page">
+        <header class="plain-hero">
+          <p class="eyebrow">{esc(page['eyebrow'])}</p>
+          <h1>{esc(page['heading'])}</h1>
+          <p class="article-excerpt">{esc(page['description'])}</p>
+        </header>
+        <div class="article-content">
+          {body_html}
+        </div>
+      </article>
+    </main>
+"""
+    output = page_shell(page["title"], page["description"], body, f"{DOMAIN}/{slug}.html")
+    (SITE / f"{slug}.html").write_text(output, encoding="utf-8")
 
 
 def build_css() -> None:
@@ -316,7 +444,7 @@ img {
 
 .site-header {
   align-items: center;
-  background: rgba(251, 250, 246, 0.92);
+  background: rgba(251, 250, 246, 0.94);
   border-bottom: 1px solid var(--line);
   display: flex;
   gap: 24px;
@@ -418,7 +546,7 @@ h3 {
   color: var(--muted);
   font-size: 1.08rem;
   line-height: 1.7;
-  max-width: 620px;
+  max-width: 680px;
 }
 
 .featured,
@@ -428,7 +556,8 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-.featured img {
+.featured img,
+.article-card img {
   aspect-ratio: 16 / 10;
   object-fit: cover;
   width: 100%;
@@ -458,7 +587,7 @@ h3 {
 .editorial h2 {
   font-size: clamp(1.8rem, 3vw, 3.4rem);
   line-height: 1.02;
-  max-width: 850px;
+  max-width: 900px;
 }
 
 .article-grid {
@@ -466,12 +595,6 @@ h3 {
   gap: 22px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 28px clamp(18px, 4vw, 64px) clamp(40px, 6vw, 84px);
-}
-
-.article-card img {
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  width: 100%;
 }
 
 .editorial {
@@ -514,7 +637,13 @@ h3 {
   margin-bottom: clamp(34px, 6vw, 76px);
 }
 
-.article-hero h1 {
+.plain-hero {
+  margin: 0 auto clamp(34px, 6vw, 76px);
+  max-width: 900px;
+}
+
+.article-hero h1,
+.plain-hero h1 {
   font-size: clamp(2.3rem, 5vw, 5.4rem);
   line-height: 0.95;
 }
@@ -544,6 +673,10 @@ h3 {
   margin: 2.2em 0 0.65em;
 }
 
+.article-content h2:first-child {
+  margin-top: 0;
+}
+
 .article-content p,
 .article-content blockquote {
   color: #2d3831;
@@ -559,9 +692,10 @@ h3 {
   padding-left: 18px;
 }
 
-.article-list-line {
-  color: var(--muted) !important;
-  padding-left: 18px;
+.static-page .article-content p {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.03rem;
+  line-height: 1.75;
 }
 
 .site-footer {
@@ -576,6 +710,12 @@ h3 {
 
 .site-footer p {
   margin: 0;
+}
+
+.site-footer div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .site-footer a {
@@ -611,7 +751,9 @@ h3 {
 
 
 def build_sitemap(articles: list[dict]) -> None:
-    urls = [f"{DOMAIN}/"] + [f"{DOMAIN}/artigos/{article['slug']}.html" for article in articles]
+    urls = [f"{DOMAIN}/"]
+    urls.extend(f"{DOMAIN}/artigos/{article['slug']}.html" for article in articles)
+    urls.extend(f"{DOMAIN}/{slug}.html" for slug in STATIC_PAGES)
     body = "\n".join(f"  <url><loc>{url}</loc></url>" for url in urls)
     sitemap = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{body}\n</urlset>\n'
     (SITE / "sitemap.xml").write_text(sitemap, encoding="utf-8")
@@ -624,10 +766,10 @@ def build_feed(articles: list[dict]) -> None:
         items.append(
             f"""
     <item>
-      <title>{html.escape(article['title'])}</title>
+      <title>{esc(article['title'])}</title>
       <link>{url}</link>
       <guid>{url}</guid>
-      <description>{html.escape(article['excerpt'])}</description>
+      <description>{esc(article['excerpt'])}</description>
       <pubDate>{date.fromisoformat(article['date']).strftime('%a, %d %b %Y 00:00:00 +0000')}</pubDate>
     </item>"""
         )
@@ -646,8 +788,7 @@ def build_feed(articles: list[dict]) -> None:
 
 def build_misc() -> None:
     (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {DOMAIN}/sitemap.xml\n", encoding="utf-8")
-    (SITE / "CNAME").write_text("verbovivo.blog\n", encoding="utf-8")
-    (SITE / "humans.txt").write_text("Verbo Vivo\nConteúdo humano, preparação editorial assistida.\n", encoding="utf-8")
+    (SITE / "humans.txt").write_text("Verbo Vivo\nConteúdo cristão para reflexão, consolo e formação espiritual.\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -662,6 +803,8 @@ def main() -> None:
     build_index(ARTICLES)
     for article in ARTICLES:
         build_article(article)
+    for slug, page in STATIC_PAGES.items():
+        build_static_page(slug, page)
     build_sitemap(ARTICLES)
     build_feed(ARTICLES)
     build_misc()

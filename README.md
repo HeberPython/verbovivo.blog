@@ -8,7 +8,7 @@ Abra no navegador:
 
 `site/index.html`
 
-A pasta `site/` contém a home, as páginas dos artigos, imagens, RSS, sitemap, robots.txt e CNAME.
+A pasta `site/` contém a home, as páginas dos artigos, imagens, RSS, sitemap, robots.txt e páginas institucionais.
 
 ## Reconstruir o site
 
@@ -25,6 +25,14 @@ O script lê os PDFs humanos em `C:\Users\Heber\Documents\verbovivo.blog`, copia
 - Depois da Festa: onde ficou Jesus?
 - Feitos para brilhar pela Palavra da Vida
 - O coração desordenado
+
+Os artigos publicados no site são versões reflexivas e compactadas, preparadas a partir dos textos brutos originais.
+
+## Páginas institucionais
+
+- `site/sobre.html`
+- `site/faq.html`
+- `site/politica-de-privacidade.html`
 
 ## Capas geradas
 
