@@ -219,6 +219,24 @@ STATIC_PAGES = {
     },
 }
 
+CONTACT_EMAILS = [
+    {
+        "email": "contato@verbovivo.blog",
+        "label": "Contato geral",
+        "description": "Canal público para mensagens, sugestões, testemunhos e assuntos gerais sobre o Verbo Vivo.",
+    },
+    {
+        "email": "artigos@verbovivo.blog",
+        "label": "Envio de artigos",
+        "description": "Canal reservado para envio de reflexões, anexos e textos que poderão ser preparados para publicação.",
+    },
+    {
+        "email": "admin@verbovivo.blog",
+        "label": "Administração",
+        "description": "Canal interno para assuntos administrativos, técnicos e gestão do projeto.",
+    },
+]
+
 
 def esc(value: str) -> str:
     return html.escape(value, quote=True)
@@ -263,6 +281,7 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
       <nav aria-label="Navegação principal">
         <a href="{prefix}index.html#artigos">Artigos</a>
         <a href="{prefix}sobre.html">Sobre</a>
+        <a href="{prefix}contato.html">Contato</a>
         <a href="{prefix}faq.html">FAQ</a>
         <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
       </nav>
@@ -272,6 +291,7 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
       <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
       <div>
         <a href="{prefix}sobre.html">Sobre</a>
+        <a href="{prefix}contato.html">Contato</a>
         <a href="{prefix}faq.html">FAQ</a>
         <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
         <a href="{prefix}feed.xml">RSS</a>
@@ -405,6 +425,81 @@ def build_static_page(slug: str, page: dict) -> None:
 """
     output = page_shell(page["title"], page["description"], body, f"{DOMAIN}/{slug}.html")
     (SITE / f"{slug}.html").write_text(output, encoding="utf-8")
+
+
+def build_contact_page() -> None:
+    cards = "\n".join(
+        f"""
+          <article class="contact-card">
+            <p class="category">{esc(item['label'])}</p>
+            <h2><a href="mailto:{esc(item['email'])}">{esc(item['email'])}</a></h2>
+            <p>{esc(item['description'])}</p>
+          </article>
+"""
+        for item in CONTACT_EMAILS
+    )
+    body = f"""
+    <main>
+      <section class="plain-hero contact-hero">
+        <p class="eyebrow">Contato</p>
+        <h1>Fale com o Verbo Vivo</h1>
+        <p class="article-excerpt">
+          Use o canal mais adequado para sua mensagem. Para enviar uma reflexão
+          ou artigo, prefira o e-mail artigos@verbovivo.blog.
+        </p>
+      </section>
+
+      <section class="contact-grid" aria-label="Canais de e-mail">
+        {cards}
+      </section>
+
+      <section class="contact-form-section">
+        <div>
+          <p class="eyebrow">Formulário</p>
+          <h2>Envie uma mensagem</h2>
+          <p>
+            Este formulário abre seu aplicativo de e-mail com os campos preenchidos.
+            Revise a mensagem antes de enviar.
+          </p>
+        </div>
+        <form class="contact-form" action="mailto:contato@verbovivo.blog" method="post" enctype="text/plain">
+          <label>
+            Nome
+            <input name="Nome" type="text" autocomplete="name" required />
+          </label>
+          <label>
+            E-mail
+            <input name="Email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Assunto
+            <input name="Assunto" type="text" required />
+          </label>
+          <label>
+            Tipo de mensagem
+            <select name="Tipo">
+              <option>Contato geral</option>
+              <option>Envio de artigo</option>
+              <option>Pedido de correção</option>
+              <option>Assunto administrativo</option>
+            </select>
+          </label>
+          <label class="full">
+            Mensagem
+            <textarea name="Mensagem" rows="7" required></textarea>
+          </label>
+          <button type="submit">Enviar por e-mail</button>
+        </form>
+      </section>
+    </main>
+"""
+    output = page_shell(
+        "Contato | Verbo Vivo",
+        "Entre em contato com o Verbo Vivo ou envie artigos e reflexões para preparação editorial.",
+        body,
+        f"{DOMAIN}/contato.html",
+    )
+    (SITE / "contato.html").write_text(output, encoding="utf-8")
 
 
 def build_css() -> None:
@@ -702,6 +797,98 @@ h3 {
   line-height: 1.75;
 }
 
+.contact-hero {
+  padding: clamp(34px, 6vw, 72px) clamp(18px, 4vw, 64px) 0;
+}
+
+.contact-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 30px clamp(18px, 4vw, 64px) clamp(34px, 5vw, 60px);
+}
+
+.contact-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.contact-card h2 {
+  font-size: clamp(1.1rem, 1.5vw, 1.45rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.contact-card p:last-child {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.contact-form-section {
+  background: var(--cream);
+  border-block: 1px solid var(--line);
+  display: grid;
+  gap: 30px;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  padding: clamp(34px, 6vw, 72px) clamp(18px, 4vw, 64px);
+}
+
+.contact-form-section h2 {
+  font-size: clamp(1.8rem, 3vw, 3.4rem);
+  line-height: 1.02;
+}
+
+.contact-form-section p {
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+.contact-form {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.contact-form label {
+  color: var(--ink);
+  display: grid;
+  font-size: 0.9rem;
+  font-weight: 800;
+  gap: 7px;
+}
+
+.contact-form .full {
+  grid-column: 1 / -1;
+}
+
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  background: var(--white);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font: inherit;
+  padding: 12px 13px;
+  width: 100%;
+}
+
+.contact-form textarea {
+  resize: vertical;
+}
+
+.contact-form button {
+  background: var(--sage);
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 13px 18px;
+  width: max-content;
+}
+
 .site-footer {
   align-items: center;
   border-top: 1px solid var(--line);
@@ -739,6 +926,11 @@ h3 {
   }
 
   .article-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-grid,
+  .contact-form-section {
     grid-template-columns: 1fr;
   }
 }
@@ -869,6 +1061,24 @@ h3 {
   .site-footer {
     padding: 24px 16px;
   }
+
+  .contact-hero {
+    padding: 30px 16px 0;
+  }
+
+  .contact-grid,
+  .contact-form-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .contact-form {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-form button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 380px) {
@@ -887,6 +1097,7 @@ h3 {
 def build_sitemap(articles: list[dict]) -> None:
     urls = [f"{DOMAIN}/"]
     urls.extend(f"{DOMAIN}/artigos/{article['slug']}.html" for article in articles)
+    urls.append(f"{DOMAIN}/contato.html")
     urls.extend(f"{DOMAIN}/{slug}.html" for slug in STATIC_PAGES)
     body = "\n".join(f"  <url><loc>{url}</loc></url>" for url in urls)
     sitemap = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{body}\n</urlset>\n'
@@ -939,6 +1150,7 @@ def main() -> None:
         build_article(article)
     for slug, page in STATIC_PAGES.items():
         build_static_page(slug, page)
+    build_contact_page()
     build_sitemap(ARTICLES)
     build_feed(ARTICLES)
     build_misc()
