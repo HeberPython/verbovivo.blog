@@ -7,7 +7,7 @@ from .ai import generate_cover_image, refine_with_openai
 from .config import settings
 from .content import ready_article_from_email, slugify
 from .mail import send_review_email, unread_messages, unread_publish_messages
-from .publisher import publish_article
+from .publisher import publish_article, upload_review_draft
 from .store import save_draft
 
 
@@ -37,23 +37,31 @@ def save_first_image_attachment(message, slug: str) -> tuple[str, str]:
     return "", ""
 
 
+def is_service_email(message) -> bool:
+    return message.from_.endswith("@email.hostinger.com")
+
+
 def poll_once() -> None:
     for message in unread_messages():
+        if is_service_email(message):
+            print(f"Ignored service email: {message.subject}")
+            continue
         source_text = extract_message_text(message)
         if not source_text.strip():
             continue
         draft = refine_with_openai(source_text, message.subject or "Nova reflexão", message.from_)
         generate_cover_image(draft, Path("automation/_generated_images"))
         save_draft(draft)
+        upload_review_draft(draft)
         recipient = settings.approver_email or message.from_
-        review_url = f"{settings.approval_base_url}/review/{draft.token}"
+        review_url = f"{settings.approval_base_url}/revisao.php?token={draft.token}"
         send_review_email(recipient, draft.title, review_url)
         print(f"Draft created: {draft.id} -> {review_url}")
 
 
 def publish_once() -> None:
     for message in unread_publish_messages():
-        if message.from_.endswith("@email.hostinger.com"):
+        if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
             continue
         source_text = extract_message_text(message)

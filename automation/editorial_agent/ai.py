@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import secrets
+from html import escape
 from pathlib import Path
 
 from openai import OpenAI
@@ -61,13 +62,13 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
     sections = data.get("sections") or []
     body_parts = []
     if data.get("quote"):
-        body_parts.append(f"<blockquote>{data['quote']}</blockquote>")
+        body_parts.append(f"<blockquote>{escape(str(data['quote']))}</blockquote>")
     for section in sections:
-        heading = section.get("heading", "").strip()
+        heading = str(section.get("heading", "")).strip()
         if heading:
-            body_parts.append(f"<h2>{heading}</h2>")
+            body_parts.append(f"<h2>{escape(heading)}</h2>")
         for paragraph in section.get("paragraphs", []):
-            body_parts.append(f"<p>{paragraph}</p>")
+            body_parts.append(f"<p>{escape(str(paragraph))}</p>")
 
     slug = slugify(title)
     return ArticleDraft(
@@ -111,4 +112,5 @@ def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
     if not image_base64:
         return None
     path.write_bytes(base64.b64decode(image_base64))
+    draft.local_image_path = str(path)
     return path

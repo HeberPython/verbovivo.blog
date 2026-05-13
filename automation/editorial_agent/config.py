@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[2]
 
-load_dotenv(ROOT / ".env")
-load_dotenv(ROOT / "automation" / ".env", override=True)
+load_dotenv(ROOT / ".env", encoding="utf-8-sig")
+load_dotenv(ROOT / "automation" / ".env", override=True, encoding="utf-8-sig")
 
 
 @dataclass(frozen=True)

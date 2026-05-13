@@ -1,32 +1,30 @@
-# Automação editorial do Verbo Vivo
+# Automacao editorial do Verbo Vivo
 
-Este módulo prepara o fluxo de agente para novos artigos enviados por e-mail.
+Este modulo prepara o fluxo de agente para novos artigos enviados por e-mail.
 
-## Fluxos desejados
+## Fluxos
 
-### Revisão com aprovação
+### Revisao com aprovacao
 
-1. Um artigo é enviado para `artigo@verbovivo.blog`.
-2. O agente lê o e-mail e extrai o texto ou anexo.
-3. O agente cria uma versão reflexiva, coerente e mais acessível do artigo.
-4. O agente gera uma imagem condizente com o contexto bíblico e pastoral.
-5. O agente envia uma resposta para aprovação.
-6. O aprovador escolhe:
-   - **Aprovar e publicar**
-   - **Corrigir e publicar**
-7. Após aprovação, o agente publica no site via FTP.
+1. Um artigo e enviado para `artigo@verbovivo.blog`.
+2. O agente le o e-mail e extrai o texto ou anexo.
+3. O agente cria uma versao reflexiva, coerente e mais acessivel do artigo.
+4. O agente gera uma imagem condizente com o contexto biblico e pastoral.
+5. O agente envia uma resposta com link de revisao em `verbovivo.blog`.
+6. O aprovador escolhe `Aprovar e publicar` ou ajusta o texto em `Corrigir e publicar`.
+7. A pagina de revisao publica no site e atualiza home, RSS e sitemap.
 
-### Publicação direta
+### Publicacao direta
 
-1. Um artigo já pronto é enviado para `publicar@verbovivo.blog`.
-2. O agente lê o e-mail e extrai o texto ou anexo.
-3. Se houver imagem anexada, ela é usada como capa.
-4. O agente normaliza o HTML para manter o layout, cores, tipografia e aparência do Verbo Vivo.
-5. O artigo é publicado diretamente no site via FTP, sem etapa de aprovação.
+1. Um artigo ja pronto e enviado para `publicar@verbovivo.blog`.
+2. O agente le o e-mail e extrai o texto ou anexo.
+3. Se houver imagem anexada, ela e usada como capa.
+4. O agente normaliza o HTML para manter layout, cores, tipografia e aparencia do Verbo Vivo.
+5. O artigo e publicado diretamente no site via FTP, sem etapa de aprovacao.
 
-## O que falta configurar
+## Variaveis
 
-As credenciais ficam fora do GitHub, em variáveis de ambiente:
+As credenciais ficam fora do GitHub, em variaveis de ambiente:
 
 ```txt
 EDITORIAL_IMAP_HOST=
@@ -44,7 +42,7 @@ PUBLISH_IMAP_PORT=993
 PUBLISH_IMAP_USER=publicar@verbovivo.blog
 PUBLISH_IMAP_PASSWORD=
 
-EDITORIAL_APPROVAL_BASE_URL=
+EDITORIAL_APPROVAL_BASE_URL=https://verbovivo.blog
 EDITORIAL_APPROVER_EMAIL=
 
 HOSTINGER_FTP_HOST=ftp.verbovivo.blog
@@ -56,30 +54,32 @@ HOSTINGER_FTP_DIR=/
 OPENAI_API_KEY=
 ```
 
-## Rodar localmente
+## Comandos
+
+Instalar dependencias:
 
 ```powershell
 pip install -r automation/requirements.txt
-python -m automation.editorial_agent.server
 ```
 
-Em outro terminal:
+Ler `artigo@verbovivo.blog`, preparar rascunho, gerar imagem e enviar link de revisao:
 
 ```powershell
 python -m automation.editorial_agent.worker poll-once
 ```
 
-Para publicar mensagens prontas enviadas para `publicar@verbovivo.blog`:
+Publicar mensagens prontas enviadas para `publicar@verbovivo.blog`:
 
 ```powershell
 python -m automation.editorial_agent.worker publish-once
 ```
 
-## Observação
+Reenviar o site estatico completo para a Hostinger:
 
-Este agente precisa ficar rodando em algum ambiente persistente. Pode ser:
+```powershell
+python -m automation.editorial_agent.deploy_site
+```
 
-- um computador ligado;
-- VPS;
-- serviço de backend;
-- automação futura no próprio ambiente Codex, quando configurarmos rotina recorrente.
+## Observacao
+
+O agente precisa rodar em algum ambiente persistente para verificar e-mails automaticamente. Por enquanto, ele pode ser executado sob demanda pelo Codex ou por um computador ligado. Depois, pode ser colocado em uma VPS ou rotina agendada.

@@ -11,6 +11,7 @@ SITE = ROOT / "site"
 ARTICLE_DIR = SITE / "artigos"
 IMAGE_OUT = SITE / "images" / "articles"
 IMAGE_IN = ROOT / "public" / "images" / "articles"
+PUBLIC = ROOT / "public"
 DOMAIN = "https://verbovivo.blog"
 
 
@@ -1141,6 +1142,15 @@ RewriteRule ^(.+?)/?$ $1.html [L]
     (SITE / "humans.txt").write_text("Verbo Vivo\nConteúdo cristão para reflexão, consolo e formação espiritual.\n", encoding="utf-8")
 
 
+def copy_public_files() -> None:
+    for path in PUBLIC.rglob("*"):
+        if not path.is_file():
+            continue
+        target = SITE / path.relative_to(PUBLIC)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+
+
 def main() -> None:
     if SITE.exists():
         shutil.rmtree(SITE)
@@ -1159,6 +1169,7 @@ def main() -> None:
     build_sitemap(ARTICLES)
     build_feed(ARTICLES)
     build_misc()
+    copy_public_files()
     print(SITE.resolve())
 
 

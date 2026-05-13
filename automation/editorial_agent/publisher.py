@@ -5,6 +5,7 @@ from email.utils import format_datetime
 from ftplib import FTP, error_perm
 from html import escape
 from io import BytesIO
+import json
 from pathlib import Path
 
 from .config import settings
@@ -140,3 +141,20 @@ def publish_article(draft: ArticleDraft) -> None:
                 continue
             with path.open("rb") as file:
                 ftp.storbinary(f"STOR {path.relative_to(SITE_DIR).as_posix()}", file)
+
+
+def upload_review_draft(draft: ArticleDraft) -> None:
+    payload = json.dumps(draft.__dict__, ensure_ascii=False, indent=2).encode("utf-8")
+    with FTP() as ftp:
+        ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
+        ftp.login(settings.ftp_user, settings.ftp_password)
+        ftp.set_pasv(True)
+        ftp.cwd(settings.ftp_dir)
+        ensure_dir(ftp, "_editorial_drafts")
+        ftp.storbinary(f"STOR _editorial_drafts/{draft.token}.json", BytesIO(payload))
+        if draft.local_image_path and draft.image_filename:
+            image_path = Path(draft.local_image_path)
+            if image_path.exists():
+                ensure_dir(ftp, "images/articles")
+                with image_path.open("rb") as image_file:
+                    ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
