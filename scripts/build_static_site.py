@@ -11,7 +11,7 @@ SITE = ROOT / "site"
 ARTICLE_DIR = SITE / "artigos"
 IMAGE_OUT = SITE / "images" / "articles"
 IMAGE_IN = ROOT / "public" / "images" / "articles"
-DOMAIN = "https://verbovivo-blog.vercel.app"
+DOMAIN = "https://verbovivo.blog"
 
 
 ARTICLES = [

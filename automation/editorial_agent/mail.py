@@ -11,7 +11,7 @@ from .config import settings
 
 def unread_messages():
     with MailBox(settings.imap_host, settings.imap_port).login(settings.imap_user, settings.imap_password) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), mark_seen=False):
+        for message in mailbox.fetch(AND(seen=False), mark_seen=True):
             yield message
 
 
@@ -20,7 +20,7 @@ def unread_publish_messages():
         settings.publish_imap_user,
         settings.publish_imap_password,
     ) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), mark_seen=False):
+        for message in mailbox.fetch(AND(seen=False), mark_seen=True):
             yield message
 
 
