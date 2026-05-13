@@ -53,6 +53,9 @@ def poll_once() -> None:
 
 def publish_once() -> None:
     for message in unread_publish_messages():
+        if message.from_.endswith("@email.hostinger.com"):
+            print(f"Ignored service email: {message.subject}")
+            continue
         source_text = extract_message_text(message)
         if not source_text.strip():
             continue
