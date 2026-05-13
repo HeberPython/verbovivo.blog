@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 
 from .config import settings
-from .content import fallback_refine
+from pathlib import Path
+
+from .ai import generate_cover_image, refine_with_openai
 from .mail import send_review_email, unread_messages
 from .store import save_draft
 
@@ -25,7 +27,8 @@ def poll_once() -> None:
         source_text = extract_message_text(message)
         if not source_text.strip():
             continue
-        draft = fallback_refine(source_text, message.subject or "Nova reflexão", message.from_)
+        draft = refine_with_openai(source_text, message.subject or "Nova reflexão", message.from_)
+        generate_cover_image(draft, Path("automation/_generated_images"))
         save_draft(draft)
         recipient = settings.approver_email or message.from_
         review_url = f"{settings.approval_base_url}/review/{draft.token}"
@@ -43,4 +46,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -12,6 +12,8 @@ frontpage-pdf/edge-profile*/
 # Python
 __pycache__/
 *.py[cod]
+.env
+automation/.env
 
 # Cache de ferramentas
 .vercel
