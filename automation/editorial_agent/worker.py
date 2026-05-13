@@ -55,7 +55,7 @@ def poll_once() -> None:
         upload_review_draft(draft)
         recipient = settings.approver_email or message.from_
         review_url = f"{settings.approval_base_url}/revisao.php?token={draft.token}"
-        send_review_email(recipient, draft.title, review_url)
+        send_review_email(recipient, draft, review_url)
         print(f"Draft created: {draft.id} -> {review_url}")
 
 

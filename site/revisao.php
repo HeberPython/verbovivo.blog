@@ -247,12 +247,12 @@ page(
     <p class="review-meta"><strong>Categoria:</strong> ' . esc((string) $draft['category']) . '<br><strong>Resumo:</strong> ' . esc((string) $draft['excerpt']) . '</p>
     ' . $imageHtml . '
     <div class="review-preview article-content">' . (string) $draft['body_html'] . '</div>
-    <form class="review-actions" method="post">
+    <form class="review-actions" id="aprovar" method="post">
       <input type="hidden" name="token" value="' . esc($token) . '" />
       <input type="hidden" name="action" value="approved" />
       <button class="approve" type="submit">Aprovar e publicar</button>
     </form>
-    <form class="review-form" method="post">
+    <form class="review-form" id="corrigir" method="post">
       <input type="hidden" name="token" value="' . esc($token) . '" />
       <input type="hidden" name="action" value="corrected_approved" />
       <h2>Corrigir e publicar</h2>
