@@ -9,5 +9,9 @@ frontpage-pdf/edge-profile*/
 # Logs locais
 *.log
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Cache de ferramentas
 .vercel

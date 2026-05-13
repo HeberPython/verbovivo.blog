@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+
+
+@dataclass
+class ArticleDraft:
+    id: str
+    token: str
+    sender: str
+    source_subject: str
+    source_text: str
+    title: str
+    slug: str
+    excerpt: str
+    category: str
+    author: str
+    body_html: str
+    image_prompt: str
+    image_filename: str
+    status: str = "pending_review"
+    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
