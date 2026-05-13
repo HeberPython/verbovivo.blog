@@ -14,6 +14,9 @@ __pycache__/
 *.py[cod]
 .env
 automation/.env
+_drafts/
+automation/_generated_images/
+automation/_publish_images/
 
 # Cache de ferramentas
 .vercel

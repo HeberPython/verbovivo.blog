@@ -147,15 +147,37 @@ function article_card(array $draft): string {
 ';
 }
 
+function featured_article(array $draft): string {
+    $title = (string) ($draft['title'] ?? 'Nova reflexão');
+    $slug = (string) ($draft['slug'] ?? 'nova-reflexao');
+    $excerpt = (string) ($draft['excerpt'] ?? 'Uma reflexão cristã para fortalecer a fé na vida cotidiana.');
+    $category = (string) ($draft['category'] ?? 'Reflexão');
+    $image = (string) ($draft['image_filename'] ?? 'depois-da-festa.png');
+
+    return '
+      <article class="featured">
+        <a href="artigos/' . esc($slug) . '.html">
+          <img src="images/articles/' . esc($image) . '" alt="' . esc($title) . '" />
+        </a>
+        <div class="article-body">
+          <p class="category">' . esc($category) . '</p>
+          <h3><a href="artigos/' . esc($slug) . '.html">' . esc($title) . '</a></h3>
+          <p>' . esc($excerpt) . '</p>
+        </div>
+      </article>
+';
+}
+
 function update_index(array $draft): void {
     $path = __DIR__ . '/index.html';
     $html = (string) file_get_contents($path);
     $needle = 'artigos/' . (string) $draft['slug'] . '.html';
-    if (str_contains($html, $needle)) {
-        return;
-    }
+    $wasListed = str_contains($html, $needle);
+    $html = (string) preg_replace('/\s*<article class="featured">.*?<\/article>/s', "\n" . featured_article($draft), $html, 1);
+    if (!$wasListed) {
     $marker = '<section class="article-grid" aria-label="Lista de artigos">';
     $html = str_replace($marker, $marker . "\n        " . article_card($draft), $html);
+    }
     file_put_contents($path, $html);
 }
 

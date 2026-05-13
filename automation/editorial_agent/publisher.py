@@ -7,6 +7,7 @@ from html import escape
 from io import BytesIO
 import json
 from pathlib import Path
+import re
 
 from .config import settings
 from .content import render_article_page
@@ -45,6 +46,22 @@ def article_card(draft: ArticleDraft) -> str:
 """
 
 
+def featured_article(draft: ArticleDraft) -> str:
+    image = draft.image_filename or "depois-da-festa.png"
+    return f"""
+      <article class="featured">
+        <a href="artigos/{escape(draft.slug)}.html">
+          <img src="images/articles/{escape(image)}" alt="{escape(draft.title)}" />
+        </a>
+        <div class="article-body">
+          <p class="category">{escape(draft.category)}</p>
+          <h3><a href="artigos/{escape(draft.slug)}.html">{escape(draft.title)}</a></h3>
+          <p>{escape(draft.excerpt)}</p>
+        </div>
+      </article>
+"""
+
+
 def draft_pub_date(draft: ArticleDraft) -> str:
     try:
         parsed = datetime.fromisoformat(draft.created_at)
@@ -61,11 +78,21 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
     index_path = SITE_DIR / "index.html"
     if index_path.exists():
         index_html = index_path.read_text(encoding="utf-8")
+        original_html = index_html
         article_url = f"artigos/{draft.slug}.html"
-        if article_url not in index_html:
+        article_was_listed = article_url in index_html
+        index_html = re.sub(
+            r'\s*<article class="featured">.*?</article>',
+            "\n" + featured_article(draft),
+            index_html,
+            count=1,
+            flags=re.DOTALL,
+        )
+        if not article_was_listed:
             marker = '<section class="article-grid" aria-label="Lista de artigos">'
             replacement = marker + "\n        " + article_card(draft)
             index_html = index_html.replace(marker, replacement, 1)
+        if index_html != original_html:
             index_path.write_text(index_html, encoding="utf-8")
             changed.append(index_path)
 
