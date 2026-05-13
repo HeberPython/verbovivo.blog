@@ -50,6 +50,9 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
 
 
 def render_article_page(draft: ArticleDraft) -> str:
+    image_html = ""
+    if draft.image_filename:
+        image_html = f'<img src="../images/articles/{escape(draft.image_filename)}" alt="{escape(draft.title)}" />'
     return f"""<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -74,11 +77,14 @@ def render_article_page(draft: ArticleDraft) -> str:
     </header>
     <main>
       <article class="article-page">
-        <header class="plain-hero">
-          <p class="category">{escape(draft.category)}</p>
-          <h1>{escape(draft.title)}</h1>
-          <p class="article-excerpt">{escape(draft.excerpt)}</p>
-          <p class="article-meta">Por {escape(draft.author)}</p>
+        <header class="article-hero">
+          <div>
+            <p class="category">{escape(draft.category)}</p>
+            <h1>{escape(draft.title)}</h1>
+            <p class="article-excerpt">{escape(draft.excerpt)}</p>
+            <p class="article-meta">Por {escape(draft.author)}</p>
+          </div>
+          {image_html}
         </header>
         <div class="article-content">
           {draft.body_html}
@@ -89,3 +95,36 @@ def render_article_page(draft: ArticleDraft) -> str:
 </html>
 """
 
+
+def ready_article_from_email(subject: str, source_text: str, sender: str, image_filename: str = "", image_path: str = "") -> ArticleDraft:
+    blocks = paragraphs_from_text(source_text)
+    title = subject.strip() or (blocks[0][:80] if blocks else "Nova reflexão")
+    slug = slugify(title)
+    body_blocks: list[str] = []
+    for block in blocks:
+        clean = block.strip()
+        if not clean:
+            continue
+        if clean.startswith("#"):
+            body_blocks.append(f"<h2>{escape(clean.lstrip('#').strip())}</h2>")
+        elif clean.isupper() and len(clean) < 90:
+            body_blocks.append(f"<h2>{escape(clean.title())}</h2>")
+        else:
+            body_blocks.append(f"<p>{escape(clean)}</p>")
+    return ArticleDraft(
+        id=secrets.token_hex(8),
+        token=secrets.token_urlsafe(24),
+        sender=sender,
+        source_subject=subject,
+        source_text=source_text,
+        title=title,
+        slug=slug,
+        excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
+        category="Reflexão",
+        author="Pastor Antonio Lemos Filho",
+        body_html="\n".join(body_blocks),
+        image_prompt="",
+        image_filename=image_filename,
+        local_image_path=image_path,
+        status="published_direct",
+    )

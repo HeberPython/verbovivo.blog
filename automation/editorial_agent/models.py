@@ -19,6 +19,6 @@ class ArticleDraft:
     body_html: str
     image_prompt: str
     image_filename: str
+    local_image_path: str = ""
     status: str = "pending_review"
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-

@@ -21,6 +21,11 @@ class Settings:
     smtp_user: str = os.getenv("EDITORIAL_SMTP_USER", "artigo@verbovivo.blog")
     smtp_password: str = os.getenv("EDITORIAL_SMTP_PASSWORD", "")
 
+    publish_imap_host: str = os.getenv("PUBLISH_IMAP_HOST", "imap.hostinger.com")
+    publish_imap_port: int = int(os.getenv("PUBLISH_IMAP_PORT", "993"))
+    publish_imap_user: str = os.getenv("PUBLISH_IMAP_USER", "publicar@verbovivo.blog")
+    publish_imap_password: str = os.getenv("PUBLISH_IMAP_PASSWORD", "")
+
     approval_base_url: str = os.getenv("EDITORIAL_APPROVAL_BASE_URL", "http://127.0.0.1:8787")
     approver_email: str = os.getenv("EDITORIAL_APPROVER_EMAIL", "")
 
@@ -34,4 +39,3 @@ class Settings:
 
 
 settings = Settings()
-

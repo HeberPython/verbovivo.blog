@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ftplib import FTP, error_perm
 from io import BytesIO
+from pathlib import Path
 
 from .config import settings
 from .content import render_article_page
@@ -29,4 +30,9 @@ def publish_article(draft: ArticleDraft) -> None:
         ftp.cwd(settings.ftp_dir)
         ensure_dir(ftp, "artigos")
         ftp.storbinary(f"STOR artigos/{draft.slug}.html", BytesIO(html))
-
+        if draft.local_image_path:
+            image_path = Path(draft.local_image_path)
+            if image_path.exists():
+                ensure_dir(ftp, "images/articles")
+                with image_path.open("rb") as image_file:
+                    ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)

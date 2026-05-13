@@ -15,6 +15,15 @@ def unread_messages():
             yield message
 
 
+def unread_publish_messages():
+    with MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
+        settings.publish_imap_user,
+        settings.publish_imap_password,
+    ) as mailbox:
+        for message in mailbox.fetch(AND(seen=False), mark_seen=False):
+            yield message
+
+
 def send_review_email(to_email: str, draft_title: str, review_url: str) -> None:
     msg = EmailMessage()
     msg["Subject"] = f"Artigo pronto para aprovação: {draft_title}"
@@ -34,4 +43,3 @@ def send_review_email(to_email: str, draft_title: str, review_url: str) -> None:
     with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port) as smtp:
         smtp.login(settings.smtp_user, settings.smtp_password)
         smtp.send_message(msg)
-
