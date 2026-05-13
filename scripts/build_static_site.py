@@ -223,17 +223,7 @@ CONTACT_EMAILS = [
     {
         "email": "contato@verbovivo.blog",
         "label": "Contato geral",
-        "description": "Canal público para mensagens, sugestões, testemunhos e assuntos gerais sobre o Verbo Vivo.",
-    },
-    {
-        "email": "artigos@verbovivo.blog",
-        "label": "Envio de artigos",
-        "description": "Canal reservado para envio de reflexões, anexos e textos que poderão ser preparados para publicação.",
-    },
-    {
-        "email": "admin@verbovivo.blog",
-        "label": "Administração",
-        "description": "Canal interno para assuntos administrativos, técnicos e gestão do projeto.",
+        "description": "Canal público para mensagens, sugestões, testemunhos, pedidos de correção e assuntos gerais sobre o Verbo Vivo.",
     },
 ]
 
@@ -444,8 +434,8 @@ def build_contact_page() -> None:
         <p class="eyebrow">Contato</p>
         <h1>Fale com o Verbo Vivo</h1>
         <p class="article-excerpt">
-          Use o canal mais adequado para sua mensagem. Para enviar uma reflexão
-          ou artigo, prefira o e-mail artigos@verbovivo.blog.
+          Use este canal para falar conosco, enviar sugestões, pedir correções
+          ou tratar de assuntos relacionados ao Verbo Vivo.
         </p>
       </section>
 
@@ -1133,6 +1123,21 @@ def build_feed(articles: list[dict]) -> None:
 
 def build_misc() -> None:
     (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {DOMAIN}/sitemap.xml\n", encoding="utf-8")
+    (SITE / ".htaccess").write_text(
+        """Options -Indexes
+DirectoryIndex index.html
+
+RewriteEngine On
+
+RewriteCond %{THE_REQUEST} /index\\.html [NC]
+RewriteRule ^index\\.html$ / [R=301,L]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
+""",
+        encoding="utf-8",
+    )
     (SITE / "humans.txt").write_text("Verbo Vivo\nConteúdo cristão para reflexão, consolo e formação espiritual.\n", encoding="utf-8")
 
 
