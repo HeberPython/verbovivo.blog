@@ -17,6 +17,7 @@ automation/.env
 _drafts/
 automation/_generated_images/
 automation/_publish_images/
+_manual_output/
 
 # Cache de ferramentas
 .vercel
