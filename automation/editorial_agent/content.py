@@ -4,6 +4,7 @@ import re
 import secrets
 import unicodedata
 from html import escape
+from urllib.parse import urlparse
 
 from .models import ArticleDraft
 
@@ -21,9 +22,94 @@ def paragraphs_from_text(text: str) -> list[str]:
     return blocks
 
 
+def normalize_social_url(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+    if value.startswith("@"):
+        return value
+    parsed = urlparse(value if "://" in value else f"https://{value}")
+    return parsed.geturl() if parsed.netloc else value
+
+
+def extract_submission_metadata(source_text: str) -> tuple[dict, str]:
+    metadata = {"author": "", "socials": {}}
+    body_lines: list[str] = []
+    in_header = True
+    for line in source_text.splitlines():
+        clean = line.strip()
+        if in_header and not clean:
+            in_header = False
+            body_lines.append(line)
+            continue
+        if in_header and ":" in clean:
+            key, value = clean.split(":", 1)
+            key_norm = unicodedata.normalize("NFKD", key).encode("ascii", "ignore").decode("ascii").lower().strip()
+            value = value.strip()
+            if key_norm in {"autor", "author", "nome", "nome do autor"}:
+                metadata["author"] = value
+                continue
+            if key_norm in {"instagram", "facebook", "youtube", "x", "twitter", "linkedin", "site", "website"}:
+                if value:
+                    metadata["socials"][key_norm] = normalize_social_url(value)
+                continue
+        body_lines.append(line)
+    body = "\n".join(body_lines).strip() or source_text.strip()
+    return metadata, body
+
+
+def social_label(name: str) -> str:
+    return {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "youtube": "YouTube",
+        "x": "X",
+        "twitter": "X",
+        "linkedin": "LinkedIn",
+        "site": "Site",
+        "website": "Site",
+    }.get(name.lower(), name.title())
+
+
+def social_icon(name: str) -> str:
+    return {
+        "instagram": "◎",
+        "facebook": "f",
+        "youtube": "▶",
+        "x": "X",
+        "twitter": "X",
+        "linkedin": "in",
+        "site": "↗",
+        "website": "↗",
+    }.get(name.lower(), "↗")
+
+
+def author_socials_html(socials: dict[str, str]) -> str:
+    links = []
+    for name, url in socials.items():
+        if not url:
+            continue
+        href = url
+        display = url
+        if url.startswith("@"):
+            handle = url.lstrip("@")
+            if name == "instagram":
+                href = f"https://instagram.com/{handle}"
+            elif name in {"x", "twitter"}:
+                href = f"https://x.com/{handle}"
+            display = url
+        links.append(
+            f'<a href="{escape(href)}" target="_blank" rel="noopener">'
+            f'<span aria-hidden="true">{escape(social_icon(name))}</span> {escape(social_label(name))} {escape(display)}</a>'
+        )
+    if not links:
+        return ""
+    return '<div class="author-socials" aria-label="Redes sociais do autor">' + "".join(links) + "</div>"
+
+
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
-    """Deterministic fallback until the LLM/image step is connected."""
-    blocks = paragraphs_from_text(source_text)
+    metadata, article_text = extract_submission_metadata(source_text)
+    blocks = paragraphs_from_text(article_text)
     title = subject.strip() or "Nova reflexão"
     selected = blocks[:8]
     body = ["<h2>Reflexão</h2>"]
@@ -37,15 +123,16 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
         token=secrets.token_urlsafe(24),
         sender=sender,
         source_subject=subject,
-        source_text=source_text,
+        source_text=article_text,
         title=title,
         slug=slug,
         excerpt="Uma reflexão cristã preparada para leitura, meditação e fortalecimento da fé.",
         category="Reflexão",
-        author="Pastor Antonio Lemos Filho",
+        author=metadata["author"] or "Autor informado na publicação",
         body_html="\n".join(body),
         image_prompt=f"Imagem editorial cristã, reverente e simbólica para o tema: {title}",
         image_filename=f"{slug}.png",
+        author_socials=metadata["socials"],
     )
 
 
@@ -83,6 +170,7 @@ def render_article_page(draft: ArticleDraft) -> str:
             <h1>{escape(draft.title)}</h1>
             <p class="article-excerpt">{escape(draft.excerpt)}</p>
             <p class="article-meta">Por {escape(draft.author)}</p>
+            {author_socials_html(draft.author_socials)}
           </div>
           {image_html}
         </header>
@@ -97,7 +185,8 @@ def render_article_page(draft: ArticleDraft) -> str:
 
 
 def ready_article_from_email(subject: str, source_text: str, sender: str, image_filename: str = "", image_path: str = "") -> ArticleDraft:
-    blocks = paragraphs_from_text(source_text)
+    metadata, article_text = extract_submission_metadata(source_text)
+    blocks = paragraphs_from_text(article_text)
     title = subject.strip() or (blocks[0][:80] if blocks else "Nova reflexão")
     slug = slugify(title)
     body_blocks: list[str] = []
@@ -116,15 +205,16 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         token=secrets.token_urlsafe(24),
         sender=sender,
         source_subject=subject,
-        source_text=source_text,
+        source_text=article_text,
         title=title,
         slug=slug,
         excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category="Reflexão",
-        author="Pastor Antonio Lemos Filho",
+        author=metadata["author"] or "Autor informado na publicação",
         body_html="\n".join(body_blocks),
         image_prompt="",
         image_filename=image_filename,
+        author_socials=metadata["socials"],
         local_image_path=image_path,
         status="published_direct",
     )

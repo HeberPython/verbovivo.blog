@@ -9,6 +9,50 @@ function esc(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function social_label(string $name): string {
+    return [
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+        'youtube' => 'YouTube',
+        'x' => 'X',
+        'twitter' => 'X',
+        'linkedin' => 'LinkedIn',
+        'site' => 'Site',
+        'website' => 'Site',
+    ][$name] ?? ucfirst($name);
+}
+
+function social_icon(string $name): string {
+    return [
+        'instagram' => '◎',
+        'facebook' => 'f',
+        'youtube' => '▶',
+        'x' => 'X',
+        'twitter' => 'X',
+        'linkedin' => 'in',
+        'site' => '↗',
+        'website' => '↗',
+    ][$name] ?? '↗';
+}
+
+function author_socials_html(array $socials): string {
+    $links = [];
+    foreach ($socials as $name => $url) {
+        $href = (string) $url;
+        $display = (string) $url;
+        if (str_starts_with($href, '@')) {
+            $handle = ltrim($href, '@');
+            if ($name === 'instagram') {
+                $href = 'https://instagram.com/' . $handle;
+            } elseif ($name === 'x' || $name === 'twitter') {
+                $href = 'https://x.com/' . $handle;
+            }
+        }
+        $links[] = '<a href="' . esc($href) . '" target="_blank" rel="noopener"><span aria-hidden="true">' . esc(social_icon((string) $name)) . '</span> ' . esc(social_label((string) $name)) . ' ' . esc($display) . '</a>';
+    }
+    return $links ? '<div class="author-socials" aria-label="Redes sociais do autor">' . implode('', $links) . '</div>' : '';
+}
+
 function token_from_request(): string {
     $token = $_POST['token'] ?? $_GET['token'] ?? '';
     if (!is_string($token) || !preg_match('/^[A-Za-z0-9_-]{20,}$/', $token)) {
@@ -116,6 +160,7 @@ function render_article_page(array $draft): string {
             <h1>' . esc($title) . '</h1>
             <p class="article-excerpt">' . esc($excerpt) . '</p>
             <p class="article-meta">Por ' . esc($author) . '</p>
+            ' . author_socials_html($draft['author_socials'] ?? []) . '
           </div>
           ' . $imageHtml . '
         </header>
@@ -244,7 +289,8 @@ page(
     'Revisão editorial',
     '<p class="eyebrow">Revisão editorial</p>
     <h1>' . esc((string) $draft['title']) . '</h1>
-    <p class="review-meta"><strong>Categoria:</strong> ' . esc((string) $draft['category']) . '<br><strong>Resumo:</strong> ' . esc((string) $draft['excerpt']) . '</p>
+    <p class="review-meta"><strong>Autor:</strong> ' . esc((string) $draft['author']) . '<br><strong>Categoria:</strong> ' . esc((string) $draft['category']) . '<br><strong>Resumo:</strong> ' . esc((string) $draft['excerpt']) . '</p>
+    ' . author_socials_html($draft['author_socials'] ?? []) . '
     ' . $imageHtml . '
     <div class="review-preview article-content">' . (string) $draft['body_html'] . '</div>
     <form class="review-actions" id="aprovar" method="post">

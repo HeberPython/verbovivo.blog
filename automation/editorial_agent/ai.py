@@ -10,7 +10,7 @@ from openai import OpenAI
 from openai import OpenAIError
 
 from .config import settings
-from .content import fallback_refine, slugify
+from .content import extract_submission_metadata, fallback_refine, slugify
 from .models import ArticleDraft
 
 
@@ -31,6 +31,7 @@ Regras:
 
 
 def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDraft:
+    metadata, article_text = extract_submission_metadata(source_text)
     if not settings.openai_api_key:
         return fallback_refine(source_text, subject, sender)
 
@@ -46,7 +47,7 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
                         "Transforme o texto abaixo em artigo reflexivo para o Verbo Vivo. "
                         "Responda somente JSON válido com as chaves: title, category, excerpt, quote, "
                         "sections, image_prompt. sections deve ser uma lista de objetos com heading e paragraphs.\n\n"
-                        f"Assunto do e-mail: {subject}\n\nTexto bruto:\n{source_text}"
+                        f"Assunto do e-mail: {subject}\n\nTexto bruto:\n{article_text}"
                     ),
                 },
             ],
@@ -76,15 +77,16 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         token=secrets.token_urlsafe(24),
         sender=sender,
         source_subject=subject,
-        source_text=source_text,
+        source_text=article_text,
         title=title,
         slug=slug,
         excerpt=data.get("excerpt") or "Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category=data.get("category") or "Reflexão",
-        author="Pastor Antonio Lemos Filho",
+        author=metadata["author"] or "Autor informado na publicação",
         body_html="\n".join(body_parts),
         image_prompt=data.get("image_prompt") or f"Imagem cristã reverente para o tema: {title}",
         image_filename=f"{slug}.png",
+        author_socials=metadata["socials"],
     )
 
 

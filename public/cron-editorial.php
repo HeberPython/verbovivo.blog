@@ -34,6 +34,95 @@ function slugify(string $value): string {
     return $value !== '' ? $value : bin2hex(random_bytes(4));
 }
 
+function key_normalize(string $value): string {
+    $value = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value) ?: $value;
+    return strtolower(trim($value));
+}
+
+function normalize_social_url(string $value): string {
+    $value = trim($value);
+    if ($value === '' || str_starts_with($value, '@')) {
+        return $value;
+    }
+    return preg_match('/^https?:\/\//i', $value) ? $value : 'https://' . $value;
+}
+
+function extract_submission_metadata(string $source): array {
+    $metadata = ['author' => '', 'socials' => []];
+    $body = [];
+    $inHeader = true;
+    foreach (preg_split('/\R/', $source) as $line) {
+        $clean = trim($line);
+        if ($inHeader && $clean === '') {
+            $inHeader = false;
+            $body[] = $line;
+            continue;
+        }
+        if ($inHeader && str_contains($clean, ':')) {
+            [$key, $value] = explode(':', $clean, 2);
+            $key = key_normalize($key);
+            $value = trim($value);
+            if (in_array($key, ['autor', 'author', 'nome', 'nome do autor'], true)) {
+                $metadata['author'] = $value;
+                continue;
+            }
+            if (in_array($key, ['instagram', 'facebook', 'youtube', 'x', 'twitter', 'linkedin', 'site', 'website'], true)) {
+                if ($value !== '') {
+                    $metadata['socials'][$key] = normalize_social_url($value);
+                }
+                continue;
+            }
+        }
+        $body[] = $line;
+    }
+    $article = trim(implode("\n", $body));
+    return [$metadata, $article !== '' ? $article : trim($source)];
+}
+
+function social_label(string $name): string {
+    return [
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+        'youtube' => 'YouTube',
+        'x' => 'X',
+        'twitter' => 'X',
+        'linkedin' => 'LinkedIn',
+        'site' => 'Site',
+        'website' => 'Site',
+    ][$name] ?? ucfirst($name);
+}
+
+function social_icon(string $name): string {
+    return [
+        'instagram' => '◎',
+        'facebook' => 'f',
+        'youtube' => '▶',
+        'x' => 'X',
+        'twitter' => 'X',
+        'linkedin' => 'in',
+        'site' => '↗',
+        'website' => '↗',
+    ][$name] ?? '↗';
+}
+
+function author_socials_html(array $socials): string {
+    $links = [];
+    foreach ($socials as $name => $url) {
+        $href = (string) $url;
+        $display = (string) $url;
+        if (str_starts_with($href, '@')) {
+            $handle = ltrim($href, '@');
+            if ($name === 'instagram') {
+                $href = 'https://instagram.com/' . $handle;
+            } elseif ($name === 'x' || $name === 'twitter') {
+                $href = 'https://x.com/' . $handle;
+            }
+        }
+        $links[] = '<a href="' . esc($href) . '" target="_blank" rel="noopener"><span aria-hidden="true">' . esc(social_icon((string) $name)) . '</span> ' . esc(social_label((string) $name)) . ' ' . esc($display) . '</a>';
+    }
+    return $links ? '<div class="author-socials" aria-label="Redes sociais do autor">' . implode('', $links) . '</div>' : '';
+}
+
 function openai_json(array $config, array $payload): array {
     $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $headers = [
@@ -139,15 +228,16 @@ function email_preview(array $draft): string {
     $reviewUrl = DOMAIN . '/revisao.php?token=' . rawurlencode((string) $draft['token']);
     $image = (string) ($draft['image_filename'] ?? '');
     $imageHtml = $image !== '' ? '<img src="' . DOMAIN . '/images/articles/' . esc($image) . '" alt="' . esc((string) $draft['title']) . '" style="display:block;width:100%;max-width:720px;border:1px solid #d8d0bf;margin:18px 0;" />' : '';
-    return '<div style="background:#fbfaf6;color:#17201b;font-family:Arial,Helvetica,sans-serif;padding:24px;"><div style="max-width:760px;margin:0 auto;background:#fffdf8;border:1px solid #d8d0bf;padding:24px;"><p style="color:#4f7059;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px;">Verbo Vivo</p><h1 style="font-family:Georgia,serif;font-size:34px;line-height:1.05;margin:0 0 12px;">' . esc((string) $draft['title']) . '</h1><p style="color:#59645c;font-size:16px;line-height:1.6;margin:0 0 14px;">' . esc((string) $draft['excerpt']) . '</p><p style="color:#a9792e;font-weight:800;margin:0 0 18px;">Por ' . esc((string) $draft['author']) . '</p>' . $imageHtml . '<div style="font-family:Georgia,serif;color:#2d3831;font-size:17px;line-height:1.75;">' . (string) $draft['body_html'] . '</div><div style="border-top:1px solid #d8d0bf;margin-top:26px;padding-top:20px;"><a href="' . $reviewUrl . '#aprovar" style="display:inline-block;background:#4f7059;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;margin:0 10px 10px 0;">Aprovar e publicar</a><a href="' . $reviewUrl . '#corrigir" style="display:inline-block;background:#a9792e;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;">Corrigir antes de publicar</a></div></div></div>';
+    return '<div style="background:#fbfaf6;color:#17201b;font-family:Arial,Helvetica,sans-serif;padding:24px;"><div style="max-width:760px;margin:0 auto;background:#fffdf8;border:1px solid #d8d0bf;padding:24px;"><p style="color:#4f7059;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px;">Verbo Vivo</p><h1 style="font-family:Georgia,serif;font-size:34px;line-height:1.05;margin:0 0 12px;">' . esc((string) $draft['title']) . '</h1><p style="color:#59645c;font-size:16px;line-height:1.6;margin:0 0 14px;">' . esc((string) $draft['excerpt']) . '</p><p style="color:#a9792e;font-weight:800;margin:0 0 8px;">Por ' . esc((string) $draft['author']) . '</p>' . author_socials_html($draft['author_socials'] ?? []) . $imageHtml . '<div style="font-family:Georgia,serif;color:#2d3831;font-size:17px;line-height:1.75;">' . (string) $draft['body_html'] . '</div><div style="border-top:1px solid #d8d0bf;margin-top:26px;padding-top:20px;"><a href="' . $reviewUrl . '#aprovar" style="display:inline-block;background:#4f7059;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;margin:0 10px 10px 0;">Aprovar e publicar</a><a href="' . $reviewUrl . '#corrigir" style="display:inline-block;background:#a9792e;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;">Corrigir antes de publicar</a></div></div></div>';
 }
 
 function refine_article(array $config, string $source, string $subject, string $sender): array {
+    [$metadata, $articleText] = extract_submission_metadata($source);
     $response = openai_json($config, [
         'model' => 'gpt-4.1-mini',
         'messages' => [
             ['role' => 'system', 'content' => 'Você é o editor cristão do blog Verbo Vivo. Transforme textos brutos humanos em reflexão curta, acolhedora, inteligível e biblicamente coerente. Não mencione IA ou automação. Escreva em português do Brasil.'],
-            ['role' => 'user', 'content' => "Responda somente JSON válido com as chaves title, category, excerpt, quote, sections, image_prompt. sections deve ser lista de objetos com heading e paragraphs.\n\nAssunto: $subject\n\nTexto:\n$source"],
+            ['role' => 'user', 'content' => "Responda somente JSON válido com as chaves title, category, excerpt, quote, sections, image_prompt. sections deve ser lista de objetos com heading e paragraphs.\n\nAssunto: $subject\n\nTexto:\n$articleText"],
         ],
         'response_format' => ['type' => 'json_object'],
         'temperature' => 0.7,
@@ -174,12 +264,13 @@ function refine_article(array $config, string $source, string $subject, string $
         'token' => rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '='),
         'sender' => $sender,
         'source_subject' => $subject,
-        'source_text' => $source,
+        'source_text' => $articleText,
         'title' => $title,
         'slug' => $slug,
         'excerpt' => (string) ($data['excerpt'] ?? 'Uma reflexão cristã para fortalecer a fé na vida cotidiana.'),
         'category' => (string) ($data['category'] ?? 'Reflexão'),
-        'author' => 'Pastor Antonio Lemos Filho',
+        'author' => $metadata['author'] ?: 'Autor informado na publicação',
+        'author_socials' => $metadata['socials'],
         'body_html' => $body,
         'image_prompt' => (string) ($data['image_prompt'] ?? $title),
         'image_filename' => $slug . '.png',

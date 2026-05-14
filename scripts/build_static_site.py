@@ -146,9 +146,9 @@ STATIC_PAGES = {
             ("Compromisso", [
                 "O Verbo Vivo não substitui acompanhamento pastoral, aconselhamento profissional ou cuidado médico quando eles forem necessários. Nosso papel é oferecer conteúdo reflexivo e edificante.",
             ]),
-            ("Sobre o Autor das reflexões", [
-                "As reflexões publicadas neste espaço são de autoria do Pastor Antonio Lemos Filho.",
-                "Em breve, esta página receberá uma apresentação mais completa sobre sua trajetória, chamado, ministério e contribuição para a edificação da fé cristã.",
+            ("Sobre os autores das reflexões", [
+                "As reflexões publicadas no Verbo Vivo podem ser escritas por diferentes autores cristãos, sempre identificados no próprio artigo.",
+                "Quando o autor informar redes sociais ou canais públicos, esses links poderão aparecer junto à autoria da publicação, para que o leitor reconheça a fonte humana do texto.",
             ]),
         ],
     },
@@ -742,6 +742,35 @@ h3 {
   color: var(--gold);
   font-weight: 800;
   margin-top: 22px;
+}
+
+.author-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.author-socials a {
+  align-items: center;
+  border: 1px solid var(--line);
+  color: var(--sage);
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 800;
+  gap: 6px;
+  padding: 7px 10px;
+}
+
+.author-socials span {
+  align-items: center;
+  background: var(--sage);
+  color: var(--white);
+  display: inline-flex;
+  font-size: 0.78rem;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
 }
 
 .article-hero img {

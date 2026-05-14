@@ -7,6 +7,7 @@ from html import escape
 from imap_tools import AND, MailBox
 
 from .config import settings
+from .content import author_socials_html
 from .models import ArticleDraft
 
 
@@ -44,7 +45,8 @@ def email_article_preview(draft: ArticleDraft, review_url: str) -> str:
           {escape(draft.title)}
         </h1>
         <p style="color:#59645c;font-size:16px;line-height:1.6;margin:0 0 14px;">{escape(draft.excerpt)}</p>
-        <p style="color:#a9792e;font-weight:800;margin:0 0 18px;">Por {escape(draft.author)}</p>
+        <p style="color:#a9792e;font-weight:800;margin:0 0 8px;">Por {escape(draft.author)}</p>
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;margin:0 0 18px;">{author_socials_html(draft.author_socials)}</div>
         {image_html}
         <div style="font-family:Georgia,'Times New Roman',serif;color:#2d3831;font-size:17px;line-height:1.75;">
           {draft.body_html}

@@ -247,6 +247,35 @@ h3 {
   margin-top: 22px;
 }
 
+.author-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.author-socials a {
+  align-items: center;
+  border: 1px solid var(--line);
+  color: var(--sage);
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 800;
+  gap: 6px;
+  padding: 7px 10px;
+}
+
+.author-socials span {
+  align-items: center;
+  background: var(--sage);
+  color: var(--white);
+  display: inline-flex;
+  font-size: 0.78rem;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
 .article-hero img {
   aspect-ratio: 16 / 10;
   border: 1px solid var(--line);
