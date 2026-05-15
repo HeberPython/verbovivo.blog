@@ -236,7 +236,7 @@ function refine_article(array $config, string $source, string $subject, string $
     $response = openai_json($config, [
         'model' => 'gpt-4.1-mini',
         'messages' => [
-            ['role' => 'system', 'content' => 'Você é o editor cristão do blog Verbo Vivo. Transforme textos brutos humanos em reflexão curta, acolhedora, inteligível e biblicamente coerente. Não mencione IA ou automação. Escreva em português do Brasil.'],
+            ['role' => 'system', 'content' => 'Você é o editor cristão do blog Verbo Vivo. Transforme textos brutos humanos em reflexão curta, acolhedora, inteligível e biblicamente coerente. Não mencione IA ou automação. Escreva em português do Brasil. Escreva referências bíblicas por extenso, como Mateus, capítulo 21, versículo 17, nunca no formato 21:17.'],
             ['role' => 'user', 'content' => "Responda somente JSON válido com as chaves title, category, excerpt, quote, sections, image_prompt. sections deve ser lista de objetos com heading e paragraphs.\n\nAssunto: $subject\n\nTexto:\n$articleText"],
         ],
         'response_format' => ['type' => 'json_object'],

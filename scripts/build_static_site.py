@@ -25,7 +25,7 @@ ARTICLES = [
         "image": "depois-da-festa.png",
         "alt": "Rua antiga vazia ao anoitecer com ramos no chão e uma casa iluminada ao fundo",
         "excerpt": "Uma reflexão sobre acolher Jesus depois que os aplausos terminam e a vida comum recomeça.",
-        "quote": "E, deixando-os, saiu da cidade para Betânia, e ali passou a noite. Mateus 21:17",
+        "quote": "E, deixando-os, saiu da cidade para Betânia, e ali passou a noite. Mateus, capítulo 21, versículo 17.",
         "sections": [
             (
                 "Quando os aplausos passam",
@@ -61,7 +61,7 @@ ARTICLES = [
         "image": "feitos-para-brilhar.png",
         "alt": "Bíblia aberta sobre mesa sob céu estrelado antes do amanhecer",
         "excerpt": "Uma meditação em Filipenses 2 sobre uma fé que abandona a murmuração e se apega à Palavra da Vida.",
-        "quote": "Façam tudo sem murmurações nem discussões... apegando-se firmemente à palavra da vida. Filipenses 2:14-16",
+        "quote": "Façam tudo sem murmurações nem discussões... apegando-se firmemente à palavra da vida. Filipenses, capítulo 2, versículos 14 a 16.",
         "sections": [
             (
                 "Uma luz no meio da geração",
@@ -97,7 +97,7 @@ ARTICLES = [
         "image": "coracao-desordenado.png",
         "alt": "Mesa de estudo com Bíblia aberta, papéis e vaso de barro rachado derramando água",
         "excerpt": "Uma reflexão sobre guardar o coração, ordenar os afetos e permitir que Deus cure a vida por dentro.",
-        "quote": "Sobre tudo o que se deve guardar, guarda o coração, porque dele procedem as fontes da vida. Provérbios 4:23",
+        "quote": "Sobre tudo o que se deve guardar, guarda o coração, porque dele procedem as fontes da vida. Provérbios, capítulo 4, versículo 23.",
         "sections": [
             (
                 "A vida começa por dentro",
@@ -297,10 +297,14 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
 def listen_controls() -> str:
     return """
             <div class="listen-tools" aria-label="Narração do artigo">
-              <button type="button" data-listen-action="play">Ouvir artigo</button>
-              <button type="button" data-listen-action="pause">Pausar</button>
-              <button type="button" data-listen-action="stop">Parar</button>
-              <span data-listen-status>Recurso de áudio do navegador.</span>
+              <button class="listen-button" type="button" data-listen-toggle aria-label="Ouvir artigo" title="Ouvir artigo">
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+                  <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"></path>
+                  <path d="M16 9.5c1.1 1.4 1.1 3.6 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  <path d="M18.8 7c2.3 2.8 2.3 7.2 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+              </button>
+              <span data-listen-status>Clique para ouvir o artigo.</span>
             </div>
 """
 
@@ -313,38 +317,48 @@ def listen_script() -> str:
         const article = document.querySelector(".article-content");
         if (!controls || !article) return;
         const status = controls.querySelector("[data-listen-status]");
-        const buttons = controls.querySelectorAll("button");
+        const button = controls.querySelector("[data-listen-toggle]");
         const synthesis = window.speechSynthesis;
         let utterance = null;
         const setStatus = (message) => { if (status) status.textContent = message; };
+        const setButton = (speaking) => {
+          if (!button) return;
+          button.classList.toggle("is-speaking", speaking);
+          button.setAttribute("aria-label", speaking ? "Pausar narração" : "Ouvir artigo");
+          button.setAttribute("title", speaking ? "Pausar narração" : "Ouvir artigo");
+        };
         if (!("speechSynthesis" in window)) {
-          buttons.forEach((button) => { button.disabled = true; });
+          if (button) button.disabled = true;
           setStatus("Narração indisponível neste navegador.");
           return;
         }
-        const articleText = () => article.innerText.replace(/\\s+/g, " ").trim();
+        const expandBibleReferences = (text) => text.replace(
+          /\\b([1-3]?\\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÁÉÍÓÚÂÊÔÃÕÇáéíóúâêôãõç]+)\\s+(\\d{1,3}):(\\d{1,3})(?:-(\\d{1,3}))?/g,
+          (_, book, chapter, verse, endVerse) => {
+            const cleanBook = book.replace(/\\s+/g, " ").trim();
+            return endVerse
+              ? `${cleanBook}, capítulo ${chapter}, versículos ${verse} a ${endVerse}`
+              : `${cleanBook}, capítulo ${chapter}, versículo ${verse}`;
+          }
+        );
+        const articleText = () => expandBibleReferences(article.innerText).replace(/\\s+/g, " ").trim();
         const stop = () => {
           synthesis.cancel();
           utterance = null;
+          setButton(false);
           setStatus("Narração parada.");
         };
         controls.addEventListener("click", (event) => {
-          const button = event.target.closest("button[data-listen-action]");
-          if (!button) return;
-          const action = button.dataset.listenAction;
-          if (action === "stop") {
-            stop();
-            return;
-          }
-          if (action === "pause") {
-            if (synthesis.speaking && !synthesis.paused) {
-              synthesis.pause();
-              setStatus("Narração pausada.");
-            }
+          if (!event.target.closest("[data-listen-toggle]")) return;
+          if (synthesis.speaking && !synthesis.paused) {
+            synthesis.pause();
+            setButton(false);
+            setStatus("Narração pausada.");
             return;
           }
           if (synthesis.paused) {
             synthesis.resume();
+            setButton(true);
             setStatus("Narrando artigo.");
             return;
           }
@@ -352,9 +366,10 @@ def listen_script() -> str:
           utterance = new SpeechSynthesisUtterance(articleText());
           utterance.lang = "pt-BR";
           utterance.rate = 0.95;
-          utterance.onend = () => setStatus("Narração concluída.");
-          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          utterance.onend = () => { setButton(false); setStatus("Narração concluída."); };
+          utterance.onerror = () => { setButton(false); setStatus("Não foi possível narrar este artigo."); };
           synthesis.speak(utterance);
+          setButton(true);
           setStatus("Narrando artigo.");
         });
         window.addEventListener("beforeunload", () => synthesis.cancel());
@@ -852,21 +867,26 @@ h3 {
   margin-top: 18px;
 }
 
-.listen-tools button {
+.listen-button {
+  align-items: center;
   background: var(--sage);
   border: 0;
+  border-radius: 999px;
   color: var(--white);
   cursor: pointer;
+  display: inline-flex;
   font-weight: 800;
-  padding: 10px 13px;
+  height: 46px;
+  justify-content: center;
+  padding: 0;
+  width: 46px;
 }
 
-.listen-tools button[data-listen-action="pause"],
-.listen-tools button[data-listen-action="stop"] {
+.listen-button.is-speaking {
   background: var(--ink);
 }
 
-.listen-tools button:disabled {
+.listen-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }

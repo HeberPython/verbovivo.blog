@@ -27,6 +27,7 @@ Regras:
 - Escreva em português do Brasil.
 - O tom deve ser pastoral, claro, reverente e acessível.
 - Compacte o texto bruto em uma reflexão publicável, sem perder o contexto bíblico central.
+- Escreva referências bíblicas por extenso: "Mateus, capítulo 21, versículo 17" ou "Filipenses, capítulo 2, versículos 14 a 16", nunca no formato "21:17".
 """
 
 
