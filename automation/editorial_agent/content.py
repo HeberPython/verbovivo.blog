@@ -107,6 +107,75 @@ def author_socials_html(socials: dict[str, str]) -> str:
     return '<div class="author-socials" aria-label="Redes sociais do autor">' + "".join(links) + "</div>"
 
 
+def listen_controls() -> str:
+    return """
+            <div class="listen-tools" aria-label="Narração do artigo">
+              <button type="button" data-listen-action="play">Ouvir artigo</button>
+              <button type="button" data-listen-action="pause">Pausar</button>
+              <button type="button" data-listen-action="stop">Parar</button>
+              <span data-listen-status>Recurso de áudio do navegador.</span>
+            </div>
+"""
+
+
+def listen_script() -> str:
+    return """
+    <script>
+      (() => {
+        const controls = document.querySelector(".listen-tools");
+        const article = document.querySelector(".article-content");
+        if (!controls || !article) return;
+        const status = controls.querySelector("[data-listen-status]");
+        const buttons = controls.querySelectorAll("button");
+        const synthesis = window.speechSynthesis;
+        let utterance = null;
+        const setStatus = (message) => { if (status) status.textContent = message; };
+        if (!("speechSynthesis" in window)) {
+          buttons.forEach((button) => { button.disabled = true; });
+          setStatus("Narração indisponível neste navegador.");
+          return;
+        }
+        const articleText = () => article.innerText.replace(/\\s+/g, " ").trim();
+        const stop = () => {
+          synthesis.cancel();
+          utterance = null;
+          setStatus("Narração parada.");
+        };
+        controls.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-listen-action]");
+          if (!button) return;
+          const action = button.dataset.listenAction;
+          if (action === "stop") {
+            stop();
+            return;
+          }
+          if (action === "pause") {
+            if (synthesis.speaking && !synthesis.paused) {
+              synthesis.pause();
+              setStatus("Narração pausada.");
+            }
+            return;
+          }
+          if (synthesis.paused) {
+            synthesis.resume();
+            setStatus("Narrando artigo.");
+            return;
+          }
+          stop();
+          utterance = new SpeechSynthesisUtterance(articleText());
+          utterance.lang = "pt-BR";
+          utterance.rate = 0.95;
+          utterance.onend = () => setStatus("Narração concluída.");
+          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          synthesis.speak(utterance);
+          setStatus("Narrando artigo.");
+        });
+        window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
+"""
+
+
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     blocks = paragraphs_from_text(article_text)
@@ -171,6 +240,7 @@ def render_article_page(draft: ArticleDraft) -> str:
             <p class="article-excerpt">{escape(draft.excerpt)}</p>
             <p class="article-meta">Por {escape(draft.author)}</p>
             {author_socials_html(draft.author_socials)}
+            {listen_controls()}
           </div>
           {image_html}
         </header>
@@ -179,6 +249,7 @@ def render_article_page(draft: ArticleDraft) -> str:
         </div>
       </article>
     </main>
+    {listen_script()}
   </body>
 </html>
 """

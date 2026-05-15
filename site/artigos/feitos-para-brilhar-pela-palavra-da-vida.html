@@ -41,6 +41,14 @@
             <h1>Feitos para brilhar pela Palavra da Vida</h1>
             <p class="article-excerpt">Uma meditação em Filipenses 2 sobre uma fé que abandona a murmuração e se apega à Palavra da Vida.</p>
             <p class="article-meta">Por Pastor Antonio Lemos Filho · 2026-05-10</p>
+            
+            <div class="listen-tools" aria-label="Narração do artigo">
+              <button type="button" data-listen-action="play">Ouvir artigo</button>
+              <button type="button" data-listen-action="pause">Pausar</button>
+              <button type="button" data-listen-action="stop">Parar</button>
+              <span data-listen-status>Recurso de áudio do navegador.</span>
+            </div>
+
           </div>
           <img src="../images/articles/feitos-para-brilhar.png" alt="Bíblia aberta sobre mesa sob céu estrelado antes do amanhecer" />
         </header>
@@ -71,5 +79,60 @@
         <a href="../feed.xml">RSS</a>
       </div>
     </footer>
+    
+    <script>
+      (() => {
+        const controls = document.querySelector(".listen-tools");
+        const article = document.querySelector(".article-content");
+        if (!controls || !article) return;
+        const status = controls.querySelector("[data-listen-status]");
+        const buttons = controls.querySelectorAll("button");
+        const synthesis = window.speechSynthesis;
+        let utterance = null;
+        const setStatus = (message) => { if (status) status.textContent = message; };
+        if (!("speechSynthesis" in window)) {
+          buttons.forEach((button) => { button.disabled = true; });
+          setStatus("Narração indisponível neste navegador.");
+          return;
+        }
+        const articleText = () => article.innerText.replace(/\s+/g, " ").trim();
+        const stop = () => {
+          synthesis.cancel();
+          utterance = null;
+          setStatus("Narração parada.");
+        };
+        controls.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-listen-action]");
+          if (!button) return;
+          const action = button.dataset.listenAction;
+          if (action === "stop") {
+            stop();
+            return;
+          }
+          if (action === "pause") {
+            if (synthesis.speaking && !synthesis.paused) {
+              synthesis.pause();
+              setStatus("Narração pausada.");
+            }
+            return;
+          }
+          if (synthesis.paused) {
+            synthesis.resume();
+            setStatus("Narrando artigo.");
+            return;
+          }
+          stop();
+          utterance = new SpeechSynthesisUtterance(articleText());
+          utterance.lang = "pt-BR";
+          utterance.rate = 0.95;
+          utterance.onend = () => setStatus("Narração concluída.");
+          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          synthesis.speak(utterance);
+          setStatus("Narrando artigo.");
+        });
+        window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
+
   </body>
 </html>

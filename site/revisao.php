@@ -53,6 +53,70 @@ function author_socials_html(array $socials): string {
     return $links ? '<div class="author-socials" aria-label="Redes sociais do autor">' . implode('', $links) . '</div>' : '';
 }
 
+function listen_controls(): string {
+    return '
+            <div class="listen-tools" aria-label="Narração do artigo">
+              <button type="button" data-listen-action="play">Ouvir artigo</button>
+              <button type="button" data-listen-action="pause">Pausar</button>
+              <button type="button" data-listen-action="stop">Parar</button>
+              <span data-listen-status>Recurso de áudio do navegador.</span>
+            </div>';
+}
+
+function listen_script(): string {
+    return '
+    <script>
+      (() => {
+        const controls = document.querySelector(".listen-tools");
+        const article = document.querySelector(".article-content");
+        if (!controls || !article) return;
+        const status = controls.querySelector("[data-listen-status]");
+        const buttons = controls.querySelectorAll("button");
+        const synthesis = window.speechSynthesis;
+        let utterance = null;
+        const setStatus = (message) => { if (status) status.textContent = message; };
+        if (!("speechSynthesis" in window)) {
+          buttons.forEach((button) => { button.disabled = true; });
+          setStatus("Narração indisponível neste navegador.");
+          return;
+        }
+        const articleText = () => article.innerText.replace(/\s+/g, " ").trim();
+        const stop = () => {
+          synthesis.cancel();
+          utterance = null;
+          setStatus("Narração parada.");
+        };
+        controls.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-listen-action]");
+          if (!button) return;
+          const action = button.dataset.listenAction;
+          if (action === "stop") { stop(); return; }
+          if (action === "pause") {
+            if (synthesis.speaking && !synthesis.paused) {
+              synthesis.pause();
+              setStatus("Narração pausada.");
+            }
+            return;
+          }
+          if (synthesis.paused) {
+            synthesis.resume();
+            setStatus("Narrando artigo.");
+            return;
+          }
+          stop();
+          utterance = new SpeechSynthesisUtterance(articleText());
+          utterance.lang = "pt-BR";
+          utterance.rate = 0.95;
+          utterance.onend = () => setStatus("Narração concluída.");
+          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          synthesis.speak(utterance);
+          setStatus("Narrando artigo.");
+        });
+        window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>';
+}
+
 function token_from_request(): string {
     $token = $_POST['token'] ?? $_GET['token'] ?? '';
     if (!is_string($token) || !preg_match('/^[A-Za-z0-9_-]{20,}$/', $token)) {
@@ -161,12 +225,14 @@ function render_article_page(array $draft): string {
             <p class="article-excerpt">' . esc($excerpt) . '</p>
             <p class="article-meta">Por ' . esc($author) . '</p>
             ' . author_socials_html($draft['author_socials'] ?? []) . '
+            ' . listen_controls() . '
           </div>
           ' . $imageHtml . '
         </header>
         <div class="article-content">' . $bodyHtml . '</div>
       </article>
     </main>
+    ' . listen_script() . '
   </body>
 </html>';
 }

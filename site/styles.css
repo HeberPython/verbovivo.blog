@@ -276,6 +276,38 @@ h3 {
   width: 20px;
 }
 
+.listen-tools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.listen-tools button {
+  background: var(--sage);
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 10px 13px;
+}
+
+.listen-tools button[data-listen-action="pause"],
+.listen-tools button[data-listen-action="stop"] {
+  background: var(--ink);
+}
+
+.listen-tools button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.listen-tools span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .article-hero img {
   aspect-ratio: 16 / 10;
   border: 1px solid var(--line);

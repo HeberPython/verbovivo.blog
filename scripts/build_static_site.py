@@ -288,8 +288,78 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
         <a href="{prefix}feed.xml">RSS</a>
       </div>
     </footer>
+    {listen_script()}
   </body>
 </html>
+"""
+
+
+def listen_controls() -> str:
+    return """
+            <div class="listen-tools" aria-label="Narração do artigo">
+              <button type="button" data-listen-action="play">Ouvir artigo</button>
+              <button type="button" data-listen-action="pause">Pausar</button>
+              <button type="button" data-listen-action="stop">Parar</button>
+              <span data-listen-status>Recurso de áudio do navegador.</span>
+            </div>
+"""
+
+
+def listen_script() -> str:
+    return """
+    <script>
+      (() => {
+        const controls = document.querySelector(".listen-tools");
+        const article = document.querySelector(".article-content");
+        if (!controls || !article) return;
+        const status = controls.querySelector("[data-listen-status]");
+        const buttons = controls.querySelectorAll("button");
+        const synthesis = window.speechSynthesis;
+        let utterance = null;
+        const setStatus = (message) => { if (status) status.textContent = message; };
+        if (!("speechSynthesis" in window)) {
+          buttons.forEach((button) => { button.disabled = true; });
+          setStatus("Narração indisponível neste navegador.");
+          return;
+        }
+        const articleText = () => article.innerText.replace(/\\s+/g, " ").trim();
+        const stop = () => {
+          synthesis.cancel();
+          utterance = null;
+          setStatus("Narração parada.");
+        };
+        controls.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-listen-action]");
+          if (!button) return;
+          const action = button.dataset.listenAction;
+          if (action === "stop") {
+            stop();
+            return;
+          }
+          if (action === "pause") {
+            if (synthesis.speaking && !synthesis.paused) {
+              synthesis.pause();
+              setStatus("Narração pausada.");
+            }
+            return;
+          }
+          if (synthesis.paused) {
+            synthesis.resume();
+            setStatus("Narrando artigo.");
+            return;
+          }
+          stop();
+          utterance = new SpeechSynthesisUtterance(articleText());
+          utterance.lang = "pt-BR";
+          utterance.rate = 0.95;
+          utterance.onend = () => setStatus("Narração concluída.");
+          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          synthesis.speak(utterance);
+          setStatus("Narrando artigo.");
+        });
+        window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
 """
 
 
@@ -377,6 +447,7 @@ def build_article(article: dict) -> None:
             <h1>{esc(article['title'])}</h1>
             <p class="article-excerpt">{esc(article['excerpt'])}</p>
             <p class="article-meta">Por {esc(article['author'])} · {article['date']}</p>
+            {listen_controls()}
           </div>
           <img src="../images/articles/{article['image']}" alt="{esc(article['alt'])}" />
         </header>
@@ -771,6 +842,38 @@ h3 {
   height: 20px;
   justify-content: center;
   width: 20px;
+}
+
+.listen-tools {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.listen-tools button {
+  background: var(--sage);
+  border: 0;
+  color: var(--white);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 10px 13px;
+}
+
+.listen-tools button[data-listen-action="pause"],
+.listen-tools button[data-listen-action="stop"] {
+  background: var(--ink);
+}
+
+.listen-tools button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.listen-tools span {
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .article-hero img {

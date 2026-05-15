@@ -103,5 +103,60 @@
         <a href="feed.xml">RSS</a>
       </div>
     </footer>
+    
+    <script>
+      (() => {
+        const controls = document.querySelector(".listen-tools");
+        const article = document.querySelector(".article-content");
+        if (!controls || !article) return;
+        const status = controls.querySelector("[data-listen-status]");
+        const buttons = controls.querySelectorAll("button");
+        const synthesis = window.speechSynthesis;
+        let utterance = null;
+        const setStatus = (message) => { if (status) status.textContent = message; };
+        if (!("speechSynthesis" in window)) {
+          buttons.forEach((button) => { button.disabled = true; });
+          setStatus("Narração indisponível neste navegador.");
+          return;
+        }
+        const articleText = () => article.innerText.replace(/\s+/g, " ").trim();
+        const stop = () => {
+          synthesis.cancel();
+          utterance = null;
+          setStatus("Narração parada.");
+        };
+        controls.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-listen-action]");
+          if (!button) return;
+          const action = button.dataset.listenAction;
+          if (action === "stop") {
+            stop();
+            return;
+          }
+          if (action === "pause") {
+            if (synthesis.speaking && !synthesis.paused) {
+              synthesis.pause();
+              setStatus("Narração pausada.");
+            }
+            return;
+          }
+          if (synthesis.paused) {
+            synthesis.resume();
+            setStatus("Narrando artigo.");
+            return;
+          }
+          stop();
+          utterance = new SpeechSynthesisUtterance(articleText());
+          utterance.lang = "pt-BR";
+          utterance.rate = 0.95;
+          utterance.onend = () => setStatus("Narração concluída.");
+          utterance.onerror = () => setStatus("Não foi possível narrar este artigo.");
+          synthesis.speak(utterance);
+          setStatus("Narrando artigo.");
+        });
+        window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
+
   </body>
 </html>
