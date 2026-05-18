@@ -854,23 +854,25 @@ h3 {
   align-items: center;
   color: #2d3831;
   display: inline-flex;
-  font-size: 0.94rem;
-  font-weight: 800;
-  gap: 8px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
 }
 
 .author-socials a:hover {
   color: var(--gold);
 }
 
+.author-socials a span {
+  display: none;
+}
+
 .social-icon {
   display: inline-block;
   flex: 0 0 auto;
   fill: currentColor;
-  height: 20px;
-  width: 20px;
+  height: 22px;
+  width: 22px;
 }
 
 .social-icon--instagram {

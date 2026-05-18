@@ -119,7 +119,8 @@ function author_socials_html(array $socials): string {
                 $href = 'https://x.com/' . $handle;
             }
         }
-        $links[] = '<a href="' . esc($href) . '" target="_blank" rel="noopener">' . social_icon((string) $name) . '<span>' . esc(social_label((string) $name)) . ' ' . esc($display) . '</span></a>';
+        $label = trim(social_label((string) $name) . ' ' . $display);
+        $links[] = '<a href="' . esc($href) . '" target="_blank" rel="noopener" aria-label="' . esc($label) . '" title="' . esc($label) . '">' . social_icon((string) $name) . '</a>';
     }
     return $links ? '<div class="author-socials" aria-label="Redes sociais do autor">' . implode('', $links) . '</div>' : '';
 }

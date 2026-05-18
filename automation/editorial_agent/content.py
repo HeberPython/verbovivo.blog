@@ -99,9 +99,10 @@ def author_socials_html(socials: dict[str, str]) -> str:
             elif name in {"x", "twitter"}:
                 href = f"https://x.com/{handle}"
             display = url
+        label = f"{social_label(name)} {display}".strip()
         links.append(
-            f'<a href="{escape(href)}" target="_blank" rel="noopener">'
-            f'{social_icon(name)}<span>{escape(social_label(name))} {escape(display)}</span></a>'
+            f'<a href="{escape(href)}" target="_blank" rel="noopener" '
+            f'aria-label="{escape(label)}" title="{escape(label)}">{social_icon(name)}</a>'
         )
     if not links:
         return ""
