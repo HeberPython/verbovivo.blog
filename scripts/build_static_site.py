@@ -843,10 +843,10 @@ h3 {
 }
 
 .author-socials {
-  align-items: flex-start;
-  display: grid;
-  gap: 7px;
-  justify-items: start;
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 12px;
 }
 
