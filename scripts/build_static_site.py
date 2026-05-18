@@ -17,6 +17,18 @@ DOMAIN = "https://verbovivo.blog"
 
 ARTICLES = [
     {
+        "title": "Descanso: Resistência Espiritual e Comunhão com Deus",
+        "slug": "descanso-resistencia-espiritual-e-comunhao-com-deus",
+        "category": "Reflexão Cristã",
+        "date": "2026-05-17",
+        "author": "Heber Rosa",
+        "image": "descanso-resistencia-espiritual-e-comunhao-com-deus.png",
+        "alt": "Campo ao pôr do sol com uma cruz ao lado de um caminho",
+        "excerpt": "O descanso não é apenas cessar do trabalho, mas um convite divino para confiar, reorientar o coração e encontrar refrigério na presença do Senhor. Inspirado no relato da criação e na oferta de Cristo, este descanso é resistência espiritual diante da cultura da produtividade incessante.",
+        "quote": "E havendo Deus acabado no dia sétimo a obra que fizera, descansou no sétimo dia de toda a sua obra, que tinha feito. Gênesis, capítulo 2, versículos 2 e 3.",
+        "sections": [],
+    },
+    {
         "title": "Depois da Festa: onde ficou Jesus?",
         "slug": "depois-da-festa-onde-ficou-jesus",
         "category": "Vida Cristã",
@@ -840,7 +852,7 @@ h3 {
 
 .author-socials a {
   align-items: center;
-  color: var(--sage);
+  color: #2d3831;
   display: inline-flex;
   font-size: 0.94rem;
   font-weight: 800;
@@ -849,17 +861,40 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-.author-socials span {
-  align-items: center;
-  background: var(--sage);
-  color: var(--white);
-  display: inline-flex;
+.author-socials a:hover {
+  color: var(--gold);
+}
+
+.social-icon {
+  display: inline-block;
   flex: 0 0 auto;
-  font-size: 0.72rem;
-  font-weight: 900;
-  height: 18px;
-  justify-content: center;
-  width: 18px;
+  fill: currentColor;
+  height: 20px;
+  width: 20px;
+}
+
+.social-icon--instagram {
+  color: #E4405F;
+}
+
+.social-icon--facebook {
+  color: #1877F2;
+}
+
+.social-icon--youtube {
+  color: #FF0000;
+}
+
+.social-icon--x {
+  color: #000000;
+}
+
+.social-icon--linkedin {
+  color: #0A66C2;
+}
+
+.social-icon--site {
+  color: var(--sage);
 }
 
 .listen-tools {
