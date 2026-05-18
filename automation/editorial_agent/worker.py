@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import argparse
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .ai import generate_cover_image, refine_with_openai
 from .config import settings
@@ -23,17 +26,34 @@ def extract_message_text(message) -> str:
     return "\n\n".join(parts)
 
 
+def standardize_article_image(payload: bytes, path: Path) -> bool:
+    try:
+        with Image.open(BytesIO(payload)) as source:
+            image = ImageOps.exif_transpose(source)
+            image = ImageOps.fit(image, (1600, 1000), method=Image.Resampling.LANCZOS)
+            if image.mode in {"RGBA", "LA"}:
+                background = Image.new("RGB", image.size, (251, 250, 246))
+                background.paste(image, mask=image.getchannel("A"))
+                image = background
+            else:
+                image = image.convert("RGB")
+            image.save(path, format="JPEG", quality=88, optimize=True, progressive=True)
+        return True
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        print(f"Ignored invalid image attachment for direct publish: {exc.__class__.__name__}")
+        return False
+
+
 def save_first_image_attachment(message, slug: str) -> tuple[str, str]:
     output_dir = Path("automation/_publish_images")
     output_dir.mkdir(parents=True, exist_ok=True)
     for attachment in message.attachments:
         name = attachment.filename.lower()
         if name.endswith((".png", ".jpg", ".jpeg", ".webp")):
-            suffix = Path(name).suffix or ".png"
-            filename = f"{slug}{suffix}"
+            filename = f"{slug}.jpg"
             path = output_dir / filename
-            path.write_bytes(attachment.payload)
-            return filename, str(path)
+            if standardize_article_image(attachment.payload, path):
+                return filename, str(path)
     return "", ""
 
 
