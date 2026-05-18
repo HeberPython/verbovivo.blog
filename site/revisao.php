@@ -24,9 +24,9 @@ function social_label(string $name): string {
 
 function social_icon(string $name): string {
     return [
-        'instagram' => '◎',
+        'instagram' => 'IG',
         'facebook' => 'f',
-        'youtube' => '▶',
+        'youtube' => 'YT',
         'x' => 'X',
         'twitter' => 'X',
         'linkedin' => 'in',

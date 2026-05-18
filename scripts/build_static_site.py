@@ -831,21 +831,22 @@ h3 {
 }
 
 .author-socials {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: flex-start;
+  display: grid;
+  gap: 7px;
+  justify-items: start;
   margin-top: 12px;
 }
 
 .author-socials a {
   align-items: center;
-  border: 1px solid var(--line);
   color: var(--sage);
   display: inline-flex;
-  font-size: 0.88rem;
+  font-size: 0.94rem;
   font-weight: 800;
-  gap: 6px;
-  padding: 7px 10px;
+  gap: 8px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .author-socials span {
@@ -853,37 +854,43 @@ h3 {
   background: var(--sage);
   color: var(--white);
   display: inline-flex;
-  font-size: 0.78rem;
-  height: 20px;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 900;
+  height: 18px;
   justify-content: center;
-  width: 20px;
+  width: 18px;
 }
 
 .listen-tools {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .listen-button {
   align-items: center;
-  background: var(--sage);
+  background: transparent;
   border: 0;
-  border-radius: 999px;
-  color: var(--white);
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   font-weight: 800;
-  height: 46px;
+  height: 40px;
   justify-content: center;
   padding: 0;
-  width: 46px;
+  width: 44px;
 }
 
 .listen-button.is-speaking {
-  background: var(--ink);
+  color: var(--gold);
+}
+
+.listen-button svg {
+  height: 34px;
+  width: 34px;
 }
 
 .listen-button:disabled {
@@ -892,8 +899,8 @@ h3 {
 }
 
 .listen-tools span {
-  color: var(--muted);
-  font-size: 0.88rem;
+  color: var(--ink);
+  font-size: 0.95rem;
 }
 
 .article-hero img {

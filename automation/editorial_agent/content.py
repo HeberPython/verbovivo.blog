@@ -73,9 +73,9 @@ def social_label(name: str) -> str:
 
 def social_icon(name: str) -> str:
     return {
-        "instagram": "◎",
+        "instagram": "IG",
         "facebook": "f",
-        "youtube": "▶",
+        "youtube": "YT",
         "x": "X",
         "twitter": "X",
         "linkedin": "in",
