@@ -11,6 +11,7 @@ from .config import settings
 from .content import ready_article_from_email, slugify
 from .mail import send_review_email, unread_messages, unread_publish_messages
 from .publisher import publish_article, upload_review_draft
+from .security import request_authorization_if_needed
 from .store import save_draft
 
 
@@ -66,6 +67,8 @@ def poll_once() -> None:
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
             continue
+        if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
+            continue
         source_text = extract_message_text(message)
         if not source_text.strip():
             continue
@@ -83,6 +86,8 @@ def publish_once() -> None:
     for message in unread_publish_messages():
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
+            continue
+        if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "publicar@verbovivo.blog", str(message.uid)):
             continue
         source_text = extract_message_text(message)
         if not source_text.strip():

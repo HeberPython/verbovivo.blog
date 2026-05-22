@@ -31,7 +31,8 @@ class Settings:
     publish_imap_password: str = os.getenv("PUBLISH_IMAP_PASSWORD", "")
 
     approval_base_url: str = os.getenv("EDITORIAL_APPROVAL_BASE_URL", "http://127.0.0.1:8787")
-    approver_email: str = os.getenv("EDITORIAL_APPROVER_EMAIL", "")
+    approver_email: str = os.getenv("EDITORIAL_APPROVER_EMAIL", "hebergravano@gmail.com")
+    allowed_senders: str = os.getenv("EDITORIAL_ALLOWED_SENDERS", "hebergravano@gmail.com")
 
     ftp_host: str = os.getenv("HOSTINGER_FTP_HOST", "ftp.verbovivo.blog")
     ftp_port: int = int(os.getenv("HOSTINGER_FTP_PORT", "21"))

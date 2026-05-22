@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 const DOMAIN = 'https://verbovivo.blog';
 const DRAFT_DIR = __DIR__ . '/_editorial_drafts';
+const AUTH_DIR = __DIR__ . '/_sender_authorizations';
 const ARTICLE_DIR = __DIR__ . '/artigos';
 const IMAGE_DIR = __DIR__ . '/images/articles';
 const CONFIG_FILE = __DIR__ . '/_private/editorial-config.php';
+const ALLOWLIST_FILE = __DIR__ . '/_private/allowed-senders.json';
+const TEMP_ALLOWLIST_FILE = __DIR__ . '/_private/temporary-sender-authorizations.json';
 
 if (php_sapi_name() !== 'cli') {
     http_response_code(403);
@@ -226,6 +229,110 @@ function smtp_send(array $config, string $to, string $subject, string $html, str
     }
 }
 
+function normalize_email(string $email): string {
+    return strtolower(trim($email));
+}
+
+function json_file_array(string $path): array {
+    if (!is_file($path)) {
+        return [];
+    }
+    $data = json_decode((string) file_get_contents($path), true);
+    return is_array($data) ? $data : [];
+}
+
+function save_json_file(string $path, array $data): void {
+    if (!is_dir(dirname($path))) {
+        mkdir(dirname($path), 0755, true);
+    }
+    file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+}
+
+function configured_allowed_senders(array $config): array {
+    $raw = (string) ($config['allowed_senders'] ?? '');
+    $items = preg_split('/[,;\s]+/', $raw) ?: [];
+    $items[] = (string) ($config['approver_email'] ?? '');
+    $items[] = 'hebergravano@gmail.com';
+    $items = array_map('normalize_email', $items);
+    return array_values(array_unique(array_filter($items)));
+}
+
+function permanent_allowed_senders(array $config): array {
+    $stored = array_map('normalize_email', json_file_array(ALLOWLIST_FILE));
+    return array_values(array_unique(array_merge(configured_allowed_senders($config), $stored)));
+}
+
+function message_key(string $flow, string $from, string $subject, string $messageId): string {
+    return hash('sha256', normalize_email($flow) . '|' . normalize_email($from) . '|' . trim($subject) . '|' . trim($messageId));
+}
+
+function is_message_temporarily_authorized(string $key, string $from): bool {
+    $temporary = json_file_array(TEMP_ALLOWLIST_FILE);
+    $entry = $temporary[$key] ?? null;
+    if (!is_array($entry)) {
+        return false;
+    }
+    if (normalize_email((string) ($entry['sender'] ?? '')) !== normalize_email($from)) {
+        return false;
+    }
+    $expires = strtotime((string) ($entry['expires_at'] ?? ''));
+    return $expires !== false && $expires >= time();
+}
+
+function is_sender_authorized(array $config, string $flow, string $from, string $subject, string $messageId): bool {
+    $sender = normalize_email($from);
+    if (in_array($sender, permanent_allowed_senders($config), true)) {
+        return true;
+    }
+    return is_message_temporarily_authorized(message_key($flow, $from, $subject, $messageId), $from);
+}
+
+function request_sender_authorization(array $config, string $flow, string $from, string $subject, string $messageId): void {
+    $approver = trim((string) ($config['approver_email'] ?? ''));
+    if ($approver === '') {
+        vv_log('Unauthorized sender blocked but approver_email is not configured: ' . $from);
+        return;
+    }
+    if (!is_dir(AUTH_DIR)) {
+        mkdir(AUTH_DIR, 0755, true);
+    }
+    $key = message_key($flow, $from, $subject, $messageId);
+    foreach (glob(AUTH_DIR . '/*.json') ?: [] as $path) {
+        $pending = json_file_array($path);
+        if (($pending['message_key'] ?? '') === $key) {
+            vv_log('Authorization request already pending for ' . $from);
+            return;
+        }
+    }
+    $token = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
+    $payload = [
+        'token' => $token,
+        'message_key' => $key,
+        'flow' => $flow,
+        'sender' => normalize_email($from),
+        'subject' => $subject,
+        'message_id' => $messageId,
+        'created_at' => gmdate(DATE_ATOM),
+    ];
+    save_json_file(AUTH_DIR . '/' . $token . '.json', $payload);
+    $temporaryUrl = DOMAIN . '/autorizar-remetente.php?token=' . rawurlencode($token) . '&mode=temporary';
+    $permanentUrl = DOMAIN . '/autorizar-remetente.php?token=' . rawurlencode($token) . '&mode=permanent';
+    $html = '<div style="font-family:Arial,Helvetica,sans-serif;background:#fbfaf6;color:#17201b;padding:24px;">'
+        . '<div style="max-width:680px;margin:0 auto;background:#fffdf8;border:1px solid #d8d0bf;padding:24px;">'
+        . '<p style="color:#4f7059;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">Verbo Vivo</p>'
+        . '<h1 style="font-family:Georgia,serif;">Autorizar novo remetente?</h1>'
+        . '<p><strong>Remetente:</strong> ' . esc($from) . '</p>'
+        . '<p><strong>Caixa:</strong> ' . esc($flow) . '</p>'
+        . '<p><strong>Assunto:</strong> ' . esc($subject) . '</p>'
+        . '<p>O agente bloqueou este envio porque o remetente ainda nao esta na lista aprovada. Escolha uma autorizacao:</p>'
+        . '<p><a href="' . esc($temporaryUrl) . '" style="display:inline-block;background:#a9792e;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;margin:0 10px 10px 0;">Autorizar somente este artigo</a>'
+        . '<a href="' . esc($permanentUrl) . '" style="display:inline-block;background:#4f7059;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;">Autorizar remetente permanente</a></p>'
+        . '</div></div>';
+    $text = "Autorizar novo remetente?\n\nRemetente: $from\nCaixa: $flow\nAssunto: $subject\n\nTemporario: $temporaryUrl\nPermanente: $permanentUrl\n";
+    smtp_send($config, $approver, 'Autorizar remetente no Verbo Vivo: ' . $from, $html, $text);
+    vv_log('Authorization request sent for ' . $from);
+}
+
 function email_preview(array $draft): string {
     $reviewUrl = DOMAIN . '/revisao.php?token=' . rawurlencode((string) $draft['token']);
     $image = (string) ($draft['image_filename'] ?? '');
@@ -300,6 +407,11 @@ function process_editorial(array $config): int {
             continue;
         }
         $subject = isset($header->subject) ? imap_utf8((string) $header->subject) : 'Nova reflexão';
+        $messageId = (string) ($header->message_id ?? ('msg-' . $msgNo));
+        if (!is_sender_authorized($config, 'artigo@verbovivo.blog', $from, $subject, $messageId)) {
+            request_sender_authorization($config, 'artigo@verbovivo.blog', $from, $subject, $messageId);
+            continue;
+        }
         $text = extract_body($imap, (int) $msgNo);
         if ($text === '') {
             continue;

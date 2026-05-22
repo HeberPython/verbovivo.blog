@@ -81,3 +81,40 @@ def send_review_email(to_email: str, draft: ArticleDraft, review_url: str) -> No
     with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port) as smtp:
         smtp.login(settings.smtp_user, settings.smtp_password)
         smtp.send_message(msg)
+
+
+def send_authorization_request(to_email: str, sender: str, subject: str, inbox: str, temporary_url: str, permanent_url: str) -> None:
+    msg = EmailMessage()
+    msg["Subject"] = f"Autorizar remetente no Verbo Vivo: {sender}"
+    msg["From"] = settings.smtp_user
+    msg["To"] = to_email
+    msg.set_content(
+        "Um remetente ainda nao aprovado tentou enviar conteudo para o Verbo Vivo.\n\n"
+        f"Remetente: {sender}\n"
+        f"Caixa: {inbox}\n"
+        f"Assunto: {subject}\n\n"
+        f"Autorizar somente esta mensagem: {temporary_url}\n"
+        f"Autorizar remetente permanente: {permanent_url}\n"
+    )
+    msg.add_alternative(
+        f"""
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#fbfaf6;color:#17201b;padding:24px;">
+          <div style="max-width:680px;margin:0 auto;background:#fffdf8;border:1px solid #d8d0bf;padding:24px;">
+            <p style="color:#4f7059;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">Verbo Vivo</p>
+            <h1 style="font-family:Georgia,'Times New Roman',serif;">Autorizar novo remetente?</h1>
+            <p><strong>Remetente:</strong> {escape(sender)}</p>
+            <p><strong>Caixa:</strong> {escape(inbox)}</p>
+            <p><strong>Assunto:</strong> {escape(subject)}</p>
+            <p>O agente bloqueou este envio porque o remetente ainda nao esta na lista aprovada.</p>
+            <p>
+              <a href="{escape(temporary_url)}" style="display:inline-block;background:#a9792e;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;margin:0 10px 10px 0;">Autorizar somente este artigo</a>
+              <a href="{escape(permanent_url)}" style="display:inline-block;background:#4f7059;color:#fffdf8;text-decoration:none;font-weight:800;padding:13px 18px;">Autorizar remetente permanente</a>
+            </p>
+          </div>
+        </div>
+        """,
+        subtype="html",
+    )
+    with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port) as smtp:
+        smtp.login(settings.smtp_user, settings.smtp_password)
+        smtp.send_message(msg)
