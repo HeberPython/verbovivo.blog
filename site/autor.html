@@ -9,7 +9,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Autor | Verbo Vivo" />
     <meta property="og:description" content="Conheça a trajetória ministerial, acadêmica e pública do pastor Antônio Lemos, autor de reflexões cristãs no Verbo Vivo." />
-    <meta property="og:image" content="https://verbovivo.blog/images/authors/antonio-lemos.jpg" />
+    <meta property="og:image" content="https://verbovivo.blog/images/authors/antonio-lemos.jpg?v=20260527" />
     <meta property="og:url" content="https://verbovivo.blog/autor.html" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="alternate" type="application/rss+xml" title="Verbo Vivo" href="feed.xml" />
@@ -86,16 +86,30 @@
       .author-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 12px;
         margin-top: 20px;
       }
 
       .author-links a {
+        align-items: center;
         background: #fffdf8;
         border: 1px solid #d8d0bf;
-        color: #4f7059;
-        font-weight: 800;
-        padding: 10px 12px;
+        display: inline-flex;
+        height: 44px;
+        justify-content: center;
+        padding: 0;
+        width: 44px;
+      }
+
+      .author-links svg {
+        display: block;
+        height: 24px;
+        width: 24px;
+      }
+
+      .author-links .instagram-icon {
+        height: 26px;
+        width: 26px;
       }
 
       .author-facts {
@@ -156,15 +170,6 @@
           padding-inline: 16px;
         }
 
-        .author-links {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .author-links a {
-          overflow-wrap: anywhere;
-        }
-
         .author-facts div {
           min-height: auto;
           padding: 16px;
@@ -218,7 +223,7 @@
         </header>
         <div class="author-profile">
           <aside class="author-portrait" aria-label="Foto de Antônio Lemos">
-            <img src="images/authors/antonio-lemos.jpg" alt="Retrato de Antônio Lemos" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+            <img src="images/authors/antonio-lemos.jpg?v=20260527" alt="Retrato de Antônio Lemos" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
             <span class="author-photo-fallback" aria-hidden="true">AL</span>
           </aside>
           <section class="author-summary">
@@ -227,9 +232,35 @@
             <p>Antônio Lemos é pastor da Igreja Evangélica Assembleia de Deus há 25 anos, em São José, Santa Catarina. Casado, pai, advogado, pós-graduado em Direito Público, acadêmico de Psicologia e com formação teológica, une experiência ministerial, sensibilidade pastoral, visão pública e profundidade bíblica.</p>
             <p>Como palestrante, já ministrou em diversos estados, cidades do Brasil e também em outros países, abordando temas como família, casamento, sexualidade, ministério, hombridade e política, sempre com o propósito de edificar vidas e fortalecer uma fé madura, prática e relevante.</p>
             <div class="author-links" aria-label="Redes sociais de Antônio Lemos">
-              <a href="https://www.instagram.com/antoniolemosoficial/" target="_blank" rel="noopener" aria-label="Instagram de Antônio Lemos">@antoniolemosoficial</a>
-              <a href="https://www.youtube.com/@pastorlemos" target="_blank" rel="noopener" aria-label="YouTube de Antônio Lemos">@pastorlemos</a>
-              <a href="https://www.facebook.com/search/top?q=Ant%C3%B4nio%20Lemos" target="_blank" rel="noopener" aria-label="Facebook de Antônio Lemos">Facebook</a>
+              <a href="https://www.instagram.com/antoniolemosoficial/" target="_blank" rel="noopener" aria-label="Instagram de Antônio Lemos" title="Instagram">
+                <svg class="instagram-icon" viewBox="0 0 32 32" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="author-instagram-gradient" x1="0" x2="1" y1="1" y2="0">
+                      <stop offset="0" stop-color="#FEDA75" />
+                      <stop offset="0.3" stop-color="#FA7E1E" />
+                      <stop offset="0.55" stop-color="#D62976" />
+                      <stop offset="0.78" stop-color="#962FBF" />
+                      <stop offset="1" stop-color="#4F5BD5" />
+                    </linearGradient>
+                  </defs>
+                  <rect width="32" height="32" rx="9" fill="url(#author-instagram-gradient)" />
+                  <path fill="#fff" d="M16 9.4A6.6 6.6 0 1 0 16 22.6 6.6 6.6 0 0 0 16 9.4Zm0 10.8A4.2 4.2 0 1 1 16 11.8a4.2 4.2 0 0 1 0 8.4Z" />
+                  <circle cx="23" cy="9" r="1.7" fill="#fff" />
+                  <path fill="#fff" d="M22 4H10a6 6 0 0 0-6 6v12a6 6 0 0 0 6 6h12a6 6 0 0 0 6-6V10a6 6 0 0 0-6-6Zm3.5 18A3.5 3.5 0 0 1 22 25.5H10A3.5 3.5 0 0 1 6.5 22V10A3.5 3.5 0 0 1 10 6.5h12a3.5 3.5 0 0 1 3.5 3.5v12Z" />
+                </svg>
+              </a>
+              <a href="https://www.youtube.com/@pastorlemos" target="_blank" rel="noopener" aria-label="YouTube de Antônio Lemos" title="YouTube">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <rect x="2" y="7" width="28" height="18" rx="5" fill="#FF0000" />
+                  <path d="M13.5 11.5v9l8-4.5-8-4.5Z" fill="#fff" />
+                </svg>
+              </a>
+              <a href="https://www.facebook.com/search/top?q=Ant%C3%B4nio%20Lemos" target="_blank" rel="noopener" aria-label="Facebook de Antônio Lemos" title="Facebook">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                  <circle cx="16" cy="16" r="15" fill="#1877F2" />
+                  <path fill="#fff" d="M20.4 17.1h-3v10.8h-4.5V17.1h-2.2v-3.8h2.2v-2.4c0-1.8.9-4.7 4.7-4.7h3.4v3.8h-2.5c-.4 0-1.1.2-1.1 1.2v2.1h3.6l-.6 3.8Z" />
+                </svg>
+              </a>
             </div>
           </section>
         </div>
