@@ -4,16 +4,191 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Autor | Verbo Vivo</title>
-    <meta name="description" content="Conheca a trajetoria, ministerio e canais publicos do autor das reflexoes publicadas no Verbo Vivo." />
+    <meta name="description" content="Conheça a trajetória ministerial, acadêmica e pública do pastor Antônio Lemos, autor de reflexões cristãs no Verbo Vivo." />
     <link rel="canonical" href="https://verbovivo.blog/autor.html" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Autor | Verbo Vivo" />
-    <meta property="og:description" content="Conheca a trajetoria, ministerio e canais publicos do autor das reflexoes publicadas no Verbo Vivo." />
-    <meta property="og:image" content="https://verbovivo.blog/images/articles/depois-da-festa.png" />
+    <meta property="og:description" content="Conheça a trajetória ministerial, acadêmica e pública do pastor Antônio Lemos, autor de reflexões cristãs no Verbo Vivo." />
+    <meta property="og:image" content="https://verbovivo.blog/images/authors/antonio-lemos.jpg" />
     <meta property="og:url" content="https://verbovivo.blog/autor.html" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="alternate" type="application/rss+xml" title="Verbo Vivo" href="feed.xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260527-author" />
+    <style>
+      .author-page-shell {
+        padding-top: clamp(26px, 5vw, 60px);
+      }
+
+      .author-page-shell .plain-hero {
+        margin-bottom: clamp(24px, 4vw, 44px);
+        max-width: 1120px;
+      }
+
+      .author-page-shell .plain-hero h1 {
+        max-width: 760px;
+      }
+
+      .author-profile {
+        align-items: stretch;
+        display: grid;
+        gap: clamp(22px, 4vw, 44px);
+        grid-template-columns: minmax(250px, 340px) minmax(0, 1fr);
+        margin: 0 auto clamp(28px, 5vw, 58px);
+        max-width: 1120px;
+      }
+
+      .author-portrait {
+        background: #efe6d4;
+        border: 1px solid #d8d0bf;
+        box-shadow: 0 18px 50px rgba(23, 32, 27, 0.09);
+        min-height: 300px;
+        overflow: hidden;
+        width: min(100%, 320px);
+      }
+
+      .author-portrait img,
+      .author-photo-fallback {
+        height: 100%;
+        min-height: 300px;
+        object-fit: cover;
+        object-position: center;
+        width: 100%;
+      }
+
+      .author-photo-fallback {
+        align-items: center;
+        color: #4f7059;
+        display: none;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(4rem, 9vw, 7rem);
+        font-weight: 800;
+        justify-content: center;
+      }
+
+      .author-summary {
+        align-self: center;
+      }
+
+      .author-summary h2 {
+        font-size: clamp(2rem, 4vw, 3.7rem);
+        line-height: 1;
+        margin-bottom: 18px;
+      }
+
+      .author-summary p {
+        color: #59645c;
+        font-size: 1.04rem;
+        line-height: 1.72;
+        margin: 0 0 14px;
+        max-width: 780px;
+      }
+
+      .author-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .author-links a {
+        background: #fffdf8;
+        border: 1px solid #d8d0bf;
+        color: #4f7059;
+        font-weight: 800;
+        padding: 10px 12px;
+      }
+
+      .author-facts {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 0 auto clamp(34px, 5vw, 68px);
+        max-width: 1120px;
+      }
+
+      .author-facts div {
+        background: #fffdf8;
+        border: 1px solid #d8d0bf;
+        min-height: 116px;
+        padding: 18px;
+      }
+
+      .author-facts span,
+      .author-facts strong {
+        display: block;
+      }
+
+      .author-facts span {
+        color: #a9792e;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .author-facts strong {
+        color: #2d3831;
+        line-height: 1.45;
+      }
+
+      .author-message {
+        background: #fffdf8;
+        border: 1px solid #d8d0bf;
+        box-shadow: 0 18px 50px rgba(23, 32, 27, 0.09);
+        max-width: 920px;
+        padding: clamp(22px, 4vw, 42px);
+      }
+
+      @media (max-width: 900px) {
+        .author-profile,
+        .author-facts {
+          grid-template-columns: 1fr;
+        }
+
+        .author-portrait {
+          max-width: 320px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .author-page-shell {
+          padding-inline: 16px;
+        }
+
+        .author-links {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .author-links a {
+          overflow-wrap: anywhere;
+        }
+
+        .author-facts div {
+          min-height: auto;
+          padding: 16px;
+        }
+
+        .author-portrait,
+        .author-portrait img,
+        .author-photo-fallback {
+          min-height: 220px;
+        }
+
+        .author-portrait {
+          max-width: 250px;
+        }
+      }
+    </style>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KRH6PSKSMV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KRH6PSKSMV');
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5233928852442075" crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="site-header">
@@ -35,18 +210,67 @@
     </header>
     
     <main>
-      <article class="article-page static-page">
+      <article class="article-page static-page author-page-shell">
         <header class="plain-hero">
           <p class="eyebrow">Autoria</p>
-          <h1>Autor dos textos</h1>
-          <p class="article-excerpt">Conheca a trajetoria, ministerio e canais publicos do autor das reflexoes publicadas no Verbo Vivo.</p>
+          <h1>Antônio Lemos</h1>
+          <p class="article-excerpt">Pastor, palestrante, advogado e autor de reflexões cristãs voltadas à edificação da fé, da família e da vida pública à luz da Palavra de Deus.</p>
         </header>
-        <div class="article-content">
-          <h2>Pagina em preparacao</h2>
-<p>Esta pagina sera dedicada ao autor dos textos publicados no Verbo Vivo, reunindo apresentacao, trajetoria, ministerio, redes sociais e contatos publicos.</p>
-<p>As informacoes serao preenchidas apos confirmacao dos dados biograficos e dos links oficiais do autor.</p>
-<h2>Creditos do projeto</h2>
-<p>O site Verbo Vivo foi idealizado e construido por Heber Rosa, com desenvolvimento, organizacao editorial e automacoes de publicacao integradas ao fluxo do blog.</p>
+        <div class="author-profile">
+          <aside class="author-portrait" aria-label="Foto de Antônio Lemos">
+            <img src="images/authors/antonio-lemos.jpg" alt="Retrato de Antônio Lemos" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';" />
+            <span class="author-photo-fallback" aria-hidden="true">AL</span>
+          </aside>
+          <section class="author-summary">
+            <p class="eyebrow">Sobre o autor</p>
+            <h2>Pastor Antônio Lemos</h2>
+            <p>Antônio Lemos é pastor da Igreja Evangélica Assembleia de Deus há 25 anos, em São José, Santa Catarina. Casado, pai, advogado, pós-graduado em Direito Público, acadêmico de Psicologia e com formação teológica, une experiência ministerial, sensibilidade pastoral, visão pública e profundidade bíblica.</p>
+            <p>Como palestrante, já ministrou em diversos estados, cidades do Brasil e também em outros países, abordando temas como família, casamento, sexualidade, ministério, hombridade e política, sempre com o propósito de edificar vidas e fortalecer uma fé madura, prática e relevante.</p>
+            <div class="author-links" aria-label="Redes sociais de Antônio Lemos">
+              <a href="https://www.instagram.com/antoniolemosoficial/" target="_blank" rel="noopener" aria-label="Instagram de Antônio Lemos">@antoniolemosoficial</a>
+              <a href="https://www.youtube.com/@pastorlemos" target="_blank" rel="noopener" aria-label="YouTube de Antônio Lemos">@pastorlemos</a>
+              <a href="https://www.facebook.com/search/top?q=Ant%C3%B4nio%20Lemos" target="_blank" rel="noopener" aria-label="Facebook de Antônio Lemos">Facebook</a>
+            </div>
+          </section>
+        </div>
+
+        <div class="author-facts" aria-label="Informações do autor">
+          <div>
+            <span>Igreja e ministério</span>
+            <strong>Igreja Evangélica Assembleia de Deus</strong>
+          </div>
+          <div>
+            <span>Cidade</span>
+            <strong>São José, Santa Catarina</strong>
+          </div>
+          <div>
+            <span>Formação</span>
+            <strong>Direito, pós-graduação em Direito Público, Psicologia e Teologia</strong>
+          </div>
+          <div>
+            <span>Ministério</span>
+            <strong>Pastor há 25 anos e palestrante no Brasil e exterior</strong>
+          </div>
+          <div>
+            <span>Temas principais</span>
+            <strong>Família, casamento, sexualidade, ministério, hombridade e política</strong>
+          </div>
+          <div>
+            <span>Referência bíblica</span>
+            <strong>Colossenses, capítulo 1, versículo 9</strong>
+          </div>
+        </div>
+
+        <div class="author-message article-content">
+          <h2>Mensagem aos leitores</h2>
+          <p>Seja muito bem-vindo a este espaço de reflexão, fé e edificação cristã. Minha oração é que cada mensagem publicada aqui não seja apenas mais um texto lido rapidamente entre tantos conteúdos do dia, mas uma pequena pausa sagrada no meio da pressa: um lugar de encontro entre a alma cansada e a voz viva de Deus.</p>
+          <p>Vivemos tempos de muito barulho, muitas opiniões e muitas dores escondidas atrás de sorrisos treinados. Por isso, mais do que nunca, precisamos voltar ao essencial: a Palavra de Deus, a presença de Cristo, a direção do Espírito Santo e uma fé que não seja apenas discurso bonito, mas vida transformada.</p>
+          <p>Este blog nasce com o desejo de servir à família que precisa de direção, ao coração ferido que precisa de consolo, ao cristão que deseja amadurecer, ao líder que precisa de encorajamento, ao jovem que busca sentido e ao casal que luta para permanecer firme.</p>
+          <blockquote>“Por esta razão, nós, também, desde o dia em que o ouvimos, não cessamos de orar por vós, e de pedir que sejais cheios do conhecimento da sua vontade, em toda a sabedoria e inteligência espiritual.” - Colossenses, capítulo 1, versículo 9.</blockquote>
+          <p>Minha esperança é que, ao ler estas palavras, você encontre não apenas ideias, mas caminhos; não apenas emoção, mas verdade; não apenas consolo, mas também coragem para obedecer. Que cada texto seja como uma janela aberta para a graça, lembrando que Deus ainda fala, sustenta, perdoa, restaura e conduz seus filhos pelo caminho da vida.</p>
+          <p>Leia com calma. Medite. Compartilhe com alguém que precisa. Volte sempre que desejar alimentar a alma. Este blog é um convite para caminharmos juntos, com Bíblia aberta, coração sincero e esperança acesa, olhando para Jesus Cristo, nosso Salvador, Senhor e esperança eterna.</p>
+          <h2>Créditos do projeto</h2>
+          <p>O site Verbo Vivo foi idealizado e construído por Heber Rosa, com desenvolvimento, organização editorial e automações de publicação integradas ao fluxo do blog.</p>
         </div>
       </article>
     </main>
@@ -126,6 +350,50 @@
           setStatus("Narrando artigo.");
         });
         window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
+
+    
+    <script>
+      (() => {
+        const endpoint = "analytics.php";
+        const now = Date.now();
+        const sessionKey = "vv_session_id";
+        const pageKey = "vv_page_id";
+        let sessionId = sessionStorage.getItem(sessionKey);
+        if (!sessionId) {
+          sessionId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+          sessionStorage.setItem(sessionKey, sessionId);
+        }
+        const pageId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(pageKey, pageId);
+        const payload = (eventName) => ({
+          event: eventName,
+          session_id: sessionId,
+          page_id: pageId,
+          path: location.pathname,
+          title: document.title,
+          referrer: document.referrer || "",
+          elapsed_seconds: Math.max(0, Math.round((Date.now() - now) / 1000)),
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+          screen: `${screen.width}x${screen.height}`,
+          viewport: `${innerWidth}x${innerHeight}`
+        });
+        const send = (eventName) => {
+          const body = JSON.stringify(payload(eventName));
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(endpoint, new Blob([body], { type: "application/json" }));
+            return;
+          }
+          fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+        };
+        send("pageview");
+        const timer = setInterval(() => send("heartbeat"), 15000);
+        window.addEventListener("pagehide", () => {
+          clearInterval(timer);
+          send("pagehide");
+        });
       })();
     </script>
 
