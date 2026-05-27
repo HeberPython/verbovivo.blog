@@ -5,6 +5,7 @@ const CONFIG_FILE = __DIR__ . '/_private/editorial-config.php';
 const DRAFT_DIR = __DIR__ . '/_editorial_drafts';
 const AUTH_DIR = __DIR__ . '/_sender_authorizations';
 const IMAGE_DIR = __DIR__ . '/images/articles';
+const CRON_LOG_FILE = __DIR__ . '/_private/cron-editorial.log';
 
 function esc(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -69,6 +70,13 @@ if (function_exists('imap_open')) {
     }
 }
 
+$logHtml = '<p>Nenhum log gravado ainda.</p>';
+if (is_file(CRON_LOG_FILE)) {
+    $lines = file(CRON_LOG_FILE, FILE_IGNORE_NEW_LINES) ?: [];
+    $tail = array_slice($lines, -30);
+    $logHtml = '<pre>' . esc(implode("\n", $tail)) . '</pre>';
+}
+
 echo '<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -81,6 +89,7 @@ echo '<!doctype html>
       table{border-collapse:collapse;width:100%;margin-top:22px}
       th,td{border-bottom:1px solid #d8d0bf;padding:10px;text-align:left;vertical-align:top}
       th{width:250px}.ok{color:#1f6f43;font-weight:800}.fail{color:#9b2d20;font-weight:800}
+      pre{background:#17201b;color:#fbfaf6;overflow:auto;padding:16px;white-space:pre-wrap}
       code{background:#f2ede1;padding:2px 5px}
     </style>
   </head>
@@ -90,7 +99,8 @@ echo '<!doctype html>
       <h1>Diagnostico do cron editorial</h1>
       <p>Esta pagina nao processa artigos. Ela apenas verifica ambiente, configuracao e conexao IMAP.</p>
       <table><tbody>' . implode('', $rows) . '</tbody></table>
+      <h2>Ultimas linhas do log do cron</h2>
+      ' . $logHtml . '
     </main>
   </body>
 </html>';
-

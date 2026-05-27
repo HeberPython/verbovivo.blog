@@ -9,6 +9,7 @@ const IMAGE_DIR = __DIR__ . '/images/articles';
 const CONFIG_FILE = __DIR__ . '/_private/editorial-config.php';
 const ALLOWLIST_FILE = __DIR__ . '/_private/allowed-senders.json';
 const TEMP_ALLOWLIST_FILE = __DIR__ . '/_private/temporary-sender-authorizations.json';
+const CRON_LOG_FILE = __DIR__ . '/_private/cron-editorial.log';
 
 if (php_sapi_name() !== 'cli') {
     http_response_code(403);
@@ -23,7 +24,9 @@ if (!is_file(CONFIG_FILE)) {
 $config = require CONFIG_FILE;
 
 function vv_log(string $message): void {
-    echo '[' . gmdate('c') . '] ' . $message . PHP_EOL;
+    $line = '[' . gmdate('c') . '] ' . $message . PHP_EOL;
+    echo $line;
+    @file_put_contents(CRON_LOG_FILE, $line, FILE_APPEND | LOCK_EX);
 }
 
 function esc(string $value): string {
@@ -434,6 +437,7 @@ function process_editorial(array $config): int {
 }
 
 try {
+    vv_log('Cron started.');
     $count = process_editorial($config);
     vv_log("Editorial processed: $count");
 } catch (Throwable $e) {
