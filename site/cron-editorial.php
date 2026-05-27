@@ -174,7 +174,7 @@ function openai_json(array $config, array $payload): array {
 function openai_image(array $config, string $prompt, string $outputPath): bool {
     $payload = [
         'model' => 'gpt-image-1',
-        'prompt' => 'Crie uma imagem editorial cristã, reverente, sem texto escrito na imagem, sem retratar Jesus de forma literal, com atmosfera contemplativa: ' . $prompt,
+        'prompt' => 'Crie uma imagem editorial cristã de alta qualidade, realista e nítida, com vida visual, contraste natural, cores profundas e luz cinematográfica suave. A imagem deve parecer fotografia/editorial premium, sem aspecto leitoso, sem neblina artificial, sem desfoque, sem baixa resolução, sem pintura borrada e sem texto escrito na imagem. Evite rostos em close, evite retratar Jesus de forma literal e evite elementos clichês excessivos. Use composição clara, profundidade realista, detalhes definidos, atmosfera reverente e esperançosa. Contexto bíblico/reflexivo para orientar a cena: ' . $prompt,
         'size' => '1536x1024',
     ];
     $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

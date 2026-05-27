@@ -102,9 +102,13 @@ def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
         result = client.images.generate(
             model="gpt-image-1",
             prompt=(
-                "Crie uma imagem editorial cristã, reverente, sem texto escrito na imagem, "
-                "sem retratar Jesus de forma literal, com atmosfera contemplativa e adequada "
-                f"ao contexto bíblico/reflexivo: {draft.image_prompt}"
+                "Crie uma imagem editorial cristã de alta qualidade, realista e nítida, "
+                "com vida visual, contraste natural, cores profundas e luz cinematográfica suave. "
+                "A imagem deve parecer fotografia/editorial premium, sem aspecto leitoso, sem neblina artificial, "
+                "sem desfoque, sem baixa resolução, sem pintura borrada e sem texto escrito na imagem. "
+                "Evite rostos em close, evite retratar Jesus de forma literal e evite elementos clichês excessivos. "
+                "Use composição clara, profundidade realista, detalhes definidos, atmosfera reverente e esperançosa. "
+                f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}"
             ),
             size="1536x1024",
         )
