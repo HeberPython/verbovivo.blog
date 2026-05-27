@@ -204,8 +204,9 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
     body.append("<h2>Para meditar</h2>")
     body.append("<p>Que esta palavra seja lida com calma, oração e abertura diante de Deus.</p>")
     slug = slugify(title)
+    draft_id = secrets.token_hex(8)
     return ArticleDraft(
-        id=secrets.token_hex(8),
+        id=draft_id,
         token=secrets.token_urlsafe(24),
         sender=sender,
         source_subject=subject,
@@ -217,7 +218,7 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
         author=metadata["author"] or "Autor informado na publicação",
         body_html="\n".join(body),
         image_prompt=f"Imagem editorial cristã, reverente e simbólica para o tema: {title}",
-        image_filename=f"{slug}.png",
+        image_filename=f"{slug}-{draft_id}.png",
         author_socials=metadata["socials"],
     )
 

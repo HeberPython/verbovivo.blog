@@ -371,8 +371,9 @@ function refine_article(array $config, string $source, string $subject, string $
             $body .= '<p>' . esc((string) $paragraph) . '</p>';
         }
     }
+    $draftId = bin2hex(random_bytes(8));
     return [
-        'id' => bin2hex(random_bytes(8)),
+        'id' => $draftId,
         'token' => rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '='),
         'sender' => $sender,
         'source_subject' => $subject,
@@ -385,7 +386,7 @@ function refine_article(array $config, string $source, string $subject, string $
         'author_socials' => $metadata['socials'],
         'body_html' => $body,
         'image_prompt' => (string) ($data['image_prompt'] ?? $title),
-        'image_filename' => $slug . '.png',
+        'image_filename' => $slug . '-' . $draftId . '.png',
         'status' => 'pending_review',
         'created_at' => gmdate(DATE_ATOM),
     ];

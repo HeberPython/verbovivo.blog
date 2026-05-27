@@ -73,8 +73,9 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
             body_parts.append(f"<p>{escape(str(paragraph))}</p>")
 
     slug = slugify(title)
+    draft_id = secrets.token_hex(8)
     return ArticleDraft(
-        id=secrets.token_hex(8),
+        id=draft_id,
         token=secrets.token_urlsafe(24),
         sender=sender,
         source_subject=subject,
@@ -86,7 +87,7 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         author=metadata["author"] or "Autor informado na publicação",
         body_html="\n".join(body_parts),
         image_prompt=data.get("image_prompt") or f"Imagem cristã reverente para o tema: {title}",
-        image_filename=f"{slug}.png",
+        image_filename=f"{slug}-{draft_id}.png",
         author_socials=metadata["socials"],
     )
 
