@@ -173,9 +173,8 @@ STATIC_PAGES = {
             ("Compromisso", [
                 "O Verbo Vivo não substitui acompanhamento pastoral, aconselhamento profissional ou cuidado médico quando eles forem necessários. Nosso papel é oferecer conteúdo reflexivo e edificante.",
             ]),
-            ("Sobre os autores das reflexões", [
-                "As reflexões publicadas no Verbo Vivo podem ser escritas por diferentes autores cristãos, sempre identificados no próprio artigo.",
-                "Quando o autor informar redes sociais ou canais públicos, esses links poderão aparecer junto à autoria da publicação, para que o leitor reconheça a fonte humana do texto.",
+            ("Autor dos textos", [
+                'As informações públicas sobre autoria foram reunidas na página <a href="autor.html">Autor</a>, onde ficam a apresentação, trajetória e canais oficiais do autor dos textos publicados.',
             ]),
         ],
     },
@@ -264,7 +263,7 @@ def content_sections(sections: list[tuple[str, list[str]]]) -> str:
     chunks: list[str] = []
     for heading, paragraphs in sections:
         chunks.append(f"<h2>{esc(heading)}</h2>")
-        chunks.extend(f"<p>{esc(paragraph)}</p>" for paragraph in paragraphs)
+        chunks.extend(f"<p>{paragraph}</p>" if "<a " in paragraph else f"<p>{esc(paragraph)}</p>" for paragraph in paragraphs)
     return "\n".join(chunks)
 
 
@@ -315,7 +314,7 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
         <a href="{prefix}faq.html">FAQ</a>
         <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
         <a href="{prefix}feed.xml">RSS</a>
-        <a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">Site por @tec.agora</a>
+        <a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a>
       </div>
     </footer>
     {listen_script()}

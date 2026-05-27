@@ -140,7 +140,7 @@ function render_article_page(array $article): string {
     </main>
     <footer class="site-footer">
       <p><strong>Verbo Vivo</strong> publica reflexoes cristas para fortalecer a fe na vida cotidiana.</p>
-      <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">Site por @tec.agora</a></div>
+      <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     ' . listen_script() . '
   </body>
@@ -292,4 +292,3 @@ foreach ($items as $item) {
     $rows .= '<div class="manager-item"><div><strong>' . esc((string) $item['title']) . '</strong><p class="review-meta">Por ' . esc((string) $item['author']) . '</p></div><div class="manager-actions"><a class="button-link secondary" href="gestor-artigos.php?token=' . esc(rawurlencode($token)) . '&action=edit&slug=' . esc(rawurlencode((string) $item['slug'])) . '">Editar</a><form method="post" onsubmit="return confirm(\'Excluir este artigo publicado?\')"><input type="hidden" name="token" value="' . esc($token) . '" /><input type="hidden" name="action" value="delete" /><input type="hidden" name="slug" value="' . esc((string) $item['slug']) . '" /><button class="danger" type="submit">Excluir</button></form></div></div>';
 }
 page('Gestor de artigos', '<p class="eyebrow">Editor escondido</p><h1>Gestor de artigos publicados</h1><p class="article-excerpt">Use esta pagina apenas pelo link secreto. Ela permite editar ou excluir artigos publicados.</p><section class="manager-panel manager-list">' . ($rows ?: '<p>Nenhum artigo encontrado.</p>') . '</section>');
-
