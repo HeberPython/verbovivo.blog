@@ -8,9 +8,16 @@ from dotenv import load_dotenv
 
 
 ROOT = Path(__file__).resolve().parents[2]
+ADMIN_TOKEN_FILE = ROOT / "automation" / "_admin_token.txt"
 
 load_dotenv(ROOT / ".env", encoding="utf-8-sig")
 load_dotenv(ROOT / "automation" / ".env", override=True, encoding="utf-8-sig")
+
+
+def default_admin_token() -> str:
+    if ADMIN_TOKEN_FILE.exists():
+        return ADMIN_TOKEN_FILE.read_text(encoding="utf-8").strip()
+    return ""
 
 
 @dataclass(frozen=True)
@@ -33,6 +40,7 @@ class Settings:
     approval_base_url: str = os.getenv("EDITORIAL_APPROVAL_BASE_URL", "http://127.0.0.1:8787")
     approver_email: str = os.getenv("EDITORIAL_APPROVER_EMAIL", "hebergravano@gmail.com")
     allowed_senders: str = os.getenv("EDITORIAL_ALLOWED_SENDERS", "hebergravano@gmail.com")
+    admin_token: str = os.getenv("EDITORIAL_ADMIN_TOKEN", default_admin_token())
 
     ftp_host: str = os.getenv("HOSTINGER_FTP_HOST", "ftp.verbovivo.blog")
     ftp_port: int = int(os.getenv("HOSTINGER_FTP_PORT", "21"))

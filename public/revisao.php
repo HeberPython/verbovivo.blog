@@ -234,7 +234,7 @@ function render_article_page(array $draft): string {
   <body>
     <header class="site-header">
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
-      <nav aria-label="Navegação principal"><a href="../index.html#artigos">Artigos</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
+      <nav aria-label="Navegação principal"><a href="../index.html#artigos">Artigos</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
     </header>
     <main>
       <article class="article-page">
@@ -252,6 +252,10 @@ function render_article_page(array $draft): string {
         <div class="article-content">' . $bodyHtml . '</div>
       </article>
     </main>
+    <footer class="site-footer">
+      <p><strong>Verbo Vivo</strong> publica reflexoes cristas para fortalecer a fe na vida cotidiana.</p>
+      <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">Site por @tec.agora</a></div>
+    </footer>
     ' . listen_script() . '
   </body>
 </html>';

@@ -27,6 +27,7 @@ def build_config() -> bytes:
         "publish_imap_password": settings.publish_imap_password,
         "approver_email": settings.approver_email,
         "allowed_senders": settings.allowed_senders,
+        "admin_token": settings.admin_token,
         "openai_api_key": settings.openai_api_key,
     }
     lines = ["<?php", "return ["]

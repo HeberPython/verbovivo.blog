@@ -141,6 +141,21 @@ ARTICLES = [
 
 
 STATIC_PAGES = {
+    "autor": {
+        "title": "Autor | Verbo Vivo",
+        "description": "Conheca a trajetoria, ministerio e canais publicos do autor das reflexoes publicadas no Verbo Vivo.",
+        "heading": "Autor dos textos",
+        "eyebrow": "Autoria",
+        "body": [
+            ("Pagina em preparacao", [
+                "Esta pagina sera dedicada ao autor dos textos publicados no Verbo Vivo, reunindo apresentacao, trajetoria, ministerio, redes sociais e contatos publicos.",
+                "As informacoes serao preenchidas apos confirmacao dos dados biograficos e dos links oficiais do autor.",
+            ]),
+            ("Creditos do projeto", [
+                "O site Verbo Vivo foi idealizado e construido por Heber Rosa, com desenvolvimento, organizacao editorial e automacoes de publicacao integradas ao fluxo do blog.",
+            ]),
+        ],
+    },
     "sobre": {
         "title": "Sobre | Verbo Vivo",
         "description": "Conheça o propósito editorial do Verbo Vivo, um blog de reflexões cristãs para fortalecer a fé na vida cotidiana.",
@@ -283,6 +298,7 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
       </a>
       <nav aria-label="Navegação principal">
         <a href="{prefix}index.html#artigos">Artigos</a>
+        <a href="{prefix}autor.html">Autor</a>
         <a href="{prefix}sobre.html">Sobre</a>
         <a href="{prefix}contato.html">Contato</a>
         <a href="{prefix}faq.html">FAQ</a>
@@ -294,10 +310,12 @@ def page_shell(title: str, description: str, body: str, canonical: str, image: s
       <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
       <div>
         <a href="{prefix}sobre.html">Sobre</a>
+        <a href="{prefix}autor.html">Autor</a>
         <a href="{prefix}contato.html">Contato</a>
         <a href="{prefix}faq.html">FAQ</a>
         <a href="{prefix}politica-de-privacidade.html">Privacidade</a>
         <a href="{prefix}feed.xml">RSS</a>
+        <a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">Site por @tec.agora</a>
       </div>
     </footer>
     {listen_script()}
