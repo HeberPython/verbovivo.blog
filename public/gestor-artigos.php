@@ -1,9 +1,15 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 const DOMAIN = 'https://verbovivo.blog';
 const ARTICLE_DIR = __DIR__ . '/artigos';
 const CONFIG_FILE = __DIR__ . '/_private/editorial-config.php';
+
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
 
 if (!is_file(CONFIG_FILE)) {
     http_response_code(500);
@@ -42,6 +48,10 @@ function match_one(string $pattern, string $html, string $default = ''): string 
     return preg_match($pattern, $html, $m) ? html_entity_decode(trim((string) $m[1]), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : $default;
 }
 
+function text_contains(string $haystack, string $needle): bool {
+    return $needle === '' || strpos($haystack, $needle) !== false;
+}
+
 function article_path(string $slug): string {
     if (!preg_match('/^[a-z0-9-]+$/', $slug)) {
         http_response_code(400);
@@ -62,7 +72,9 @@ function list_articles(): array {
             'author' => preg_replace('/^Por\s+/u', '', match_one('/<p class="article-meta">(.*?)<\/p>/s', $html)),
         ];
     }
-    usort($items, fn(array $a, array $b): int => strcmp($a['title'], $b['title']));
+    usort($items, function (array $a, array $b): int {
+        return strcmp((string) $a['title'], (string) $b['title']);
+    });
     return $items;
 }
 
@@ -195,10 +207,10 @@ function update_indexes(array $article, ?string $oldSlug = null): void {
     if (is_file($index)) {
         $html = (string) file_get_contents($index);
         $urlPart = 'artigos/' . (string) $article['slug'] . '.html';
-        $replacement = str_contains($html, '<article class="featured">') && str_contains((string) preg_replace('/^.*(<article class="featured">.*?<\/article>).*/s', '$1', $html), $urlPart)
+        $replacement = text_contains($html, '<article class="featured">') && text_contains((string) preg_replace('/^.*(<article class="featured">.*?<\/article>).*/s', '$1', $html), $urlPart)
             ? featured_article($article)
             : article_card($article);
-        if (str_contains($html, $urlPart)) {
+        if (text_contains($html, $urlPart)) {
             $html = (string) preg_replace('/\s*<article class="(?:featured|article-card)">(?:(?!<article class=).)*?' . preg_quote($urlPart, '/') . '.*?<\/article>/s', "\n" . $replacement, $html, 1);
         } else {
             $marker = '<section class="article-grid" aria-label="Lista de artigos">';
@@ -218,7 +230,7 @@ function update_feed(array $article): void {
     $xml = (string) file_get_contents($path);
     $url = DOMAIN . '/artigos/' . (string) $article['slug'] . '.html';
     $item = '<item><title>' . esc((string) $article['title']) . '</title><link>' . $url . '</link><guid>' . $url . '</guid><description>' . esc((string) $article['excerpt']) . '</description><pubDate>' . gmdate(DATE_RSS) . '</pubDate></item>';
-    if (str_contains($xml, $url)) {
+    if (text_contains($xml, $url)) {
         $xml = (string) preg_replace('/<item>.*?' . preg_quote($url, '/') . '.*?<\/item>/s', $item, $xml, 1);
     } else {
         $xml = str_replace('    <item>', "    $item\n    <item>", $xml);
@@ -233,7 +245,7 @@ function update_sitemap(array $article): void {
     }
     $xml = (string) file_get_contents($path);
     $url = DOMAIN . '/artigos/' . (string) $article['slug'] . '.html';
-    if (!str_contains($xml, $url)) {
+    if (!text_contains($xml, $url)) {
         $xml = str_replace('</urlset>', '  <url><loc>' . $url . '</loc></url>' . "\n</urlset>", $xml);
         file_put_contents($path, $xml);
     }
