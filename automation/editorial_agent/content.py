@@ -193,6 +193,66 @@ def listen_script() -> str:
 """
 
 
+def analytics_head() -> str:
+    return """
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KRH6PSKSMV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KRH6PSKSMV');
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5233928852442075" crossorigin="anonymous"></script>
+"""
+
+
+def analytics_script(endpoint: str = "analytics.php") -> str:
+    return f"""
+    <script>
+      (() => {{
+        const endpoint = "{endpoint}";
+        const now = Date.now();
+        const sessionKey = "vv_session_id";
+        const pageKey = "vv_page_id";
+        let sessionId = sessionStorage.getItem(sessionKey);
+        if (!sessionId) {{
+          sessionId = crypto.randomUUID ? crypto.randomUUID() : `${{now}}-${{Math.random().toString(36).slice(2)}}`;
+          sessionStorage.setItem(sessionKey, sessionId);
+        }}
+        const pageId = crypto.randomUUID ? crypto.randomUUID() : `${{now}}-${{Math.random().toString(36).slice(2)}}`;
+        sessionStorage.setItem(pageKey, pageId);
+        const payload = (eventName) => ({{
+          event: eventName,
+          session_id: sessionId,
+          page_id: pageId,
+          path: location.pathname,
+          title: document.title,
+          referrer: document.referrer || "",
+          elapsed_seconds: Math.max(0, Math.round((Date.now() - now) / 1000)),
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+          screen: `${{screen.width}}x${{screen.height}}`,
+          viewport: `${{innerWidth}}x${{innerHeight}}`
+        }});
+        const send = (eventName) => {{
+          const body = JSON.stringify(payload(eventName));
+          if (navigator.sendBeacon) {{
+            navigator.sendBeacon(endpoint, new Blob([body], {{ type: "application/json" }}));
+            return;
+          }}
+          fetch(endpoint, {{ method: "POST", headers: {{ "Content-Type": "application/json" }}, body, keepalive: true }}).catch(() => {{}});
+        }};
+        send("pageview");
+        const timer = setInterval(() => send("heartbeat"), 15000);
+        window.addEventListener("pagehide", () => {{
+          clearInterval(timer);
+          send("pagehide");
+        }});
+      }})();
+    </script>
+"""
+
+
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     blocks = paragraphs_from_text(article_text)
@@ -235,6 +295,7 @@ def render_article_page(draft: ArticleDraft) -> str:
     <title>{escape(draft.title)} | Verbo Vivo</title>
     <meta name="description" content="{escape(draft.excerpt)}" />
     <link rel="stylesheet" href="../styles.css" />
+    {analytics_head()}
   </head>
   <body>
     <header class="site-header">
@@ -273,6 +334,7 @@ def render_article_page(draft: ArticleDraft) -> str:
       <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     {listen_script()}
+    {analytics_script("../analytics.php")}
   </body>
 </html>
 """

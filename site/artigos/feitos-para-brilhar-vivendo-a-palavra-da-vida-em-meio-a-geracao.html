@@ -6,6 +6,16 @@
     <title>Feitos para Brilhar: Vivendo a Palavra da Vida em Meio à Geração | Verbo Vivo</title>
     <meta name="description" content="Paulo nos chama a viver sem murmurações nem discussões, manifestando a salvação eficaz por meio de uma vida irrepreensível, pura e luminosa. Somos convidados a brilhar como estrelas no mundo, firmes na Palavra da vida, testemunhando o caráter transformador de Cristo em meio a uma geração perversa." />
     <link rel="stylesheet" href="../styles.css" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KRH6PSKSMV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KRH6PSKSMV');
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5233928852442075" crossorigin="anonymous"></script>
+
   </head>
   <body>
     <header class="site-header">
@@ -30,7 +40,7 @@
             <p class="article-excerpt">Paulo nos chama a viver sem murmurações nem discussões, manifestando a salvação eficaz por meio de uma vida irrepreensível, pura e luminosa. Somos convidados a brilhar como estrelas no mundo, firmes na Palavra da vida, testemunhando o caráter transformador de Cristo em meio a uma geração perversa.</p>
             <p class="article-meta">Por Autor informado na publicação</p>
             <div class="author-socials" aria-label="Redes sociais do autor"><a href="https://youtube.com/@Lemos3" target="_blank" rel="noopener" aria-label="YouTube https://youtube.com/@Lemos3" title="YouTube https://youtube.com/@Lemos3"><svg class="social-icon social-icon--youtube" aria-hidden="true" viewBox="0 0 24 24"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.5A3.02 3.02 0 0 0 .5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.5 9.38.5 9.38.5s7.5 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81ZM9.55 15.57V8.43L15.82 12l-6.27 3.57Z"/></svg></a></div>
-            
+
             <div class="listen-tools" aria-label="Narração do artigo">
               <button class="listen-button" type="button" data-listen-toggle aria-label="Ouvir artigo" title="Ouvir artigo">
                 <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
@@ -75,7 +85,7 @@
       <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
       <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
-    
+
     <script>
       (() => {
         const controls = document.querySelector(".listen-tools");
@@ -138,6 +148,50 @@
           setStatus("Narrando artigo.");
         });
         window.addEventListener("beforeunload", () => synthesis.cancel());
+      })();
+    </script>
+
+
+    <script>
+      (() => {
+        const endpoint = "../analytics.php";
+        const now = Date.now();
+        const sessionKey = "vv_session_id";
+        const pageKey = "vv_page_id";
+        let sessionId = sessionStorage.getItem(sessionKey);
+        if (!sessionId) {
+          sessionId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+          sessionStorage.setItem(sessionKey, sessionId);
+        }
+        const pageId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(pageKey, pageId);
+        const payload = (eventName) => ({
+          event: eventName,
+          session_id: sessionId,
+          page_id: pageId,
+          path: location.pathname,
+          title: document.title,
+          referrer: document.referrer || "",
+          elapsed_seconds: Math.max(0, Math.round((Date.now() - now) / 1000)),
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+          screen: `${screen.width}x${screen.height}`,
+          viewport: `${innerWidth}x${innerHeight}`
+        });
+        const send = (eventName) => {
+          const body = JSON.stringify(payload(eventName));
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(endpoint, new Blob([body], { type: "application/json" }));
+            return;
+          }
+          fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+        };
+        send("pageview");
+        const timer = setInterval(() => send("heartbeat"), 15000);
+        window.addEventListener("pagehide", () => {
+          clearInterval(timer);
+          send("pagehide");
+        });
       })();
     </script>
 

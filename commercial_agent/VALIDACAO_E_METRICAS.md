@@ -1,70 +1,145 @@
 # Validacao, Metas e Metricas
 
+Produto:
+
+**Verbo Vivo Lab: Blog Editorial Automatizado do Zero**
+
 ## Hipotese principal
-Pessoas que querem criar blogs, projetos editoriais ou canais de conteudo com IA pagariam por um guia pratico baseado em um caso real, desde que a promessa seja concreta e a implementacao pareca possivel.
 
-## Sinais de validacao
-Antes de investir tempo em curso completo, buscar:
+Pessoas que querem criar blogs, projetos editoriais ou canais de conteudo com IA pagariam por um guia pratico baseado em um caso real, desde que a promessa seja concreta, a entrega seja simples e a implementacao pareca possivel.
 
-- 30 pessoas interessadas.
-- 10 conversas qualificadas.
+## Hipoteses secundarias
+
+- A prova real do `verbovivo.blog` aumenta confianca.
+- A palavra "blog automatizado" atrai, mas pode assustar se parecer tecnico demais.
+- O preco beta de R$ 47 reduz risco percebido.
+- O publico ministerial/cristao pode se identificar com o caso real, mas o produto tambem precisa parecer adaptavel para outros nichos.
+
+## Meta do beta
+
+Periodo:
+
+14 dias.
+
+Metas:
+
+- 100 visitantes qualificados.
+- 30 leads/interessados.
+- 20 conversas diretas.
+- 10 cliques no checkout.
 - 5 vendas beta.
-- Pelo menos 3 perguntas recorrentes sobre implementacao.
-- Pelo menos 2 compradores dizendo que querem versao em video.
+- 0 a 1 reembolso.
+- 5 objecoes reais registradas.
+
+## Criterios de decisao
+
+Continuar:
+
+- 5 vendas beta ou mais.
+- Pelo menos 3 compradores pedindo video, aula ou versao avancada.
+- Objecoes resolviveis por copy, FAQ ou checklist.
+
+Ajustar:
+
+- Muitos leads e poucas vendas.
+- Muitas perguntas sobre dificuldade tecnica.
+- Cliques no checkout sem vendas.
+- Pessoas achando o nome interessante, mas sem entender a entrega.
+
+Pausar:
+
+- 20 conversas qualificadas sem intencao clara de compra.
+- Zero vendas apos oferta direta para interessados reais.
+- Reembolsos por expectativa desalinhada.
 
 ## Experimento de 7 dias
+
 Dia 1:
-- Publicar pagina de espera.
-- Postar bastidor do verbovivo.blog.
+
+- Publicar ou revisar pagina de vendas.
+- Postar bastidor: "como o Verbo Vivo saiu de blog estatico para fluxo editorial".
+- Listar 20 pessoas para conversa direta.
 
 Dia 2:
-- Enviar mensagem direta para 10 pessoas potenciais.
+
+- Enviar mensagem direta para 10 pessoas.
 - Perguntar se elas gostariam de ter um fluxo parecido.
+- Registrar as palavras exatas das objecoes.
 
 Dia 3:
-- Publicar print ou explicacao do fluxo artigo@ e publicar@.
-- Coletar duvidas.
+
+- Publicar explicacao do fluxo `artigo@` e `publicar@`.
+- Mostrar que existe aprovacao humana, nao automacao cega.
 
 Dia 4:
-- Apresentar oferta beta.
-- Abrir lista de interessados.
+
+- Abrir oferta beta por R$ 47.
+- Enviar link para interessados.
+- Registrar cliques e perguntas.
 
 Dia 5:
-- Publicar FAQ com custos, dificuldade e ferramentas.
+
+- Publicar FAQ sobre custos, dificuldade tecnica, IA e adaptacao para outros nichos.
+- Ajustar a pagina com as perguntas reais.
 
 Dia 6:
-- Oferecer o beta para interessados.
+
+- Reforcar prova concreta: dominio, Hostinger, GitHub, e-mails, sitemap e aprovacao.
+- Fazer convite direto para quem demonstrou interesse.
 
 Dia 7:
-- Contar resultados e decidir se continua, ajusta ou pausa.
+
+- Fechar primeira leitura dos dados.
+- Decidir: continuar, ajustar promessa ou pausar.
 
 ## Experimento de 30 dias
+
 Semana 1:
+
 - Validar promessa e publico.
+- Coletar objecoes.
+- Fazer primeiras vendas.
 
 Semana 2:
-- Vender beta.
 
-Semana 3:
+- Melhorar pagina e FAQ.
+- Fechar 5 vendas beta.
 - Entregar PDF e templates.
 
+Semana 3:
+
+- Coletar feedback dos compradores.
+- Mapear quais capitulos geram mais duvida.
+- Decidir se videos curtos fazem sentido.
+
 Semana 4:
-- Coletar feedback, depoimentos e melhorar oferta.
+
+- Revisar produto.
+- Subir preco para R$ 97 se houver validacao.
+- Planejar versao 2 sem criar curso grande ainda.
 
 ## Planilha de metricas
-Campos recomendados:
 
-| Data | Canal | Visitantes | Leads | Cliques checkout | Vendas | Receita | Reembolsos | Objecao principal | Acao tomada |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+Usar `METRICAS_TEMPLATE.csv`.
+
+Campos:
+
+| Data | Canal | Visitantes | Leads | Leads qualificados | Conversas | Cliques checkout | Vendas | Receita | Reembolsos | Objecao principal | Experimento | Acao tomada |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |
 
 ## Indicadores
+
 Taxa de captura:
 
 `leads / visitantes`
 
+Taxa de qualificacao:
+
+`leads_qualificados / leads`
+
 Taxa de clique para checkout:
 
-`cliques checkout / visitantes`
+`cliques_checkout / visitantes`
 
 Conversao de venda:
 
@@ -72,41 +147,40 @@ Conversao de venda:
 
 Conversao do checkout:
 
-`vendas / cliques checkout`
+`vendas / cliques_checkout`
 
 Receita por visitante:
 
 `receita / visitantes`
 
-## Metas de referencia
-Pagina de espera:
-- Abaixo de 5% de captura: headline ou promessa fraca.
-- 5% a 15%: aceitavel.
-- Acima de 15%: boa validacao.
+## Leitura rapida dos gargalos
 
-Pagina de venda:
-- Abaixo de 1% de venda: revisar oferta.
-- 1% a 3%: inicio aceitavel.
-- Acima de 3%: bom sinal para escalar.
+Poucos visitantes:
 
-## Rotina de decisao
-Se poucos visitantes:
-- Problema e distribuicao.
-- Criar mais conteudo, parcerias e conversas diretas.
+- Problema de distribuicao.
+- Acao: mais conteudo, conversas diretas e parcerias.
 
-Se muitos visitantes e poucos leads:
-- Problema e promessa.
-- Trocar headline e isca.
+Visitantes sem leads:
 
-Se muitos leads e poucas vendas:
-- Problema e oferta.
-- Melhorar prova, bonus, preco e FAQ.
+- Problema de promessa.
+- Acao: trocar headline, mostrar prova real antes e simplificar CTA.
 
-Se vendas com muitas duvidas:
-- Problema e clareza.
-- Criar onboarding e video explicativo.
+Leads sem vendas:
 
-Se reembolso:
-- Problema e expectativa.
-- Ajustar pagina para deixar requisitos e limites mais claros.
+- Problema de oferta.
+- Acao: melhorar bonus, FAQ, garantia, demonstracao e preco.
 
+Cliques sem vendas:
+
+- Problema de checkout, preco, confianca ou campos demais.
+- Acao: revisar checkout, suporte, garantia, descricao e meios de pagamento.
+
+Vendas com duvidas:
+
+- Problema de onboarding.
+- Acao: criar pagina complementar e e-mail de boas-vindas melhor.
+
+Reembolso:
+
+- Problema de expectativa.
+- Acao: deixar limites mais claros na pagina.

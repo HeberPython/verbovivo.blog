@@ -3,6 +3,7 @@ from __future__ import annotations
 import html
 import json
 import os
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -62,10 +63,43 @@ def file_inventory() -> list[str]:
 
 
 def articles() -> list[dict]:
-    try:
-        return json.loads(read("content/articles/articles.json"))
-    except Exception:
-        return []
+    draft_dir = ROOT / "_drafts"
+    articles_from_drafts: list[dict] = []
+    for path in sorted(draft_dir.glob("*.json")):
+        try:
+            item = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        slug = item.get("slug")
+        if slug and (ROOT / "site" / "artigos" / f"{slug}.html").exists():
+            articles_from_drafts.append(
+                {
+                    "title": item.get("title", ""),
+                    "slug": slug,
+                    "author": item.get("author", ""),
+                    "category": item.get("category", ""),
+                    "status": "publicado",
+                }
+            )
+    if articles_from_drafts:
+        return articles_from_drafts
+
+    article_dir = ROOT / "site" / "artigos"
+    articles_from_html: list[dict] = []
+    for path in sorted(article_dir.glob("*.html")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        title = re.search(r"<title>(.*?)</title>", text, flags=re.I | re.S)
+        author = re.search(r'<p class="author">.*?Por\s+([^<]+)</p>', text, flags=re.I | re.S)
+        articles_from_html.append(
+            {
+                "title": html.unescape(title.group(1).split("|")[0].strip()) if title else path.stem,
+                "slug": path.stem,
+                "author": html.unescape(author.group(1).strip()) if author else "",
+                "category": "",
+                "status": "publicado",
+            }
+        )
+    return articles_from_html
 
 
 def h(text: str) -> str:

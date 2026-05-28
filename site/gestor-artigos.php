@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 const DOMAIN = 'https://verbovivo.blog';
@@ -148,7 +148,7 @@ function render_article_page(array $article): string {
 }
 
 function article_card(array $article): string {
-    $image = trim((string) $article['image_filename']) ?: 'depois-da-festa.png';
+    $image = trim((string) $article['image_filename']) ?: 'o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png';
     return '
       <article class="article-card">
         <a href="artigos/' . esc((string) $article['slug']) . '.html">

@@ -16,6 +16,7 @@ from .models import ArticleDraft
 
 DOMAIN = "https://verbovivo.blog"
 SITE_DIR = Path("site")
+DEFAULT_IMAGE = "o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png"
 
 
 def ensure_dir(ftp: FTP, path: str) -> None:
@@ -31,7 +32,7 @@ def ensure_dir(ftp: FTP, path: str) -> None:
 
 
 def article_card(draft: ArticleDraft) -> str:
-    image = draft.image_filename or "depois-da-festa.png"
+    image = draft.image_filename or DEFAULT_IMAGE
     return f"""
       <article class="article-card">
         <a href="artigos/{escape(draft.slug)}.html">
@@ -47,7 +48,7 @@ def article_card(draft: ArticleDraft) -> str:
 
 
 def featured_article(draft: ArticleDraft) -> str:
-    image = draft.image_filename or "depois-da-festa.png"
+    image = draft.image_filename or DEFAULT_IMAGE
     return f"""
       <article class="featured">
         <a href="artigos/{escape(draft.slug)}.html">

@@ -52,6 +52,22 @@ HOSTINGER_FTP_PASSWORD=
 HOSTINGER_FTP_DIR=/
 
 OPENAI_API_KEY=
+
+GA4_MEASUREMENT_ID=
+GSC_SITE_URL=https://verbovivo.blog/
+GOOGLE_APPLICATION_CREDENTIALS=
+GSC_OAUTH_CLIENT_SECRETS=
+GSC_OAUTH_TOKEN=
+GOOGLE_ADSENSE_CLIENT=
+HOSTINGER_ACCESS_LOG_PATH=automation/_logs/hostinger
+HOSTINGER_ANALYTICS_REMOTE_LOG=_private/analytics-events.jsonl
+HOSTINGER_ANALYTICS_LOCAL_LOG=automation/_logs/hostinger/first-party-analytics.jsonl
+
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_GH_REPO=
+TELEGRAM_GH_WORKFLOW=
+GITHUB_TOKEN_FOR_TELEGRAM=
 ```
 
 ## Comandos
@@ -79,6 +95,38 @@ Reenviar o site estatico completo para a Hostinger:
 ```powershell
 python -m automation.editorial_agent.deploy_site
 ```
+
+Gerar relatorio editorial/audiencia com as fontes configuradas:
+
+```powershell
+python -m automation.editorial_agent.audience_report
+```
+
+Autorizar o Search Console por OAuth, quando a conta de servico nao puder ser adicionada no Search Console:
+
+```powershell
+python -m automation.editorial_agent.audience_report --authorize-search-console
+```
+
+Enviar o resumo curto para o Telegram, quando `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` estiverem configurados:
+
+```powershell
+python -m automation.editorial_agent.audience_report --telegram
+```
+
+Tambem e possivel enviar pelo GitHub Actions reutilizando secrets existentes:
+
+```txt
+TELEGRAM_GH_REPO=HeberPython/agente-sites
+TELEGRAM_GH_WORKFLOW=send_telegram.yml
+GITHUB_TOKEN_FOR_TELEGRAM=<token com permissao para actions:write no repo>
+```
+
+Para ativar a tag do Google Analytics no HTML, configure `GA4_MEASUREMENT_ID` antes de rodar `scripts/build_static_site.py`. Para AdSense, configure `GOOGLE_ADSENSE_CLIENT`.
+
+Para incluir logs da Hostinger, exporte/baixe os arquivos de acesso ou estatisticas do hPanel e coloque em `automation/_logs/hostinger`. O relatorio le arquivos `.log`, `.txt` e `.gz` dentro dessa pasta.
+
+O site tambem possui uma medicao editorial propria em `analytics.php`, que salva eventos anonimizados em `_private/analytics-events.jsonl`. O relatorio tenta baixar esse arquivo via FTP antes de analisar.
 
 ## Observacao
 

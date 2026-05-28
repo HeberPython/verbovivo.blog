@@ -1,49 +1,34 @@
 # Verbo Vivo
 
-Primeira versão publicável do `verbovivo.blog`.
+Código-fonte do blog cristão `verbovivo.blog`.
 
-## Site pronto
+## Estrutura principal
 
-Abra no navegador:
+- `site/`: versão final publicada na Hostinger.
+- `public/`: arquivos PHP e assets preservados para publicação.
+- `automation/editorial_agent/`: agente editorial por e-mail, revisão, geração de imagem e publicação.
+- `scripts/build_static_site.py`: recompõe a home, os três artigos atuais, `feed.xml` e `sitemap.xml`.
+- `_drafts/`: rascunhos JSON usados pelo fluxo editorial.
 
-`site/index.html`
-
-A pasta `site/` contém a home, as páginas dos artigos, imagens, RSS, sitemap, robots.txt e páginas institucionais.
-
-## Reconstruir o site
-
-Use o script:
+## Recriar a versão estática atual
 
 ```powershell
-C:\Users\Heber\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe scripts\build_static_site.py
+python scripts\build_static_site.py
 ```
 
-O script lê os PDFs humanos em `C:\Users\Heber\Documents\verbovivo.blog`, copia as imagens e recria a pasta `site/`.
+O script usa os rascunhos atuais em `_drafts/`, recompõe `site/index.html`, gera as páginas em `site/artigos/`, copia imagens e atualiza RSS/sitemap.
 
-## Conteúdo inicial
+## Artigos atuais da home
 
-- Depois da Festa: onde ficou Jesus?
-- Feitos para brilhar pela Palavra da Vida
-- O coração desordenado
+- O Coração Desordenado: Guardando a Fonte da Vida
+- Feitos para Brilhar: Vivendo a Palavra da Vida em Meio à Geração
+- Depois da festa: onde ficou Jesus?
 
-Os artigos publicados no site são versões reflexivas e compactadas, preparadas a partir dos textos brutos originais.
+## Fluxo editorial
 
-## Páginas institucionais
+1. `artigo@verbovivo.blog`: recebe texto, refina, gera imagem e devolve preview para aprovação.
+2. `publicar@verbovivo.blog`: recebe artigo pronto com imagem e adapta ao layout do site.
+3. `revisao.php`: permite aprovar ou corrigir um rascunho por token.
+4. `cron-editorial.php`: executa a leitura editorial na Hostinger via Cron Jobs.
 
-- `site/sobre.html`
-- `site/faq.html`
-- `site/politica-de-privacidade.html`
-
-## Capas geradas
-
-- `public/images/articles/depois-da-festa.png`
-- `public/images/articles/feitos-para-brilhar.png`
-- `public/images/articles/coracao-desordenado.png`
-
-## Fluxo editorial proposto
-
-1. O autor adiciona o artigo humano em PDF, DOCX ou Markdown.
-2. Um agente extrai o texto e preserva a voz do autor.
-3. O agente gera resumo, categoria, tags, imagem contextual, alt text e metadados SEO.
-4. O artigo entra como rascunho para aprovação.
-5. O site publica somente conteúdo aprovado.
+Credenciais ficam fora do Git em `automation/.env` e no arquivo privado do servidor.

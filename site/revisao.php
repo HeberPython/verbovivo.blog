@@ -93,7 +93,7 @@ function listen_script(): string {
           return;
         }
         const expandBibleReferences = (text) => text.replace(
-          /\b([1-3]?\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÁÉÍÓÚÂÊÔÃÕÇáéíóúâêôãõç]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?/g,
+          /\b([1-3]?\s?[A-Z???????????][A-Za-z??????????????????????]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?/g,
           (_, book, chapter, verse, endVerse) => {
             const cleanBook = book.replace(/\s+/g, " ").trim();
             return endVerse
@@ -266,7 +266,7 @@ function article_card(array $draft): string {
     $slug = (string) ($draft['slug'] ?? 'nova-reflexao');
     $excerpt = (string) ($draft['excerpt'] ?? 'Uma reflexão cristã para fortalecer a fé na vida cotidiana.');
     $category = (string) ($draft['category'] ?? 'Reflexão');
-    $image = (string) ($draft['image_filename'] ?? 'depois-da-festa.png');
+    $image = (string) ($draft['image_filename'] ?? 'o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png');
 
     return '
       <article class="article-card">
@@ -287,7 +287,7 @@ function featured_article(array $draft): string {
     $slug = (string) ($draft['slug'] ?? 'nova-reflexao');
     $excerpt = (string) ($draft['excerpt'] ?? 'Uma reflexão cristã para fortalecer a fé na vida cotidiana.');
     $category = (string) ($draft['category'] ?? 'Reflexão');
-    $image = (string) ($draft['image_filename'] ?? 'depois-da-festa.png');
+    $image = (string) ($draft['image_filename'] ?? 'o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png');
 
     return '
       <article class="featured">

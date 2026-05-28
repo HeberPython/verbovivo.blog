@@ -9,11 +9,19 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Sobre | Verbo Vivo" />
     <meta property="og:description" content="Conheça o propósito editorial do Verbo Vivo, um blog de reflexões cristãs para fortalecer a fé na vida cotidiana." />
-    <meta property="og:image" content="https://verbovivo.blog/images/articles/depois-da-festa.png" />
+    <meta property="og:image" content="https://verbovivo.blog/images/articles/o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png" />
     <meta property="og:url" content="https://verbovivo.blog/sobre.html" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="alternate" type="application/rss+xml" title="Verbo Vivo" href="feed.xml" />
     <link rel="stylesheet" href="styles.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KRH6PSKSMV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-KRH6PSKSMV');
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5233928852442075" crossorigin="anonymous"></script>
   </head>
   <body>
     <header class="site-header">
@@ -33,7 +41,7 @@
         <a href="politica-de-privacidade.html">Privacidade</a>
       </nav>
     </header>
-    
+
     <main>
       <article class="article-page static-page">
         <header class="plain-hero">
@@ -68,69 +76,47 @@
         <a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a>
       </div>
     </footer>
-    
+
     <script>
       (() => {
-        const controls = document.querySelector(".listen-tools");
-        const article = document.querySelector(".article-content");
-        if (!controls || !article) return;
-        const status = controls.querySelector("[data-listen-status]");
-        const button = controls.querySelector("[data-listen-toggle]");
-        const synthesis = window.speechSynthesis;
-        let utterance = null;
-        const setStatus = (message) => { if (status) status.textContent = message; };
-        const setButton = (speaking) => {
-          if (!button) return;
-          button.classList.toggle("is-speaking", speaking);
-          button.setAttribute("aria-label", speaking ? "Pausar narração" : "Ouvir artigo");
-          button.setAttribute("title", speaking ? "Pausar narração" : "Ouvir artigo");
-        };
-        if (!("speechSynthesis" in window)) {
-          if (button) button.disabled = true;
-          setStatus("Narração indisponível neste navegador.");
-          return;
+        const endpoint = "analytics.php";
+        const now = Date.now();
+        const sessionKey = "vv_session_id";
+        const pageKey = "vv_page_id";
+        let sessionId = sessionStorage.getItem(sessionKey);
+        if (!sessionId) {
+          sessionId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+          sessionStorage.setItem(sessionKey, sessionId);
         }
-        const expandBibleReferences = (text) => text.replace(
-          /\b([1-3]?\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÁÉÍÓÚÂÊÔÃÕÇáéíóúâêôãõç]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?/g,
-          (_, book, chapter, verse, endVerse) => {
-            const cleanBook = book.replace(/\s+/g, " ").trim();
-            return endVerse
-              ? `${cleanBook}, capítulo ${chapter}, versículos ${verse} a ${endVerse}`
-              : `${cleanBook}, capítulo ${chapter}, versículo ${verse}`;
-          }
-        );
-        const articleText = () => expandBibleReferences(article.innerText).replace(/\s+/g, " ").trim();
-        const stop = () => {
-          synthesis.cancel();
-          utterance = null;
-          setButton(false);
-          setStatus("Narração parada.");
-        };
-        controls.addEventListener("click", (event) => {
-          if (!event.target.closest("[data-listen-toggle]")) return;
-          if (synthesis.speaking && !synthesis.paused) {
-            synthesis.pause();
-            setButton(false);
-            setStatus("Narração pausada.");
-            return;
-          }
-          if (synthesis.paused) {
-            synthesis.resume();
-            setButton(true);
-            setStatus("Narrando artigo.");
-            return;
-          }
-          stop();
-          utterance = new SpeechSynthesisUtterance(articleText());
-          utterance.lang = "pt-BR";
-          utterance.rate = 0.95;
-          utterance.onend = () => { setButton(false); setStatus("Narração concluída."); };
-          utterance.onerror = () => { setButton(false); setStatus("Não foi possível narrar este artigo."); };
-          synthesis.speak(utterance);
-          setButton(true);
-          setStatus("Narrando artigo.");
+        const pageId = crypto.randomUUID ? crypto.randomUUID() : `${now}-${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(pageKey, pageId);
+        const payload = (eventName) => ({
+          event: eventName,
+          session_id: sessionId,
+          page_id: pageId,
+          path: location.pathname,
+          title: document.title,
+          referrer: document.referrer || "",
+          elapsed_seconds: Math.max(0, Math.round((Date.now() - now) / 1000)),
+          language: navigator.language || "",
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+          screen: `${screen.width}x${screen.height}`,
+          viewport: `${innerWidth}x${innerHeight}`
         });
-        window.addEventListener("beforeunload", () => synthesis.cancel());
+        const send = (eventName) => {
+          const body = JSON.stringify(payload(eventName));
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(endpoint, new Blob([body], { type: "application/json" }));
+            return;
+          }
+          fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+        };
+        send("pageview");
+        const timer = setInterval(() => send("heartbeat"), 15000);
+        window.addEventListener("pagehide", () => {
+          clearInterval(timer);
+          send("pagehide");
+        });
       })();
     </script>
 
