@@ -14,6 +14,22 @@ Formato recomendado para o beta:
 - Linguagem pratica, com screenshots e checklists.
 - Um capitulo por decisao importante.
 - Pouco codigo no corpo principal; detalhes tecnicos ficam em anexos.
+- Incluir uma pagina de "Atualizacao da versao" sempre que o caso real do blog evoluir.
+
+## Nota de atualizacao para a proxima versao do ebook
+
+Esta versao do ebook precisa refletir as melhorias implantadas no `verbovivo.blog` depois da primeira configuracao:
+
+- O blog passou a ter um gestor oculto de artigos publicados em `gestor-artigos.php`, protegido por token.
+- O agente passou a bloquear remetentes nao autorizados antes de preparar/publicar artigos.
+- Quando um remetente novo envia conteudo, o aprovador recebe link para autorizacao temporaria ou permanente.
+- Foram criadas paginas ocultas de apoio: revisao, autorizacao de remetente, diagnostico do cron e gestor.
+- O cron editorial roda na Hostinger em horarios programados e pode ser diagnosticado por pagina protegida.
+- O site ganhou medicao propria anonima em `analytics.php`, alem de Google Analytics/Search Console/AdSense.
+- Os artigos ganharam narração no navegador; referencias biblicas precisam ser escritas por extenso para nao serem lidas como horario.
+- A manutencao profunda removeu prototipos antigos, scripts obsoletos e referencias a artigos descartados.
+- Foi identificado um erro real de producao: arquivos PHP com BOM invisivel antes de `<?php` quebraram paginas com `declare(strict_types=1)`. O caso deve entrar como alerta pratico no capitulo de manutencao.
+- O gestor oculto deve ser citado como recurso existente, mas a ampliacao para editar paginas fixas e imagens deve ficar como possibilidade futura, nao como promessa do beta.
 
 ## Introducao - O que voce esta prestes a construir
 
@@ -66,12 +82,22 @@ Conteudo:
 - E-mails editoriais.
 - Agente local/PHP.
 - Aprovacao por token.
+- Gestor oculto por token para manutencao pontual de artigos.
+- Paginas ocultas de apoio: revisao, autorizacao, diagnostico e gestor.
 - Publicacao final.
 - RSS, sitemap e Search Console.
 
 Entrega do capitulo:
 
 Diagrama do fluxo: autor -> e-mail -> agente -> revisao -> aprovacao -> site -> Google.
+
+Atualizacao sugerida do diagrama:
+
+autor autorizado -> e-mail editorial -> agente -> preview por e-mail -> revisao por token -> publicacao -> home/feed/sitemap -> Search Console.
+
+Fluxo de excecao:
+
+remetente novo -> agente bloqueia -> e-mail ao aprovador -> autorizacao temporaria/permanente -> processamento no proximo ciclo.
 
 ## Capitulo 3 - Dominio, hospedagem e presenca propria
 
@@ -124,10 +150,17 @@ Conteudo:
 - Como separar e-mails evita confusao operacional.
 - Modelo de envio para autores.
 - Como anexos e imagens entram no fluxo.
+- Lista de remetentes autorizados.
+- O que acontece quando alguem fora da lista tenta enviar artigo.
+- Autorizacao temporaria versus autorizacao permanente.
 
 Entrega do capitulo:
 
 Templates de envio e convite para autores.
+
+Acrescimo necessario:
+
+Explicar que `artigo@` e `publicar@` nao devem aceitar qualquer remetente. O caso real passou a exigir allowlist manual. Isso evita que compradores do ebook, curiosos ou terceiros consigam acionar o fluxo editorial apenas descobrindo os enderecos.
 
 ## Capitulo 6 - Agentes com supervisao humana
 
@@ -143,6 +176,8 @@ Conteudo:
 - Geracao ou uso de imagem.
 - Quando usar IA e quando publicar sem IA.
 - Como preservar a voz do autor.
+- Diferenca entre o fluxo com IA (`artigo@`) e o fluxo de formatacao/publicacao direta (`publicar@`).
+- Por que o fluxo direto deve apenas normalizar layout, tipografia, imagem e estrutura, sem reescrever desnecessariamente.
 
 Entrega do capitulo:
 
@@ -162,6 +197,9 @@ Conteudo:
 - Correcao antes da publicacao.
 - Evitar publicacao indevida.
 - Como transformar revisao em rotina simples.
+- Preview no proprio e-mail antes de abrir a revisao.
+- Link de correcao quando for preciso alterar o artigo.
+- Relacao entre revisao por token e seguranca operacional.
 
 Entrega do capitulo:
 
@@ -182,10 +220,18 @@ Conteudo:
 - Envio para hospedagem.
 - Rotinas manuais e rotinas agendadas.
 - O papel do Cron Jobs na Hostinger.
+- Diagnostico do cron por pagina protegida.
+- Log do cron em pasta privada.
+- Manutencao profunda: backup, limpeza de arquivos obsoletos, testes e rollback.
+- Cuidado com compatibilidade PHP na hospedagem.
 
 Entrega do capitulo:
 
 Checklist de publicacao e pos-publicacao.
+
+Estudo de caso para inserir:
+
+Durante a manutencao do `verbovivo.blog`, o gestor oculto retornou erro 500. O arquivo existia, mas um caractere invisivel BOM antes de `<?php` quebrou o PHP porque o arquivo usava `declare(strict_types=1)`. A solucao foi regravar os PHPs sem BOM, testar o link protegido e criar a regra: toda manutencao deve validar tambem paginas ocultas, nao apenas a home publica.
 
 ## Capitulo 9 - SEO simples para nao publicar no escuro
 
@@ -205,6 +251,9 @@ Conteudo:
 - Robots.txt.
 - Search Console.
 - O que acompanhar depois da publicacao.
+- Google Analytics.
+- Medicao propria simples em `analytics.php`.
+- AdSense quando o projeto estiver maduro.
 
 Entrega do capitulo:
 
@@ -224,12 +273,27 @@ Conteudo:
 - Remetentes autorizados.
 - Bloqueio de e-mails de servico.
 - Revisao por token.
+- Gestor oculto por token.
+- Diagnostico protegido por token.
+- Autorizacao temporaria/permanente de remetente.
+- Arquivos PHP sem BOM.
+- Compatibilidade com versoes PHP da hospedagem.
 - Backup antes de mudancas.
 - O que nunca colocar em produto publico.
 
 Entrega do capitulo:
 
 Checklist de seguranca para lancamento.
+
+Checklist complementar de seguranca:
+
+- Testar `_private` retornando acesso negado.
+- Testar `cron-editorial.php` retornando 403 pelo navegador.
+- Testar `gestor-artigos.php` com token valido.
+- Testar `gestor-artigos.php` sem token retornando 404.
+- Verificar se nenhum arquivo `.env`, token OAuth, chave OpenAI ou senha foi para o GitHub.
+- Validar que remetente nao autorizado nao publica artigo.
+- Confirmar que o aprovador recebe e-mail de autorizacao.
 
 ## Capitulo 11 - Como adaptar para seu nicho
 
@@ -276,6 +340,18 @@ Entrega do capitulo:
 
 Checklist final de execucao.
 
+Atualizacao sugerida do Dia 7:
+
+Incluir uma revisao obrigatoria das paginas ocultas:
+
+- `revisao.php`
+- `gestor-artigos.php`
+- `cron-diagnostico.php`
+- `autorizar-remetente.php`
+- `cron-editorial.php`
+
+Essa etapa ensina que um projeto editorial automatizado nao e apenas a parte bonita da home; os bastidores precisam estar saudaveis.
+
 ## Anexos
 
 Anexo A: Glossario simples.
@@ -293,6 +369,49 @@ Anexo F: Checklist de seguranca.
 Anexo G: Planilha de metricas.
 
 Anexo H: Custos externos possiveis.
+
+Anexo I: Checklist de manutencao e rollback.
+
+Anexo J: Gabarito de teste das paginas ocultas.
+
+Anexo K: Backlog do gestor oculto.
+
+## Anexo I - Checklist de manutencao e rollback
+
+- Fazer backup antes de limpar arquivos.
+- Conferir `git status`.
+- Verificar home, artigos, imagens, `sitemap.xml` e `feed.xml`.
+- Verificar paginas ocultas com token.
+- Remover arquivos obsoletos somente depois de confirmar que nao participam do fluxo vivo.
+- Publicar na Hostinger.
+- Testar online com HTTP 200/403/404 esperados.
+- Fazer commit e push.
+- Registrar relatorio de manutencao.
+
+## Anexo J - Gabarito de teste das paginas ocultas
+
+- `gestor-artigos.php?token=...`: deve abrir com token valido.
+- `gestor-artigos.php`: deve esconder a pagina.
+- `revisao.php?token=...`: deve abrir quando houver rascunho valido.
+- `cron-diagnostico.php?token=...`: deve mostrar IMAP/logs com token valido.
+- `cron-editorial.php`: deve retornar 403 no navegador.
+- `_private/`: deve ficar inacessivel publicamente.
+- `autorizar-remetente.php?token=...`: deve processar apenas token valido.
+
+## Anexo K - Backlog do gestor oculto
+
+O caso real possui um gestor simples para artigos. Futuramente, ele pode evoluir para:
+
+- Trocar imagem de capa por upload.
+- Editar paginas fixas.
+- Editar dados do autor.
+- Gerenciar biblioteca de imagens.
+- Ajustar SEO basico.
+- Criar backup automatico antes de salvar.
+- Manter historico e restaurar versoes.
+- Exigir senha alem do token.
+
+No beta, apresentar isso como possibilidade de evolucao, nao como recurso prometido.
 
 ## Pagina complementar
 

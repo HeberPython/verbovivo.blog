@@ -53,6 +53,7 @@ Tenha prontos:
 - Prazo de garantia.
 - Aviso de custos externos.
 - Link do blog real: `https://verbovivo.blog`.
+- Nota de atualizacao do ebook, quando o caso real tiver evoluido depois da primeira versao.
 
 ## Dados recomendados do produto
 
@@ -96,7 +97,8 @@ Nao abrir no beta.
 8. Escolher pagamento a vista. Parcelamento pode ser deixado para versao maior, pois R$ 47 e valor baixo.
 9. Enviar o PDF principal.
 10. Enviar templates/checklists como material complementar ou organizar no Hotmart Club, se a tela oferecer essa opcao.
-11. Salvar e continuar ate o Painel do Produto.
+11. Se ja existir comprador ou versao anterior, incluir aviso de atualizacao explicando o que mudou no caso real.
+12. Salvar e continuar ate o Painel do Produto.
 
 ## Pagina de Produto Hotmart
 
@@ -122,6 +124,8 @@ FAQ minimo:
 - Existem custos externos?
 - O que esta incluso no beta?
 - O que nao esta incluso?
+- Como proteger o fluxo para que qualquer pessoa nao publique no blog?
+- O que sao paginas ocultas por token?
 
 ## Se usar pagina externa
 
@@ -159,6 +163,10 @@ Obrigado por entrar no beta do Verbo Vivo Lab.
 
 Comece pelo PDF principal. Depois, baixe os checklists e leia a pagina complementar. Se algo ficar confuso, responda a pesquisa de feedback; as duvidas dos primeiros compradores vao orientar a versao final.
 
+Mensagem para atualizacao do produto:
+
+O material foi atualizado com melhorias do caso real: seguranca por remetentes autorizados, paginas ocultas de gestao/revisao/diagnostico, checklist de manutencao e uma licao pratica sobre erro 500 em PHP causado por caractere invisivel no arquivo.
+
 ## Publicacao e validacao
 
 Depois de publicar:
@@ -180,3 +188,5 @@ Depois de publicar:
 - Nao publicar credenciais, prints com senhas ou trechos sensiveis do projeto.
 - Nao abrir afiliados antes de validar conversao e reembolso.
 - Nao criar curso grande antes de 5 vendas beta e feedback real.
+- Nao vender o gestor oculto ampliado como recurso pronto; por enquanto, apresente como possibilidade futura/backlog.
+- Nao ensinar pessoas a copiar credenciais reais do caso `verbovivo.blog`; explicar arquitetura, nao segredos.

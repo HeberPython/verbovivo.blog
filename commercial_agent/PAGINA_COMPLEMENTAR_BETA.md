@@ -22,6 +22,7 @@ Voce entrou no beta do Verbo Vivo Lab. Comece pelo PDF principal e use os checkl
 - Checklist e-mails editoriais.
 - Checklist SEO.
 - Checklist seguranca.
+- Checklist paginas ocultas e manutencao.
 - Templates de e-mail.
 - Planilha de metricas.
 
@@ -34,6 +35,7 @@ Voce entrou no beta do Verbo Vivo Lab. Comece pelo PDF principal e use os checkl
 5. Desenhe aprovacao humana.
 6. Publique um artigo simples.
 7. Revise SEO e seguranca.
+8. Teste as paginas ocultas e o fluxo de autorizacao de remetentes.
 
 ### 4. Links uteis
 
@@ -56,6 +58,9 @@ Perguntas iniciais:
 - Quanto custa manter algo parecido?
 - Posso adaptar para outro nicho?
 - Como evito que qualquer pessoa publique no meu blog?
+- O que e uma pagina oculta por token?
+- Por que preciso testar o gestor, a revisao e o cron mesmo quando a home esta funcionando?
+- O que fazer se a hospedagem retornar erro 500 em uma pagina PHP?
 
 ### 6. Aviso de seguranca
 
@@ -70,3 +75,16 @@ Perguntas para compradores:
 3. Qual capitulo deveria virar video?
 4. Voce pretende implementar sozinho ou com ajuda tecnica?
 5. O preco beta fez sentido para a entrega?
+
+### 8. Atualizacoes do caso real
+
+Registrar nesta area as mudancas reais do `verbovivo.blog` que acontecerem depois da publicacao do PDF.
+
+Atualizacao inicial recomendada:
+
+- O blog passou a usar lista de remetentes autorizados para os e-mails editoriais.
+- Remetentes novos precisam ser autorizados manualmente, de forma temporaria ou permanente.
+- O gestor oculto de artigos existe, mas permanece simples e protegido por token.
+- A manutencao do projeto agora inclui teste obrigatorio das paginas ocultas.
+- Foi adicionada medicao propria anonima em `analytics.php`.
+- Foi documentado um erro real de producao: arquivo PHP com BOM invisivel antes de `<?php`, causando erro 500. A correcao foi regravar os PHPs sem BOM e validar online.
