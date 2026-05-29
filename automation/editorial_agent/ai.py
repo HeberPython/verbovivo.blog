@@ -4,13 +4,15 @@ import base64
 import json
 import secrets
 from html import escape
+from io import BytesIO
 from pathlib import Path
 
 from openai import OpenAI
 from openai import OpenAIError
+from PIL import Image
 
 from .config import settings
-from .content import extract_submission_metadata, fallback_refine, slugify
+from .content import extract_submission_metadata, fallback_refine, slugify, webp_name
 from .models import ArticleDraft
 
 
@@ -119,6 +121,12 @@ def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
     image_base64 = result.data[0].b64_json
     if not image_base64:
         return None
-    path.write_bytes(base64.b64decode(image_base64))
+    image_bytes = base64.b64decode(image_base64)
+    path.write_bytes(image_bytes)
+    try:
+        with Image.open(BytesIO(image_bytes)) as image:
+            image.convert("RGB").save(path.with_name(webp_name(path.name)), "WEBP", quality=78, method=6)
+    except OSError:
+        pass
     draft.local_image_path = str(path)
     return path

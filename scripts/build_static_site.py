@@ -20,6 +20,8 @@ SITE = ROOT / "site"
 DRAFTS = ROOT / "_drafts"
 DOMAIN = "https://verbovivo.blog"
 DEFAULT_IMAGE = "o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png"
+ARTICLE_WIDTH = 1536
+ARTICLE_HEIGHT = 1024
 
 CURRENT_HOME_DRAFTS = [
     "dcf1e0e616343e53",
@@ -45,11 +47,27 @@ def article_image(draft: ArticleDraft) -> str:
     return draft.image_filename or DEFAULT_IMAGE
 
 
+def webp_name(filename: str) -> str:
+    return re.sub(r"\.[^.]+$", ".webp", filename)
+
+
+def article_picture(prefix: str, filename: str, alt: str, *, eager: bool) -> str:
+    loading = 'fetchpriority="high" decoding="async"' if eager else 'loading="lazy" decoding="async"'
+    return (
+        "<picture>"
+        f'<source srcset="{prefix}{escape(webp_name(filename))}" type="image/webp" />'
+        f'<img src="{prefix}{escape(filename)}" alt="{escape(alt)}" '
+        f'width="{ARTICLE_WIDTH}" height="{ARTICLE_HEIGHT}" {loading} />'
+        "</picture>"
+    )
+
+
 def article_card(draft: ArticleDraft, featured: bool = False) -> str:
     css_class = "featured" if featured else "article-card"
+    image = article_image(draft)
     return f"""      <article class="{css_class}">
         <a href="artigos/{escape(draft.slug)}.html">
-          <img src="images/articles/{escape(article_image(draft))}" alt="{escape(draft.title)}" />
+          {article_picture("images/articles/", image, draft.title, eager=featured)}
         </a>
         <div class="article-body">
           <p class="category">{escape(draft.category)}</p>

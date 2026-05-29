@@ -8,7 +8,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .ai import generate_cover_image, refine_with_openai
 from .config import settings
-from .content import ready_article_from_email, slugify
+from .content import ready_article_from_email, slugify, webp_name
 from .mail import send_review_email, unread_messages, unread_publish_messages
 from .publisher import publish_article, upload_review_draft
 from .security import request_authorization_if_needed
@@ -38,7 +38,8 @@ def standardize_article_image(payload: bytes, path: Path) -> bool:
                 image = background
             else:
                 image = image.convert("RGB")
-            image.save(path, format="JPEG", quality=88, optimize=True, progressive=True)
+            image.save(path, format="JPEG", quality=86, optimize=True, progressive=True)
+            image.save(path.with_name(webp_name(path.name)), format="WEBP", quality=78, method=6)
         return True
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         print(f"Ignored invalid image attachment for direct publish: {exc.__class__.__name__}")
