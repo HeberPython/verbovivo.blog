@@ -8,9 +8,6 @@ from urllib.parse import urlparse
 
 from .models import ArticleDraft
 
-ARTICLE_WIDTH = 1536
-ARTICLE_HEIGHT = 1024
-
 
 def slugify(value: str) -> str:
     value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
@@ -256,21 +253,6 @@ def analytics_script(endpoint: str = "analytics.php") -> str:
 """
 
 
-def webp_name(filename: str) -> str:
-    return re.sub(r"\.[^.]+$", ".webp", filename)
-
-
-def article_picture(prefix: str, filename: str, alt: str, *, eager: bool = True) -> str:
-    loading = 'fetchpriority="high" decoding="async"' if eager else 'loading="lazy" decoding="async"'
-    return (
-        "<picture>"
-        f'<source srcset="{prefix}{escape(webp_name(filename))}" type="image/webp" />'
-        f'<img src="{prefix}{escape(filename)}" alt="{escape(alt)}" '
-        f'width="{ARTICLE_WIDTH}" height="{ARTICLE_HEIGHT}" {loading} />'
-        "</picture>"
-    )
-
-
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     blocks = paragraphs_from_text(article_text)
@@ -304,7 +286,7 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
 def render_article_page(draft: ArticleDraft) -> str:
     image_html = ""
     if draft.image_filename:
-        image_html = article_picture("../images/articles/", draft.image_filename, draft.title, eager=True)
+        image_html = f'<img src="../images/articles/{escape(draft.image_filename)}" alt="{escape(draft.title)}" />'
     return f"""<!doctype html>
 <html lang="pt-BR">
   <head>

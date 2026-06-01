@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 from .config import settings
-from .content import article_picture, render_article_page, webp_name
+from .content import render_article_page
 from .models import ArticleDraft
 
 
@@ -36,7 +36,7 @@ def article_card(draft: ArticleDraft) -> str:
     return f"""
       <article class="article-card">
         <a href="artigos/{escape(draft.slug)}.html">
-          {article_picture("images/articles/", image, draft.title, eager=False)}
+          <img src="images/articles/{escape(image)}" alt="{escape(draft.title)}" />
         </a>
         <div class="article-body">
           <p class="category">{escape(draft.category)}</p>
@@ -52,7 +52,7 @@ def featured_article(draft: ArticleDraft) -> str:
     return f"""
       <article class="featured">
         <a href="artigos/{escape(draft.slug)}.html">
-          {article_picture("images/articles/", image, draft.title, eager=True)}
+          <img src="images/articles/{escape(image)}" alt="{escape(draft.title)}" />
         </a>
         <div class="article-body">
           <p class="category">{escape(draft.category)}</p>
@@ -143,11 +143,6 @@ def write_local_article(draft: ArticleDraft, html: bytes) -> list[Path]:
             image_path = image_dir / draft.image_filename
             image_path.write_bytes(source.read_bytes())
             changed.append(image_path)
-            webp_source = source.with_name(webp_name(source.name))
-            if webp_source.exists():
-                webp_path = image_dir / webp_name(draft.image_filename)
-                webp_path.write_bytes(webp_source.read_bytes())
-                changed.append(webp_path)
     return changed
 
 
@@ -169,10 +164,6 @@ def publish_article(draft: ArticleDraft) -> None:
                 ensure_dir(ftp, "images/articles")
                 with image_path.open("rb") as image_file:
                     ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
-                webp_path = image_path.with_name(webp_name(image_path.name))
-                if webp_path.exists():
-                    with webp_path.open("rb") as image_file:
-                        ftp.storbinary(f"STOR images/articles/{webp_name(draft.image_filename)}", image_file)
         for path in changed_paths:
             if path.name == f"{draft.slug}.html" or path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
                 continue
@@ -195,7 +186,3 @@ def upload_review_draft(draft: ArticleDraft) -> None:
                 ensure_dir(ftp, "images/articles")
                 with image_path.open("rb") as image_file:
                     ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
-                webp_path = image_path.with_name(webp_name(image_path.name))
-                if webp_path.exists():
-                    with webp_path.open("rb") as image_file:
-                        ftp.storbinary(f"STOR images/articles/{webp_name(draft.image_filename)}", image_file)
