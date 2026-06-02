@@ -15,6 +15,13 @@ DEFAULT_AUTHOR_SOCIALS = {
     "youtube": "https://www.youtube.com/@Lemos3",
     "facebook": "https://www.facebook.com/PastorAntonioLemos",
 }
+REFERENCE_HEADINGS = {
+    "fontes",
+    "fontes e dicionarios de referencia",
+    "referencias",
+    "referencias bibliograficas",
+    "bibliografia",
+}
 
 
 def slugify(value: str) -> str:
@@ -33,13 +40,6 @@ def paragraphs_from_text(text: str) -> list[str]:
 def normalize_direct_submission_text(text: str) -> str:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     kept_lines: list[str] = []
-    stop_headings = {
-        "fontes",
-        "fontes e dicionarios de referencia",
-        "referencias",
-        "referencias bibliograficas",
-        "bibliografia",
-    }
     discard_patterns = (
         r"^\[image:\s*.*?\]$",
         r"^!\[.*?\]\(.*?\)$",
@@ -50,14 +50,56 @@ def normalize_direct_submission_text(text: str) -> str:
     )
     for line in text.splitlines():
         clean = line.strip()
-        heading = clean.strip("*# ").rstrip(":")
-        heading_norm = unicodedata.normalize("NFKD", heading).encode("ascii", "ignore").decode("ascii").lower()
-        if heading_norm in stop_headings:
-            break
         if any(re.match(pattern, clean, re.IGNORECASE) for pattern in discard_patterns):
             continue
         kept_lines.append(line.rstrip())
     return "\n".join(kept_lines).strip()
+
+
+def normalized_heading(value: str) -> str:
+    value = value.strip("*# ").rstrip(":")
+    return unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").lower()
+
+
+def split_direct_references(text: str) -> tuple[str, str]:
+    main_lines: list[str] = []
+    reference_lines: list[str] = []
+    in_references = False
+    for line in text.splitlines():
+        if normalized_heading(line) in REFERENCE_HEADINGS:
+            in_references = True
+            continue
+        (reference_lines if in_references else main_lines).append(line)
+    return "\n".join(main_lines).strip(), "\n".join(reference_lines).strip()
+
+
+def direct_references_html(text: str) -> str:
+    if not text.strip():
+        return ""
+    items: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        clean = line.strip()
+        if not clean:
+            continue
+        if clean.startswith("- "):
+            if current:
+                items.append(" ".join(current))
+            current = [clean[2:].strip()]
+        else:
+            current.append(clean)
+    if current:
+        items.append(" ".join(current))
+    if not items:
+        items = [text.strip()]
+    rendered = "".join(f"<li>{inline_direct_markup(item)}</li>" for item in items)
+    return (
+        '<aside class="article-references" aria-label="Referências para aprofundamento">'
+        "<h2>Para aprofundar a leitura</h2>"
+        "<p>Estas obras podem ajudar o leitor que deseja ampliar o estudo bíblico e teológico relacionado à reflexão.</p>"
+        f"<ul>{rendered}</ul>"
+        "</aside>"
+    )
 
 
 def inline_direct_markup(text: str) -> str:
@@ -78,7 +120,9 @@ def inline_direct_markup(text: str) -> str:
 
 
 def direct_article_html(text: str, title: str) -> str:
-    blocks = paragraphs_from_text(normalize_direct_submission_text(text))
+    cleaned_text = normalize_direct_submission_text(text)
+    article_text, reference_text = split_direct_references(cleaned_text)
+    blocks = paragraphs_from_text(article_text)
     body: list[str] = []
     list_items: list[str] = []
 
@@ -110,6 +154,9 @@ def direct_article_html(text: str, title: str) -> str:
         else:
             body.append(f"<p>{inline_direct_markup(clean)}</p>")
     flush_list()
+    references_html = direct_references_html(reference_text)
+    if references_html:
+        body.append(references_html)
     return "\n".join(body)
 
 

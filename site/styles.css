@@ -383,6 +383,38 @@ h3 {
   padding-left: 18px;
 }
 
+.article-references {
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  margin-top: clamp(40px, 7vw, 72px);
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.article-references h2 {
+  margin-top: 0;
+}
+
+.article-references h3 {
+  color: var(--sage);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0;
+  margin: 24px 0 10px;
+  text-transform: uppercase;
+}
+
+.article-references ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.article-references li {
+  color: #59645c;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.68;
+  margin-bottom: 7px;
+}
+
 .static-page .article-content p {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 1.03rem;

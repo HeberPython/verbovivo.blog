@@ -37,6 +37,20 @@ Facebook: facebook.com/usuario
 
 - O campo antigo `Autor:` e ignorado para evitar a troca acidental do autor padrao.
 
+### Referencias opcionais
+
+- Algumas reflexoes podem terminar com indicacoes literarias, bibliograficas ou de dicionarios especializados.
+- Para criar a secao final `Para aprofundar a leitura`, inclua depois do texto:
+
+```txt
+Referencias bibliograficas:
+
+- Nome da obra, autor ou edicao.
+- Nome de outro livro ou dicionario especializado.
+```
+
+- A secao e opcional. Quando nao houver referencias no e-mail, o artigo termina normalmente depois da reflexao.
+
 ## Variaveis
 
 As credenciais ficam fora do GitHub, em variaveis de ambiente:
