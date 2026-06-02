@@ -30,6 +30,89 @@ def paragraphs_from_text(text: str) -> list[str]:
     return blocks
 
 
+def normalize_direct_submission_text(text: str) -> str:
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    kept_lines: list[str] = []
+    stop_headings = {
+        "fontes",
+        "fontes e dicionarios de referencia",
+        "referencias",
+        "referencias bibliograficas",
+        "bibliografia",
+    }
+    discard_patterns = (
+        r"^\[image:\s*.*?\]$",
+        r"^!\[.*?\]\(.*?\)$",
+        r"^texto(?:\s+mais\s+imagem)?\s+do\s+artigo\s+come[cç]a\s+aqui\.{0,3}$",
+        r"^[-_]{3,}$",
+        r"^(?:enviado|sent)\s+(?:do|from)\s+meu\b",
+        r"^(?:de|from|para|to|assunto|subject|data|date):\s",
+    )
+    for line in text.splitlines():
+        clean = line.strip()
+        heading = clean.strip("*# ").rstrip(":")
+        heading_norm = unicodedata.normalize("NFKD", heading).encode("ascii", "ignore").decode("ascii").lower()
+        if heading_norm in stop_headings:
+            break
+        if any(re.match(pattern, clean, re.IGNORECASE) for pattern in discard_patterns):
+            continue
+        kept_lines.append(line.rstrip())
+    return "\n".join(kept_lines).strip()
+
+
+def inline_direct_markup(text: str) -> str:
+    text = re.sub(r"\$\\alpha\s+\\gamma\s+\\omega\s+\\nu\$", "agōn", text)
+    text = re.sub(
+        r"\b([1-3]?\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÀ-ÿ]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?",
+        lambda match: (
+            f"{match.group(1)}, capítulo {match.group(2)}, versículos {match.group(3)} a {match.group(4)}"
+            if match.group(4)
+            else f"{match.group(1)}, capítulo {match.group(2)}, versículo {match.group(3)}"
+        ),
+        text,
+    )
+    value = escape(text.strip())
+    value = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", value)
+    value = re.sub(r"\*(.+?)\*", r"<em>\1</em>", value)
+    return value
+
+
+def direct_article_html(text: str, title: str) -> str:
+    blocks = paragraphs_from_text(normalize_direct_submission_text(text))
+    body: list[str] = []
+    list_items: list[str] = []
+
+    def flush_list() -> None:
+        if list_items:
+            body.append("<ul>" + "".join(f"<li>{item}</li>" for item in list_items) + "</ul>")
+            list_items.clear()
+
+    normalized_title = slugify(title)
+    for block in blocks:
+        clean = re.sub(r"\s*\n\s*", " ", block.strip())
+        if not clean:
+            continue
+        if clean.startswith("- "):
+            list_items.append(inline_direct_markup(clean[2:]))
+            continue
+        flush_list()
+        heading = clean.strip("*# ").strip()
+        if slugify(heading) == normalized_title or slugify(heading).startswith(normalized_title + "-"):
+            continue
+        if re.match(r"^\*?\d+\.\s+.+?\*?$", clean):
+            body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
+        elif clean.startswith("#"):
+            body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
+        elif clean.startswith("*") and clean.endswith("*") and len(clean) < 100:
+            body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
+        elif clean.startswith(("“", '"')) and ("—" in clean or re.search(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ÿ]+\s+\d+:\d+", clean)):
+            body.append(f"<blockquote>{inline_direct_markup(clean)}</blockquote>")
+        else:
+            body.append(f"<p>{inline_direct_markup(clean)}</p>")
+    flush_list()
+    return "\n".join(body)
+
+
 def normalize_social_url(value: str) -> str:
     value = value.strip()
     if not value:
@@ -363,20 +446,10 @@ def render_article_page(draft: ArticleDraft) -> str:
 
 def ready_article_from_email(subject: str, source_text: str, sender: str, image_filename: str = "", image_path: str = "") -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
+    article_text = normalize_direct_submission_text(article_text)
     blocks = paragraphs_from_text(article_text)
     title = subject.strip() or (blocks[0][:80] if blocks else "Nova reflexão")
     slug = slugify(title)
-    body_blocks: list[str] = []
-    for block in blocks:
-        clean = block.strip()
-        if not clean:
-            continue
-        if clean.startswith("#"):
-            body_blocks.append(f"<h2>{escape(clean.lstrip('#').strip())}</h2>")
-        elif clean.isupper() and len(clean) < 90:
-            body_blocks.append(f"<h2>{escape(clean.title())}</h2>")
-        else:
-            body_blocks.append(f"<p>{escape(clean)}</p>")
     return ArticleDraft(
         id=secrets.token_hex(8),
         token=secrets.token_urlsafe(24),
@@ -388,7 +461,7 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category="Reflexão",
         author=submission_author(metadata),
-        body_html="\n".join(body_blocks),
+        body_html=direct_article_html(article_text, title),
         image_prompt="",
         image_filename=image_filename,
         author_socials=submission_socials(metadata),

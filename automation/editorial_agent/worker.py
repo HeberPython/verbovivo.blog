@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from html.parser import HTMLParser
 from io import BytesIO
 from pathlib import Path
 
@@ -15,11 +16,38 @@ from .security import request_authorization_if_needed
 from .store import save_draft
 
 
+class EmailHTMLTextExtractor(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in {"br", "p", "div", "li", "h1", "h2", "h3"}:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"p", "div", "li", "h1", "h2", "h3"}:
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(data)
+
+    def text(self) -> str:
+        return "".join(self.parts).strip()
+
+
+def text_from_html(value: str) -> str:
+    parser = EmailHTMLTextExtractor()
+    parser.feed(value)
+    parser.close()
+    return parser.text()
+
+
 def extract_message_text(message) -> str:
     if message.text:
         return message.text
     if message.html:
-        return message.html
+        return text_from_html(message.html)
     parts = []
     for attachment in message.attachments:
         if attachment.filename.lower().endswith((".txt", ".md")):
