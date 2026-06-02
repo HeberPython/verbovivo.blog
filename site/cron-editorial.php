@@ -10,6 +10,12 @@ const CONFIG_FILE = __DIR__ . '/_private/editorial-config.php';
 const ALLOWLIST_FILE = __DIR__ . '/_private/allowed-senders.json';
 const TEMP_ALLOWLIST_FILE = __DIR__ . '/_private/temporary-sender-authorizations.json';
 const CRON_LOG_FILE = __DIR__ . '/_private/cron-editorial.log';
+const DEFAULT_AUTHOR = 'Pastor Antônio Lemos';
+const DEFAULT_AUTHOR_SOCIALS = [
+    'instagram' => 'https://www.instagram.com/antoniolemosoficial/',
+    'youtube' => 'https://www.youtube.com/@Lemos3',
+    'facebook' => 'https://www.facebook.com/PastorAntonioLemos',
+];
 
 if (!function_exists('str_contains')) {
     function str_contains(string $haystack, string $needle): bool {
@@ -76,7 +82,7 @@ function normalize_social_url(string $value): string {
 }
 
 function extract_submission_metadata(string $source): array {
-    $metadata = ['author' => '', 'socials' => []];
+    $metadata = ['author' => '', 'guest_author' => false, 'socials' => []];
     $body = [];
     $inHeader = true;
     foreach (preg_split('/\R/', $source) as $line) {
@@ -90,8 +96,12 @@ function extract_submission_metadata(string $source): array {
             [$key, $value] = explode(':', $clean, 2);
             $key = key_normalize($key);
             $value = trim($value);
-            if (in_array($key, ['autor', 'author', 'nome', 'nome do autor'], true)) {
+            if (in_array($key, ['autor convidado', 'author guest', 'guest author'], true)) {
                 $metadata['author'] = $value;
+                $metadata['guest_author'] = $value !== '';
+                continue;
+            }
+            if (in_array($key, ['autor', 'author', 'nome', 'nome do autor'], true)) {
                 continue;
             }
             if (in_array($key, ['instagram', 'facebook', 'youtube', 'x', 'twitter', 'linkedin', 'site', 'website'], true)) {
@@ -105,6 +115,14 @@ function extract_submission_metadata(string $source): array {
     }
     $article = trim(implode("\n", $body));
     return [$metadata, $article !== '' ? $article : trim($source)];
+}
+
+function submission_author(array $metadata): string {
+    return !empty($metadata['guest_author']) ? (string) $metadata['author'] : DEFAULT_AUTHOR;
+}
+
+function submission_socials(array $metadata): array {
+    return !empty($metadata['guest_author']) ? $metadata['socials'] : DEFAULT_AUTHOR_SOCIALS;
 }
 
 function social_label(string $name): string {
@@ -404,8 +422,8 @@ function refine_article(array $config, string $source, string $subject, string $
         'slug' => $slug,
         'excerpt' => (string) ($data['excerpt'] ?? 'Uma reflexão cristã para fortalecer a fé na vida cotidiana.'),
         'category' => (string) ($data['category'] ?? 'Reflexão'),
-        'author' => $metadata['author'] ?: 'Autor informado na publicação',
-        'author_socials' => $metadata['socials'],
+        'author' => submission_author($metadata),
+        'author_socials' => submission_socials($metadata),
         'body_html' => $body,
         'image_prompt' => (string) ($data['image_prompt'] ?? $title),
         'image_filename' => $slug . '-' . $draftId . '.png',

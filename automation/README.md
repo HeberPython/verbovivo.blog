@@ -22,6 +22,21 @@ Este modulo prepara o fluxo de agente para novos artigos enviados por e-mail.
 4. O agente normaliza o HTML para manter layout, cores, tipografia e aparencia do Verbo Vivo.
 5. O artigo e publicado diretamente no site via FTP, sem etapa de aprovacao.
 
+### Autoria
+
+- O autor padrao de todos os artigos e `Pastor Antonio Lemos`.
+- Os links oficiais do autor padrao sao adicionados automaticamente.
+- Para publicar excepcionalmente um texto de outra pessoa, use no inicio do e-mail:
+
+```txt
+Autor convidado: Nome do autor
+Instagram: @usuario
+YouTube: youtube.com/@canal
+Facebook: facebook.com/usuario
+```
+
+- O campo antigo `Autor:` e ignorado para evitar a troca acidental do autor padrao.
+
 ## Variaveis
 
 As credenciais ficam fora do GitHub, em variaveis de ambiente:

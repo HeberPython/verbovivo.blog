@@ -9,6 +9,14 @@ from urllib.parse import urlparse
 from .models import ArticleDraft
 
 
+DEFAULT_AUTHOR = "Pastor Antônio Lemos"
+DEFAULT_AUTHOR_SOCIALS = {
+    "instagram": "https://www.instagram.com/antoniolemosoficial/",
+    "youtube": "https://www.youtube.com/@Lemos3",
+    "facebook": "https://www.facebook.com/PastorAntonioLemos",
+}
+
+
 def slugify(value: str) -> str:
     value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     value = re.sub(r"[^a-zA-Z0-9]+", "-", value.lower()).strip("-")
@@ -33,7 +41,7 @@ def normalize_social_url(value: str) -> str:
 
 
 def extract_submission_metadata(source_text: str) -> tuple[dict, str]:
-    metadata = {"author": "", "socials": {}}
+    metadata = {"author": "", "guest_author": False, "socials": {}}
     body_lines: list[str] = []
     in_header = True
     for line in source_text.splitlines():
@@ -46,8 +54,11 @@ def extract_submission_metadata(source_text: str) -> tuple[dict, str]:
             key, value = clean.split(":", 1)
             key_norm = unicodedata.normalize("NFKD", key).encode("ascii", "ignore").decode("ascii").lower().strip()
             value = value.strip()
-            if key_norm in {"autor", "author", "nome", "nome do autor"}:
+            if key_norm in {"autor convidado", "author guest", "guest author"}:
                 metadata["author"] = value
+                metadata["guest_author"] = bool(value)
+                continue
+            if key_norm in {"autor", "author", "nome", "nome do autor"}:
                 continue
             if key_norm in {"instagram", "facebook", "youtube", "x", "twitter", "linkedin", "site", "website"}:
                 if value:
@@ -56,6 +67,16 @@ def extract_submission_metadata(source_text: str) -> tuple[dict, str]:
         body_lines.append(line)
     body = "\n".join(body_lines).strip() or source_text.strip()
     return metadata, body
+
+
+def submission_author(metadata: dict) -> str:
+    return metadata["author"] if metadata.get("guest_author") else DEFAULT_AUTHOR
+
+
+def submission_socials(metadata: dict) -> dict[str, str]:
+    if metadata.get("guest_author"):
+        return metadata["socials"]
+    return DEFAULT_AUTHOR_SOCIALS.copy()
 
 
 def social_label(name: str) -> str:
@@ -275,11 +296,11 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
         slug=slug,
         excerpt="Uma reflexão cristã preparada para leitura, meditação e fortalecimento da fé.",
         category="Reflexão",
-        author=metadata["author"] or "Autor informado na publicação",
+        author=submission_author(metadata),
         body_html="\n".join(body),
         image_prompt=f"Imagem editorial cristã, reverente e simbólica para o tema: {title}",
         image_filename=f"{slug}-{draft_id}.png",
-        author_socials=metadata["socials"],
+        author_socials=submission_socials(metadata),
     )
 
 
@@ -366,11 +387,11 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         slug=slug,
         excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category="Reflexão",
-        author=metadata["author"] or "Autor informado na publicação",
+        author=submission_author(metadata),
         body_html="\n".join(body_blocks),
         image_prompt="",
         image_filename=image_filename,
-        author_socials=metadata["socials"],
+        author_socials=submission_socials(metadata),
         local_image_path=image_path,
         status="published_direct",
     )

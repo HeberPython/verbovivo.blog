@@ -10,7 +10,7 @@ from openai import OpenAI
 from openai import OpenAIError
 
 from .config import settings
-from .content import extract_submission_metadata, fallback_refine, slugify
+from .content import extract_submission_metadata, fallback_refine, slugify, submission_author, submission_socials
 from .models import ArticleDraft
 
 
@@ -84,11 +84,11 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         slug=slug,
         excerpt=data.get("excerpt") or "Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category=data.get("category") or "Reflexão",
-        author=metadata["author"] or "Autor informado na publicação",
+        author=submission_author(metadata),
         body_html="\n".join(body_parts),
         image_prompt=data.get("image_prompt") or f"Imagem cristã reverente para o tema: {title}",
         image_filename=f"{slug}-{draft_id}.png",
-        author_socials=metadata["socials"],
+        author_socials=submission_socials(metadata),
     )
 
 
