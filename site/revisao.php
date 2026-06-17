@@ -21,6 +21,39 @@ function esc(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function article_datetime(array $draft): DateTimeImmutable {
+    $value = (string) ($draft['published_at'] ?? $draft['created_at'] ?? 'now');
+    try {
+        $date = new DateTimeImmutable($value);
+    } catch (Throwable $e) {
+        $date = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+    }
+    return $date->setTimezone(new DateTimeZone('UTC'));
+}
+
+function article_publication_iso(array $draft): string {
+    return article_datetime($draft)->format(DateTimeInterface::ATOM);
+}
+
+function article_publication_label(array $draft): string {
+    $months = [
+        1 => 'janeiro',
+        2 => 'fevereiro',
+        3 => 'março',
+        4 => 'abril',
+        5 => 'maio',
+        6 => 'junho',
+        7 => 'julho',
+        8 => 'agosto',
+        9 => 'setembro',
+        10 => 'outubro',
+        11 => 'novembro',
+        12 => 'dezembro',
+    ];
+    $date = article_datetime($draft);
+    return $date->format('j') . ' de ' . $months[(int) $date->format('n')] . ' de ' . $date->format('Y');
+}
+
 function social_label(string $name): string {
     return [
         'instagram' => 'Instagram',
@@ -219,7 +252,7 @@ function page(string $title, string $body): void {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>' . esc($title) . ' | Verbo Vivo</title>
-    <link rel="stylesheet" href="styles.css?v=20260604-book-strip" />
+    <link rel="stylesheet" href="styles.css?v=20260617-publication-date" />
     <style>
       .review-shell { padding: clamp(28px, 5vw, 70px) clamp(18px, 4vw, 64px) clamp(48px, 7vw, 96px); }
       .review-wrap { margin: 0 auto; max-width: 980px; }
@@ -271,6 +304,8 @@ function render_article_page(array $draft): string {
         'headline' => $title,
         'description' => $seoDescription,
         'image' => $imageUrl !== '' ? [$imageUrl] : [],
+        'datePublished' => article_publication_iso($draft),
+        'dateModified' => article_publication_iso($draft),
         'author' => ['@type' => 'Person', 'name' => $author, 'url' => DOMAIN . '/autor.html'],
         'publisher' => ['@type' => 'Organization', 'name' => 'Verbo Vivo', 'url' => DOMAIN],
         'inLanguage' => 'pt-BR',
@@ -297,7 +332,7 @@ function render_article_page(array $draft): string {
     ' . ($imageUrl !== '' ? '<meta property="og:image" content="' . esc($imageUrl) . '" />' : '') . '
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">' . $schemaJson . '</script>
-    <link rel="stylesheet" href="../styles.css?v=20260604-book-strip" />
+    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
   </head>
   <body>
     <header class="site-header">
@@ -319,6 +354,7 @@ function render_article_page(array $draft): string {
           ' . $imageHtml . '
         </header>
         <div class="article-content">' . $bodyHtml . '</div>
+        <p class="publication-date">Publicado em <time datetime="' . esc(article_publication_iso($draft)) . '">' . esc(article_publication_label($draft)) . '</time>.</p>
         ' . related_articles_html($slug) . '
       </article>
     </main>

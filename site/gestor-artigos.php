@@ -22,6 +22,39 @@ function esc(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function article_datetime(array $article): DateTimeImmutable {
+    $value = (string) ($article['published_at'] ?? $article['created_at'] ?? 'now');
+    try {
+        $date = new DateTimeImmutable($value);
+    } catch (Throwable $e) {
+        $date = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+    }
+    return $date->setTimezone(new DateTimeZone('UTC'));
+}
+
+function article_publication_iso(array $article): string {
+    return article_datetime($article)->format(DateTimeInterface::ATOM);
+}
+
+function article_publication_label(array $article): string {
+    $months = [
+        1 => 'janeiro',
+        2 => 'fevereiro',
+        3 => 'março',
+        4 => 'abril',
+        5 => 'maio',
+        6 => 'junho',
+        7 => 'julho',
+        8 => 'agosto',
+        9 => 'setembro',
+        10 => 'outubro',
+        11 => 'novembro',
+        12 => 'dezembro',
+    ];
+    $date = article_datetime($article);
+    return $date->format('j') . ' de ' . $months[(int) $date->format('n')] . ' de ' . $date->format('Y');
+}
+
 function admin_token(): string {
     global $config;
     return (string) ($config['admin_token'] ?? '');
@@ -159,6 +192,8 @@ function render_article_page(array $article): string {
         'headline' => $title,
         'description' => $seoDescription,
         'image' => $imageUrl !== '' ? [$imageUrl] : [],
+        'datePublished' => article_publication_iso($article),
+        'dateModified' => article_publication_iso($article),
         'author' => ['@type' => 'Person', 'name' => $author, 'url' => DOMAIN . '/autor.html'],
         'publisher' => ['@type' => 'Organization', 'name' => 'Verbo Vivo', 'url' => DOMAIN],
         'inLanguage' => 'pt-BR',
@@ -183,7 +218,7 @@ function render_article_page(array $article): string {
     ' . ($imageUrl !== '' ? '<meta property="og:image" content="' . esc($imageUrl) . '" />' : '') . '
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">' . $schemaJson . '</script>
-    <link rel="stylesheet" href="../styles.css?v=20260604-book-strip" />
+    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
   </head>
   <body>
     <header class="site-header">
@@ -204,6 +239,7 @@ function render_article_page(array $article): string {
           ' . $imageHtml . '
         </header>
         <div class="article-content">' . (string) $article['body_html'] . '</div>
+        <p class="publication-date">Publicado em <time datetime="' . esc(article_publication_iso($article)) . '">' . esc(article_publication_label($article)) . '</time>.</p>
         ' . related_articles_html($slug) . '
       </article>
     </main>
@@ -318,7 +354,7 @@ function update_sitemap(array $article): void {
 }
 
 function page(string $title, string $body): void {
-    echo '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>' . esc($title) . ' | Verbo Vivo</title><link rel="stylesheet" href="styles.css?v=20260604-book-strip" /><style>.manager{padding:clamp(28px,5vw,70px) clamp(18px,4vw,64px)}.manager-wrap{margin:0 auto;max-width:1100px}.manager-panel{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:clamp(18px,3vw,30px);margin-top:22px}.manager-list{display:grid;gap:12px}.manager-item{border-bottom:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;padding:14px 0}.manager-actions{display:flex;flex-wrap:wrap;gap:10px}.manager-form label{display:grid;font-weight:800;gap:7px;margin-top:15px}.manager-form input,.manager-form textarea{border:1px solid var(--line);color:var(--ink);font:inherit;padding:12px 13px;width:100%}.manager-form textarea{font-family:Georgia,serif;line-height:1.65;min-height:460px}.danger{background:#8f2d2d}.primary{background:var(--sage)}.secondary{background:var(--gold)}.manager button,.button-link{border:0;color:var(--white);cursor:pointer;display:inline-block;font-weight:800;padding:11px 15px;text-decoration:none}</style></head><body><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a><nav aria-label="Navegacao principal"><a href="index.html#artigos">Artigos</a><a href="autor.html">Autor</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav></header><main class="manager"><div class="manager-wrap">' . $body . '</div></main></body></html>';
+    echo '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>' . esc($title) . ' | Verbo Vivo</title><link rel="stylesheet" href="styles.css?v=20260617-publication-date" /><style>.manager{padding:clamp(28px,5vw,70px) clamp(18px,4vw,64px)}.manager-wrap{margin:0 auto;max-width:1100px}.manager-panel{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:clamp(18px,3vw,30px);margin-top:22px}.manager-list{display:grid;gap:12px}.manager-item{border-bottom:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;padding:14px 0}.manager-actions{display:flex;flex-wrap:wrap;gap:10px}.manager-form label{display:grid;font-weight:800;gap:7px;margin-top:15px}.manager-form input,.manager-form textarea{border:1px solid var(--line);color:var(--ink);font:inherit;padding:12px 13px;width:100%}.manager-form textarea{font-family:Georgia,serif;line-height:1.65;min-height:460px}.danger{background:#8f2d2d}.primary{background:var(--sage)}.secondary{background:var(--gold)}.manager button,.button-link{border:0;color:var(--white);cursor:pointer;display:inline-block;font-weight:800;padding:11px 15px;text-decoration:none}</style></head><body><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a><nav aria-label="Navegacao principal"><a href="index.html#artigos">Artigos</a><a href="autor.html">Autor</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav></header><main class="manager"><div class="manager-wrap">' . $body . '</div></main></body></html>';
 }
 
 $token = require_admin();

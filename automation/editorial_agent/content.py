@@ -4,6 +4,7 @@ import json
 import re
 import secrets
 import unicodedata
+from datetime import datetime, timezone
 from html import escape
 from urllib.parse import urlparse
 
@@ -366,6 +367,42 @@ def seo_page_description(draft: ArticleDraft) -> str:
     return (draft.seo_description or draft.excerpt or "Reflexão cristã para fortalecer a fé na vida cotidiana.").strip()
 
 
+def parse_article_datetime(value: str) -> datetime:
+    clean = (value or "").strip()
+    if clean.endswith("Z"):
+        clean = clean[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(clean)
+    except ValueError:
+        parsed = datetime.now(timezone.utc)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def article_publication_iso(draft: ArticleDraft) -> str:
+    return parse_article_datetime(draft.created_at).isoformat()
+
+
+def article_publication_label(draft: ArticleDraft) -> str:
+    months = [
+        "janeiro",
+        "fevereiro",
+        "março",
+        "abril",
+        "maio",
+        "junho",
+        "julho",
+        "agosto",
+        "setembro",
+        "outubro",
+        "novembro",
+        "dezembro",
+    ]
+    published = parse_article_datetime(draft.created_at)
+    return f"{published.day} de {months[published.month - 1]} de {published.year}"
+
+
 def listen_script() -> str:
     return """
     <script>
@@ -585,6 +622,8 @@ def render_article_page(draft: ArticleDraft) -> str:
         "headline": draft.title,
         "description": page_description,
         "image": [image_url] if image_url else [],
+        "datePublished": article_publication_iso(draft),
+        "dateModified": article_publication_iso(draft),
         "author": {"@type": "Person", "name": draft.author, "url": f"{DOMAIN}/autor.html"},
         "publisher": {"@type": "Organization", "name": "Verbo Vivo", "url": DOMAIN},
         "inLanguage": "pt-BR",
@@ -607,7 +646,7 @@ def render_article_page(draft: ArticleDraft) -> str:
     <meta property="og:url" content="{escape(article_url)}" />
     {f'<meta property="og:image" content="{escape(image_url)}" />' if image_url else ''}
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="../styles.css?v=20260604-book-strip" />
+    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
     <script type="application/ld+json">
 {schema_json}
     </script>
@@ -644,6 +683,7 @@ def render_article_page(draft: ArticleDraft) -> str:
         <div class="article-content">
           {draft.body_html}
         </div>
+        <p class="publication-date">Publicado em <time datetime="{escape(article_publication_iso(draft))}">{escape(article_publication_label(draft))}</time>.</p>
         {related_articles_html(draft.slug)}
       </article>
     </main>
