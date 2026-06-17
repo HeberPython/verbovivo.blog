@@ -42,6 +42,37 @@ def unread_publish_messages():
     )
 
 
+def recent_publish_messages(limit: int = 25):
+    mailbox = MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
+        settings.publish_imap_user,
+        settings.publish_imap_password,
+    )
+    try:
+        # Recovery path: Hostinger/webmail can show a message as read even when
+        # the site update failed. Looking at recent messages prevents silent loss.
+        return list(mailbox.fetch(limit=limit, reverse=True, mark_seen=False, headers_only=True))
+    finally:
+        try:
+            mailbox.logout()
+        except IMAP_CLOSE_ERRORS as exc:
+            print(f"Warning: IMAP logout ignored after recent fetch: {exc.__class__.__name__}")
+
+
+def publish_message_by_uid(uid: str | int):
+    mailbox = MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
+        settings.publish_imap_user,
+        settings.publish_imap_password,
+    )
+    try:
+        messages = list(mailbox.fetch(AND(uid=str(uid)), limit=1, mark_seen=False))
+        return messages[0] if messages else None
+    finally:
+        try:
+            mailbox.logout()
+        except IMAP_CLOSE_ERRORS as exc:
+            print(f"Warning: IMAP logout ignored after uid fetch: {exc.__class__.__name__}")
+
+
 def mark_seen(inbox: str, uid: str | int) -> None:
     if inbox == "publicar@verbovivo.blog":
         host = settings.publish_imap_host

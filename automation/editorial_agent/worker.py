@@ -10,8 +10,15 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .ai import generate_cover_image, refine_with_openai
 from .config import settings
 from .content import ready_article_from_email, slugify
-from .mail import mark_seen, send_review_email, unread_messages, unread_publish_messages
-from .publisher import publish_article, upload_review_draft
+from .mail import (
+    mark_seen,
+    publish_message_by_uid,
+    recent_publish_messages,
+    send_review_email,
+    unread_messages,
+    unread_publish_messages,
+)
+from .publisher import article_is_fully_published, publish_article, upload_review_draft
 from .security import request_authorization_if_needed
 from .store import save_draft
 
@@ -113,17 +120,27 @@ def poll_once(limit: int | None = None) -> None:
 
 
 def publish_once() -> None:
+    messages = {}
     for message in unread_publish_messages():
+        messages[str(message.uid)] = message
+    for message in recent_publish_messages():
+        messages.setdefault(str(message.uid), message)
+    for message in messages.values():
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
             mark_seen("publicar@verbovivo.blog", message.uid)
             continue
         if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "publicar@verbovivo.blog", str(message.uid)):
             continue
+        slug = slugify(message.subject or "nova-reflexao")
+        if article_is_fully_published(slug):
+            print(f"Already published and indexed: {slug}")
+            mark_seen("publicar@verbovivo.blog", message.uid)
+            continue
+        message = publish_message_by_uid(message.uid) or message
         source_text = extract_message_text(message)
         if not source_text.strip():
             continue
-        slug = slugify(message.subject or "nova-reflexao")
         image_filename, image_path = save_first_image_attachment(message, slug)
         draft = ready_article_from_email(message.subject or "Nova reflexão", source_text, message.from_, image_filename, image_path)
         save_draft(draft)

@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 from .config import settings
 from .content import render_article_page
@@ -191,6 +192,47 @@ def http_upload(remote_path: str, payload: bytes) -> None:
             raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
 
 
+def remote_text(path: str) -> str:
+    url = f"{DOMAIN}/{path.lstrip('/')}"
+    request = Request(url, headers={"User-Agent": "VerboVivoEditorialAgent/1.0"})
+    last_error: Exception | None = None
+    for _ in range(3):
+        try:
+            with urlopen(request, timeout=30) as response:
+                if response.status >= 400:
+                    raise RuntimeError(f"Remote check failed for {path}: {response.status}")
+                return response.read().decode("utf-8", errors="replace")
+        except (OSError, URLError, RuntimeError) as exc:
+            last_error = exc
+    raise RuntimeError(f"Remote check failed for {path}: {last_error}")
+
+
+def article_is_fully_published(slug: str) -> bool:
+    article_path = f"artigos/{slug}.html"
+    article_url = f"{DOMAIN}/{article_path}"
+    try:
+        article_html = remote_text(article_path)
+        index_html = remote_text("index.html")
+        feed_xml = remote_text("feed.xml")
+        sitemap_xml = remote_text("sitemap.xml")
+    except RuntimeError:
+        return False
+    return (
+        "<article" in article_html
+        and article_path in index_html
+        and article_url in feed_xml
+        and article_url in sitemap_xml
+    )
+
+
+def verify_article_publication(draft: ArticleDraft) -> None:
+    if not article_is_fully_published(draft.slug):
+        raise RuntimeError(
+            "Publication verification failed: "
+            f"{draft.slug} is not visible in article page, home, feed and sitemap."
+        )
+
+
 def publish_article_http(draft: ArticleDraft, html: bytes, changed_paths: list[Path]) -> None:
     http_upload(f"artigos/{draft.slug}.html", html)
     if draft.local_image_path and draft.image_filename:
@@ -210,6 +252,7 @@ def publish_article(draft: ArticleDraft) -> None:
 
     if settings.editorial_upload_url:
         publish_article_http(draft, html, changed_paths)
+        verify_article_publication(draft)
         return
 
     with FTP() as ftp:
@@ -230,6 +273,7 @@ def publish_article(draft: ArticleDraft) -> None:
                 continue
             with path.open("rb") as file:
                 ftp.storbinary(f"STOR {path.relative_to(SITE_DIR).as_posix()}", file)
+    verify_article_publication(draft)
 
 
 def upload_review_draft(draft: ArticleDraft) -> None:
