@@ -1,0 +1,98 @@
+name: Verbo Vivo Editorial Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Fluxo para executar"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - artigo
+          - publicar
+      artigo_limit:
+        description: "Limite opcional para artigo@; vazio processa todos"
+        required: false
+        default: ""
+  schedule:
+    # UTC. 13:00 UTC = 10:00 em Sao Paulo. 01:00 UTC = 22:00 em Sao Paulo.
+    - cron: "0 1,13 * * *"
+
+concurrency:
+  group: verbo-vivo-editorial-agent
+  cancel-in-progress: false
+
+jobs:
+  process-email-queues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      EDITORIAL_IMAP_HOST: ${{ secrets.EDITORIAL_IMAP_HOST }}
+      EDITORIAL_IMAP_PORT: ${{ secrets.EDITORIAL_IMAP_PORT }}
+      EDITORIAL_IMAP_USER: ${{ secrets.EDITORIAL_IMAP_USER }}
+      EDITORIAL_IMAP_PASSWORD: ${{ secrets.EDITORIAL_IMAP_PASSWORD }}
+      EDITORIAL_SMTP_HOST: ${{ secrets.EDITORIAL_SMTP_HOST }}
+      EDITORIAL_SMTP_PORT: ${{ secrets.EDITORIAL_SMTP_PORT }}
+      EDITORIAL_SMTP_USER: ${{ secrets.EDITORIAL_SMTP_USER }}
+      EDITORIAL_SMTP_PASSWORD: ${{ secrets.EDITORIAL_SMTP_PASSWORD }}
+      PUBLISH_IMAP_HOST: ${{ secrets.PUBLISH_IMAP_HOST }}
+      PUBLISH_IMAP_PORT: ${{ secrets.PUBLISH_IMAP_PORT }}
+      PUBLISH_IMAP_USER: ${{ secrets.PUBLISH_IMAP_USER }}
+      PUBLISH_IMAP_PASSWORD: ${{ secrets.PUBLISH_IMAP_PASSWORD }}
+      EDITORIAL_APPROVAL_BASE_URL: ${{ secrets.EDITORIAL_APPROVAL_BASE_URL }}
+      EDITORIAL_APPROVER_EMAIL: ${{ secrets.EDITORIAL_APPROVER_EMAIL }}
+      EDITORIAL_ALLOWED_SENDERS: ${{ secrets.EDITORIAL_ALLOWED_SENDERS }}
+      EDITORIAL_ADMIN_TOKEN: ${{ secrets.EDITORIAL_ADMIN_TOKEN }}
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Check required secrets
+        shell: python
+        run: |
+          import os
+          required = [
+              "EDITORIAL_IMAP_HOST", "EDITORIAL_IMAP_USER", "EDITORIAL_IMAP_PASSWORD",
+              "EDITORIAL_SMTP_HOST", "EDITORIAL_SMTP_USER", "EDITORIAL_SMTP_PASSWORD",
+              "PUBLISH_IMAP_HOST", "PUBLISH_IMAP_USER", "PUBLISH_IMAP_PASSWORD",
+              "EDITORIAL_APPROVAL_BASE_URL", "EDITORIAL_APPROVER_EMAIL", "EDITORIAL_ALLOWED_SENDERS",
+              "HOSTINGER_FTP_HOST", "HOSTINGER_FTP_USER", "HOSTINGER_FTP_PASSWORD",
+              "HOSTINGER_FTP_DIR", "OPENAI_API_KEY",
+          ]
+          missing = [name for name in required if not os.getenv(name)]
+          if missing:
+              raise SystemExit("Missing required secrets: " + ", ".join(missing))
+
+      - name: Process publicar inbox
+        if: ${{ github.event_name == 'schedule' || inputs.command == 'all' || inputs.command == 'publicar' }}
+        run: python -m automation.editorial_agent.worker publish-once
+
+      - name: Process artigo inbox
+        if: ${{ github.event_name == 'schedule' || inputs.command == 'all' || inputs.command == 'artigo' }}
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.artigo_limit }}" ]; then
+            python -m automation.editorial_agent.worker poll-once --limit "${{ inputs.artigo_limit }}"
+          else
+            python -m automation.editorial_agent.worker poll-once
+          fi

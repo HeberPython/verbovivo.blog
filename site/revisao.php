@@ -81,6 +81,32 @@ function listen_controls(): string {
             </div>';
 }
 
+function top_book_strip(): string {
+    return '<section class="top-book-strip" aria-label="Livro em destaque"><span>Livro gratuito do autor</span><strong>Servir através da Intercessão</strong><a href="https://www.editorakaleo.com/product-page/servir-atrav%C3%A9s-da-intercess%C3%A3o" target="_blank" rel="noopener">Acessar e-book</a></section>';
+}
+
+function related_articles_html(string $currentSlug): string {
+    $items = [
+        ['slug' => 'luta-invisivel', 'title' => 'Luta Invisível', 'excerpt' => 'A intercessão como serviço silencioso, amor pastoral e perseverança diante de Deus.'],
+        ['slug' => 'tesouros-escondidos-em-cristo-a-sabedoria-que-transforma', 'title' => 'Tesouros escondidos em Cristo', 'excerpt' => 'A sabedoria que transforma nasce do conhecimento profundo de Cristo.'],
+        ['slug' => 'palavras-que-enganam-vigilancia-e-discernimento-na-vida-crista', 'title' => 'Palavras que Enganam', 'excerpt' => 'Discernimento espiritual para reconhecer discursos sedutores e permanecer firme na verdade.'],
+        ['slug' => 'o-coracao-desordenado-guardando-a-fonte-da-vida', 'title' => 'O Coração Desordenado', 'excerpt' => 'Uma reflexão sobre guardar a fonte da vida e ordenar o coração diante de Deus.'],
+    ];
+    $cards = '';
+    $count = 0;
+    foreach ($items as $item) {
+        if ($item['slug'] === $currentSlug) {
+            continue;
+        }
+        $cards .= '<a class="related-card" href="../artigos/' . esc($item['slug']) . '.html"><strong>' . esc($item['title']) . '</strong><span>' . esc($item['excerpt']) . '</span></a>';
+        $count++;
+        if ($count >= 3) {
+            break;
+        }
+    }
+    return '<aside class="related-reading" aria-label="Leia tambem"><p>Leia também</p><h2>Continue a reflexão</h2><div class="related-grid">' . $cards . '</div></aside>';
+}
+
 function listen_script(): string {
     return '
     <script>
@@ -105,7 +131,7 @@ function listen_script(): string {
           return;
         }
         const expandBibleReferences = (text) => text.replace(
-          /\b([1-3]?\s?[A-Z???????????][A-Za-z??????????????????????]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?/g,
+          /\b([1-3]?\s?[A-Z\u00C0-\u017F][A-Za-z\u00C0-\u017F]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?/g,
           (_, book, chapter, verse, endVerse) => {
             const cleanBook = book.replace(/\s+/g, " ").trim();
             return endVerse
@@ -193,7 +219,7 @@ function page(string $title, string $body): void {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>' . esc($title) . ' | Verbo Vivo</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260604-book-strip" />
     <style>
       .review-shell { padding: clamp(28px, 5vw, 70px) clamp(18px, 4vw, 64px) clamp(48px, 7vw, 96px); }
       .review-wrap { margin: 0 auto; max-width: 980px; }
@@ -214,6 +240,7 @@ function page(string $title, string $body): void {
       <a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
       <nav aria-label="Navegação principal"><a href="index.html#artigos">Artigos</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a><a href="faq.html">FAQ</a></nav>
     </header>
+    ' . top_book_strip() . '
     <main class="review-shell"><div class="review-wrap">' . $body . '</div></main>
   </body>
 </html>';
@@ -227,6 +254,32 @@ function render_article_page(array $draft): string {
     $slug = (string) ($draft['slug'] ?? 'nova-reflexao');
     $image = (string) ($draft['image_filename'] ?? '');
     $imageHtml = $image !== '' ? '<img src="../images/articles/' . esc($image) . '" alt="' . esc($title) . '" />' : '';
+    $seoTitle = trim((string) ($draft['seo_title'] ?? ''));
+    $seoTitle = $seoTitle !== '' ? $seoTitle : $title . ' | Verbo Vivo';
+    if (stripos($seoTitle, 'verbo vivo') === false) {
+        $seoTitle .= ' | Verbo Vivo';
+    }
+    $seoDescription = trim((string) ($draft['seo_description'] ?? ''));
+    $seoDescription = $seoDescription !== '' ? $seoDescription : $excerpt;
+    $seoKeywords = trim((string) ($draft['seo_keywords'] ?? ''));
+    $articleUrl = DOMAIN . '/artigos/' . $slug . '.html';
+    $imageUrl = $image !== '' ? DOMAIN . '/images/articles/' . $image : '';
+    $schema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $articleUrl],
+        'headline' => $title,
+        'description' => $seoDescription,
+        'image' => $imageUrl !== '' ? [$imageUrl] : [],
+        'author' => ['@type' => 'Person', 'name' => $author, 'url' => DOMAIN . '/autor.html'],
+        'publisher' => ['@type' => 'Organization', 'name' => 'Verbo Vivo', 'url' => DOMAIN],
+        'inLanguage' => 'pt-BR',
+        'articleSection' => $category,
+    ];
+    if ($seoKeywords !== '') {
+        $schema['keywords'] = $seoKeywords;
+    }
+    $schemaJson = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     $bodyHtml = (string) ($draft['body_html'] ?? '');
 
     return '<!doctype html>
@@ -234,20 +287,24 @@ function render_article_page(array $draft): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>' . esc($title) . ' | Verbo Vivo</title>
-    <meta name="description" content="' . esc($excerpt) . '" />
-    <link rel="canonical" href="' . DOMAIN . '/artigos/' . esc($slug) . '.html" />
+    <title>' . esc($seoTitle) . '</title>
+    <meta name="description" content="' . esc($seoDescription) . '" />
+    <link rel="canonical" href="' . esc($articleUrl) . '" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="' . esc($title) . '" />
-    <meta property="og:description" content="' . esc($excerpt) . '" />
-    <meta property="og:url" content="' . DOMAIN . '/artigos/' . esc($slug) . '.html" />
-    <link rel="stylesheet" href="../styles.css" />
+    <meta property="og:description" content="' . esc($seoDescription) . '" />
+    <meta property="og:url" content="' . esc($articleUrl) . '" />
+    ' . ($imageUrl !== '' ? '<meta property="og:image" content="' . esc($imageUrl) . '" />' : '') . '
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">' . $schemaJson . '</script>
+    <link rel="stylesheet" href="../styles.css?v=20260604-book-strip" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
       <nav aria-label="Navegação principal"><a href="../index.html#artigos">Artigos</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
     </header>
+    ' . top_book_strip() . '
     <main>
       <article class="article-page">
         <header class="article-hero">
@@ -262,6 +319,7 @@ function render_article_page(array $draft): string {
           ' . $imageHtml . '
         </header>
         <div class="article-content">' . $bodyHtml . '</div>
+        ' . related_articles_html($slug) . '
       </article>
     </main>
     <footer class="site-footer">
@@ -322,8 +380,12 @@ function update_index(array $draft): void {
     $wasListed = str_contains($html, $needle);
     $html = (string) preg_replace('/\s*<article class="featured">.*?<\/article>/s', "\n" . featured_article($draft), $html, 1);
     if (!$wasListed) {
-    $marker = '<section class="article-grid" aria-label="Lista de artigos">';
-    $html = str_replace($marker, $marker . "\n        " . article_card($draft), $html);
+        $html = (string) preg_replace(
+            '/(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)/',
+            '$1' . "\n        " . article_card($draft),
+            $html,
+            1
+        );
     }
     file_put_contents($path, $html);
 }
@@ -335,12 +397,14 @@ function update_feed(array $draft): void {
     if (str_contains($xml, $url)) {
         return;
     }
+    $description = trim((string) ($draft['seo_description'] ?? ''));
+    $description = $description !== '' ? $description : (string) $draft['excerpt'];
     $item = '
     <item>
       <title>' . esc((string) $draft['title']) . '</title>
       <link>' . $url . '</link>
       <guid>' . $url . '</guid>
-      <description>' . esc((string) $draft['excerpt']) . '</description>
+      <description>' . esc($description) . '</description>
       <pubDate>' . gmdate(DATE_RSS) . '</pubDate>
     </item>';
     $xml = str_replace('    <item>', $item . "\n    <item>", $xml);
@@ -354,7 +418,14 @@ function update_sitemap(array $draft): void {
     if (str_contains($xml, $url)) {
         return;
     }
-    $xml = str_replace('</urlset>', '  <url><loc>' . $url . '</loc></url>' . "\n</urlset>", $xml);
+    $entry = '  <url>
+    <loc>' . $url . '</loc>
+    <lastmod>' . gmdate('Y-m-d') . '</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+';
+    $xml = str_replace('</urlset>', $entry . '</urlset>', $xml);
     file_put_contents($path, $xml);
 }
 

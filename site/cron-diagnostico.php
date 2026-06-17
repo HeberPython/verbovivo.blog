@@ -50,6 +50,10 @@ $required = [
     'editorial_imap_password',
     'editorial_smtp_user',
     'editorial_smtp_password',
+    'publish_imap_host',
+    'publish_imap_port',
+    'publish_imap_user',
+    'publish_imap_password',
     'openai_api_key',
     'admin_token',
 ];
@@ -59,14 +63,21 @@ foreach ($required as $key) {
 }
 
 if (function_exists('imap_open')) {
-    $mailbox = sprintf('{%s:%d/imap/ssl}INBOX', (string) $config['editorial_imap_host'], (int) $config['editorial_imap_port']);
-    $imap = @imap_open($mailbox, (string) $config['editorial_imap_user'], (string) $config['editorial_imap_password']);
-    if ($imap) {
-        $unseen = imap_search($imap, 'UNSEEN') ?: [];
-        $rows[] = row('Login IMAP artigo@', true, count($unseen) . ' mensagem(ns) nao lida(s).');
-        imap_close($imap);
-    } else {
-        $rows[] = row('Login IMAP artigo@', false, (string) imap_last_error());
+    $mailboxes = [
+        'artigo@' => ['editorial_imap_host', 'editorial_imap_port', 'editorial_imap_user', 'editorial_imap_password'],
+        'publicar@' => ['publish_imap_host', 'publish_imap_port', 'publish_imap_user', 'publish_imap_password'],
+    ];
+    foreach ($mailboxes as $label => $keys) {
+        [$hostKey, $portKey, $userKey, $passwordKey] = $keys;
+        $mailbox = sprintf('{%s:%d/imap/ssl}INBOX', (string) $config[$hostKey], (int) $config[$portKey]);
+        $imap = @imap_open($mailbox, (string) $config[$userKey], (string) $config[$passwordKey]);
+        if ($imap) {
+            $unseen = imap_search($imap, 'UNSEEN') ?: [];
+            $rows[] = row('Login IMAP ' . $label, true, count($unseen) . ' mensagem(ns) nao lida(s).');
+            imap_close($imap);
+        } else {
+            $rows[] = row('Login IMAP ' . $label, false, (string) imap_last_error());
+        }
     }
 }
 

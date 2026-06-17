@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import base64
 import json
@@ -15,19 +15,23 @@ from .models import ArticleDraft
 
 
 SYSTEM_PROMPT = """
-Você é o editor cristão do blog Verbo Vivo.
-Recebe textos brutos escritos por humanos e transforma em uma reflexão curta,
-acolhedora, inteligível e biblicamente coerente.
+VocÃª Ã© o editor cristÃ£o do blog Verbo Vivo.
+Recebe textos brutos escritos por humanos e transforma em uma reflexÃ£o curta,
+acolhedora, inteligÃ­vel e biblicamente coerente.
 
 Regras:
-- Preserve a intenção espiritual do autor.
-- Não invente fatos biográficos, citações ou referências bíblicas.
-- Não faça sensacionalismo bíblico.
-- Não mencione IA, automação ou agente.
-- Escreva em português do Brasil.
-- O tom deve ser pastoral, claro, reverente e acessível.
-- Compacte o texto bruto em uma reflexão publicável, sem perder o contexto bíblico central.
-- Escreva referências bíblicas por extenso: "Mateus, capítulo 21, versículo 17" ou "Filipenses, capítulo 2, versículos 14 a 16", nunca no formato "21:17".
+- Preserve a intenÃ§Ã£o espiritual do autor.
+- NÃ£o invente fatos biogrÃ¡ficos, citaÃ§Ãµes ou referÃªncias bÃ­blicas.
+- NÃ£o faÃ§a sensacionalismo bÃ­blico.
+- NÃ£o mencione IA, automaÃ§Ã£o ou agente.
+- Escreva em portuguÃªs do Brasil.
+- O tom deve ser pastoral, claro, reverente e acessÃ­vel.
+- Compacte o texto bruto em uma reflexÃ£o publicÃ¡vel, sem perder o contexto bÃ­blico central.
+- Escreva referÃªncias bÃ­blicas por extenso: "Mateus, capÃ­tulo 21, versÃ­culo 17" ou "Filipenses, capÃ­tulo 2, versÃ­culos 14 a 16", nunca no formato "21:17".
+- Mantenha title como tÃ­tulo editorial bonito para aparecer no artigo.
+- Crie seo_title com atÃ© 60 caracteres, mais pesquisÃ¡vel no Google, sem sensacionalismo.
+- Crie excerpt/seo_description com atÃ© 155 caracteres, claro, fiel ao texto e com termos que pessoas buscariam.
+- Crie seo_keywords com uma expressÃ£o principal de busca, curta e natural.
 """
 
 
@@ -46,8 +50,9 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
                     "role": "user",
                     "content": (
                         "Transforme o texto abaixo em artigo reflexivo para o Verbo Vivo. "
-                        "Responda somente JSON válido com as chaves: title, category, excerpt, quote, "
-                        "sections, image_prompt. sections deve ser uma lista de objetos com heading e paragraphs.\n\n"
+                        "Responda somente JSON vÃ¡lido com as chaves: title, seo_title, category, excerpt, "
+                        "seo_description, seo_keywords, quote, sections, image_prompt. "
+                        "sections deve ser uma lista de objetos com heading e paragraphs.\n\n"
                         f"Assunto do e-mail: {subject}\n\nTexto bruto:\n{article_text}"
                     ),
                 },
@@ -60,7 +65,7 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         return fallback_refine(source_text, subject, sender)
     raw = response.choices[0].message.content or "{}"
     data = json.loads(raw)
-    title = data.get("title") or subject or "Nova reflexão"
+    title = data.get("title") or subject or "Nova reflexÃ£o"
     sections = data.get("sections") or []
     body_parts = []
     if data.get("quote"):
@@ -82,13 +87,16 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         source_text=article_text,
         title=title,
         slug=slug,
-        excerpt=data.get("excerpt") or "Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
-        category=data.get("category") or "Reflexão",
+        excerpt=data.get("excerpt") or "Uma reflexÃ£o cristÃ£ para fortalecer a fÃ© na vida cotidiana.",
+        category=data.get("category") or "ReflexÃ£o",
         author=submission_author(metadata),
         body_html="\n".join(body_parts),
-        image_prompt=data.get("image_prompt") or f"Imagem cristã reverente para o tema: {title}",
+        image_prompt=data.get("image_prompt") or f"Imagem cristÃ£ reverente para o tema: {title}",
         image_filename=f"{slug}-{draft_id}.png",
         author_socials=submission_socials(metadata),
+        seo_title=data.get("seo_title") or "",
+        seo_description=data.get("seo_description") or data.get("excerpt") or "",
+        seo_keywords=data.get("seo_keywords") or "",
     )
 
 
@@ -103,12 +111,15 @@ def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
         result = client.images.generate(
             model="gpt-image-1",
             prompt=(
-                "Crie uma imagem editorial cristã de alta qualidade, realista e nítida, "
-                "com vida visual, contraste natural, cores profundas e luz cinematográfica suave. "
-                "A imagem deve parecer fotografia/editorial premium, sem aspecto leitoso, sem neblina artificial, "
-                "sem desfoque, sem baixa resolução, sem pintura borrada e sem texto escrito na imagem. "
-                "Evite rostos em close, evite retratar Jesus de forma literal e evite elementos clichês excessivos. "
-                "Use composição clara, profundidade realista, detalhes definidos, atmosfera reverente e esperançosa. "
+                "Crie uma imagem editorial cristã premium para o blog Verbo Vivo, com aparência viva, nítida e realista, "
+                "semelhante às melhores imagens enviadas prontas para publicação: cores ricas e naturais, contraste bem definido, "
+                "luz cinematográfica quente, textura visível, profundidade de campo controlada e composição limpa. "
+                "Priorize cenas simbólicas cristãs com paisagens reais, caminhos, luz natural, céu dramático, pedras, oliveiras, "
+                "madeira, pergaminho, arquitetura antiga e mãos em oração quando fizer sentido, sempre com atmosfera reverente e esperançosa. "
+                "A imagem não pode parecer leitosa, embaçada, lavada, genérica, infantil, caricata, aquarela, pintura borrada, "
+                "baixa resolução, stock artificial ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
+                "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou elementos exageradamente clichês. "
+                "Use enquadramento horizontal editorial 3:2, sujeito claro, fundo harmonioso e qualidade visual pronta para capa de artigo. "
                 f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}"
             ),
             size="1536x1024",

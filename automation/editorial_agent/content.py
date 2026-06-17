@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import secrets
 import unicodedata
@@ -9,6 +10,7 @@ from urllib.parse import urlparse
 from .models import ArticleDraft
 
 
+DOMAIN = "https://verbovivo.blog"
 DEFAULT_AUTHOR = "Pastor Antônio Lemos"
 DEFAULT_AUTHOR_SOCIALS = {
     "instagram": "https://www.instagram.com/antoniolemosoficial/",
@@ -50,9 +52,13 @@ def normalize_direct_submission_text(text: str) -> str:
     )
     for line in text.splitlines():
         clean = line.strip()
+        clean = re.sub(r"^corpo\s+do\s+e-?mail:\s*", "", clean, flags=re.IGNORECASE)
+        if re.match(r"^assunto\s+do\s+e-?mail:\s*", clean, re.IGNORECASE):
+            continue
         if any(re.match(pattern, clean, re.IGNORECASE) for pattern in discard_patterns):
             continue
-        kept_lines.append(line.rstrip())
+        if clean:
+            kept_lines.append(clean)
     return "\n".join(kept_lines).strip()
 
 
@@ -119,6 +125,18 @@ def inline_direct_markup(text: str) -> str:
     return value
 
 
+def looks_like_direct_heading(text: str) -> bool:
+    clean = text.strip("*# ").strip()
+    if not clean or len(clean) > 86 or re.search(r"[.!?;:]$", clean):
+        return False
+    words = clean.split()
+    if not 2 <= len(words) <= 12:
+        return False
+    lowercase_connectors = {"a", "ao", "aos", "as", "como", "contra", "da", "das", "de", "do", "dos", "e", "em", "na", "nas", "no", "nos", "o", "os", "para", "pela", "pelos", "por", "sem"}
+    significant_words = [word for word in words if word.lower() not in lowercase_connectors]
+    return bool(significant_words) and all(word[0].isupper() or word[0].isdigit() for word in significant_words)
+
+
 def direct_article_html(text: str, title: str) -> str:
     cleaned_text = normalize_direct_submission_text(text)
     article_text, reference_text = split_direct_references(cleaned_text)
@@ -148,6 +166,8 @@ def direct_article_html(text: str, title: str) -> str:
         elif clean.startswith("#"):
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
         elif clean.startswith("*") and clean.endswith("*") and len(clean) < 100:
+            body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
+        elif looks_like_direct_heading(clean):
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
         elif clean.startswith(("“", '"')) and ("—" in clean or re.search(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ÿ]+\s+\d+:\d+", clean)):
             body.append(f"<blockquote>{inline_direct_markup(clean)}</blockquote>")
@@ -242,15 +262,13 @@ def author_socials_html(socials: dict[str, str]) -> str:
         if not url:
             continue
         href = url
-        display = url
         if url.startswith("@"):
             handle = url.lstrip("@")
             if name == "instagram":
                 href = f"https://instagram.com/{handle}"
             elif name in {"x", "twitter"}:
                 href = f"https://x.com/{handle}"
-            display = url
-        label = f"{social_label(name)} {display}".strip()
+        label = social_label(name)
         links.append(
             f'<a href="{escape(href)}" target="_blank" rel="noopener" '
             f'aria-label="{escape(label)}" title="{escape(label)}">{social_icon(name)}</a>'
@@ -273,6 +291,79 @@ def listen_controls() -> str:
               <span data-listen-status>Clique para ouvir o artigo.</span>
             </div>
 """
+
+
+def top_book_strip() -> str:
+    return """
+    <section class="top-book-strip" aria-label="Livro em destaque">
+      <span>Livro gratuito do autor</span>
+      <strong>Servir através da Intercessão</strong>
+      <a href="https://www.editorakaleo.com/product-page/servir-atrav%C3%A9s-da-intercess%C3%A3o" target="_blank" rel="noopener">Acessar e-book</a>
+    </section>
+"""
+
+
+RELATED_ARTICLES = [
+    {
+        "slug": "luta-invisivel",
+        "title": "Luta Invisível",
+        "excerpt": "A intercessão como serviço silencioso, amor pastoral e perseverança diante de Deus.",
+    },
+    {
+        "slug": "tesouros-escondidos-em-cristo-a-sabedoria-que-transforma",
+        "title": "Tesouros escondidos em Cristo",
+        "excerpt": "A sabedoria que transforma nasce do conhecimento profundo de Cristo.",
+    },
+    {
+        "slug": "palavras-que-enganam-vigilancia-e-discernimento-na-vida-crista",
+        "title": "Palavras que Enganam",
+        "excerpt": "Discernimento espiritual para reconhecer discursos sedutores e permanecer firme na verdade.",
+    },
+    {
+        "slug": "o-coracao-desordenado-guardando-a-fonte-da-vida",
+        "title": "O Coração Desordenado",
+        "excerpt": "Uma reflexão sobre guardar a fonte da vida e ordenar o coração diante de Deus.",
+    },
+]
+
+
+def related_articles_html(current_slug: str) -> str:
+    items = [item for item in RELATED_ARTICLES if item["slug"] != current_slug][:3]
+    if not items:
+        return ""
+    cards = "".join(
+        (
+            '<a class="related-card" href="../artigos/{slug}.html">'
+            "<strong>{title}</strong>"
+            "<span>{excerpt}</span>"
+            "</a>"
+        ).format(
+            slug=escape(item["slug"]),
+            title=escape(item["title"]),
+            excerpt=escape(item["excerpt"]),
+        )
+        for item in items
+    )
+    return (
+        '<aside class="related-reading" aria-label="Leia tambem">'
+        "<p>Leia também</p>"
+        "<h2>Continue a reflexão</h2>"
+        f'<div class="related-grid">{cards}</div>'
+        "</aside>"
+    )
+
+
+def seo_page_title(draft: ArticleDraft) -> str:
+    value = (draft.seo_title or "").strip()
+    if not value:
+        value = draft.title.strip()
+    if "verbo vivo" not in value.lower():
+        value = f"{value} | Verbo Vivo"
+    return value
+
+
+def seo_page_description(draft: ArticleDraft) -> str:
+    return (draft.seo_description or draft.excerpt or "Reflexão cristã para fortalecer a fé na vida cotidiana.").strip()
 
 
 def listen_script() -> str:
@@ -404,6 +495,47 @@ def analytics_script(endpoint: str = "analytics.php") -> str:
 """
 
 
+def plain_text(value: str) -> str:
+    value = re.sub(r"<[^>]+>", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def trim_sentence(value: str, limit: int) -> str:
+    value = plain_text(value)
+    if len(value) <= limit:
+        return value
+    cut = value[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,.;:")
+    return f"{cut}."
+
+
+def seo_title_from_text(title: str, body: str = "") -> str:
+    title = plain_text(title)
+    body_lower = plain_text(body).lower()
+    if "oração" in body_lower or "intercess" in body_lower:
+        base = f"O que a Bíblia ensina sobre {title.lower()}"
+    elif "coração" in body_lower:
+        base = "Como guardar o coração segundo a Bíblia"
+    elif "fé" in body_lower:
+        base = f"{title}: reflexão bíblica para fortalecer a fé"
+    else:
+        base = title
+    return trim_sentence(base, 58)
+
+
+def seo_description_from_text(body: str) -> str:
+    text = plain_text(body)
+    if not text:
+        return "Reflexão cristã para fortalecer a fé na vida cotidiana."
+    return trim_sentence(text, 154)
+
+
+def seo_keywords_from_title(title: str) -> str:
+    title = plain_text(title).lower()
+    title = re.sub(r"[^a-z0-9áéíóúâêôãõç\s-]", "", title)
+    words = [word for word in title.split() if len(word) > 2]
+    return " ".join(words[:6]) or "reflexão cristã"
+
+
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     blocks = paragraphs_from_text(article_text)
@@ -431,21 +563,54 @@ def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft
         image_prompt=f"Imagem editorial cristã, reverente e simbólica para o tema: {title}",
         image_filename=f"{slug}-{draft_id}.png",
         author_socials=submission_socials(metadata),
+        seo_title=seo_title_from_text(title, article_text),
+        seo_description=seo_description_from_text(article_text),
+        seo_keywords=seo_keywords_from_title(title),
     )
 
 
 def render_article_page(draft: ArticleDraft) -> str:
     image_html = ""
+    article_url = f"{DOMAIN}/artigos/{draft.slug}.html"
+    image_url = ""
+    page_title = seo_page_title(draft)
+    page_description = seo_page_description(draft)
     if draft.image_filename:
         image_html = f'<img src="../images/articles/{escape(draft.image_filename)}" alt="{escape(draft.title)}" />'
+        image_url = f"{DOMAIN}/images/articles/{draft.image_filename}"
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "mainEntityOfPage": {"@type": "WebPage", "@id": article_url},
+        "headline": draft.title,
+        "description": page_description,
+        "image": [image_url] if image_url else [],
+        "author": {"@type": "Person", "name": draft.author, "url": f"{DOMAIN}/autor.html"},
+        "publisher": {"@type": "Organization", "name": "Verbo Vivo", "url": DOMAIN},
+        "inLanguage": "pt-BR",
+        "articleSection": draft.category,
+    }
+    if draft.seo_keywords:
+        schema["keywords"] = draft.seo_keywords
+    schema_json = json.dumps(schema, ensure_ascii=False, indent=2)
     return f"""<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{escape(draft.title)} | Verbo Vivo</title>
-    <meta name="description" content="{escape(draft.excerpt)}" />
-    <link rel="stylesheet" href="../styles.css" />
+    <title>{escape(page_title)}</title>
+    <meta name="description" content="{escape(page_description)}" />
+    <link rel="canonical" href="{escape(article_url)}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="{escape(draft.title)}" />
+    <meta property="og:description" content="{escape(page_description)}" />
+    <meta property="og:url" content="{escape(article_url)}" />
+    {f'<meta property="og:image" content="{escape(image_url)}" />' if image_url else ''}
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="../styles.css?v=20260604-book-strip" />
+    <script type="application/ld+json">
+{schema_json}
+    </script>
     {analytics_head()}
   </head>
   <body>
@@ -462,6 +627,7 @@ def render_article_page(draft: ArticleDraft) -> str:
         <a href="../faq.html">FAQ</a>
       </nav>
     </header>
+    {top_book_strip()}
     <main>
       <article class="article-page">
         <header class="article-hero">
@@ -478,6 +644,7 @@ def render_article_page(draft: ArticleDraft) -> str:
         <div class="article-content">
           {draft.body_html}
         </div>
+        {related_articles_html(draft.slug)}
       </article>
     </main>
     <footer class="site-footer">
@@ -513,5 +680,8 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         image_filename=image_filename,
         author_socials=submission_socials(metadata),
         local_image_path=image_path,
+        seo_title=seo_title_from_text(title, article_text),
+        seo_description=seo_description_from_text(article_text),
+        seo_keywords=seo_keywords_from_title(title),
         status="published_direct",
     )

@@ -93,6 +93,46 @@ nav a {
   font-weight: 700;
 }
 
+.top-book-strip {
+  align-items: center;
+  background: #17201b;
+  border-bottom: 1px solid rgba(216, 208, 191, 0.35);
+  color: var(--white);
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px clamp(18px, 4vw, 64px);
+}
+
+.top-book-strip span {
+  color: #d8b06d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.top-book-strip strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.top-book-strip a {
+  border: 1px solid #d8b06d;
+  color: #d8b06d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.top-book-strip a:hover {
+  background: #d8b06d;
+  color: var(--ink);
+}
+
 main {
   overflow: hidden;
 }
@@ -188,6 +228,59 @@ h3 {
   gap: 22px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 28px clamp(18px, 4vw, 64px) clamp(40px, 6vw, 84px);
+}
+
+.book-callout {
+  align-items: center;
+  background: linear-gradient(135deg, #17201b 0%, #2d3831 58%, #4f7059 100%);
+  color: var(--white);
+  display: grid;
+  gap: clamp(22px, 4vw, 46px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  margin: 0 clamp(18px, 4vw, 64px) clamp(40px, 6vw, 84px);
+  padding: clamp(28px, 5vw, 58px);
+}
+
+.book-callout .eyebrow {
+  color: #d8b06d;
+}
+
+.book-callout h2 {
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  line-height: 0.98;
+}
+
+.book-callout p {
+  color: rgba(255, 253, 248, 0.86);
+  font-size: 1.04rem;
+  line-height: 1.7;
+  margin-bottom: 0;
+  max-width: 760px;
+}
+
+.book-action {
+  border-left: 4px solid #d8b06d;
+  padding-left: clamp(18px, 3vw, 30px);
+}
+
+.book-action p {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.18;
+  margin-top: 0;
+}
+
+.book-action a {
+  background: #d8b06d;
+  color: var(--ink);
+  display: inline-flex;
+  font-weight: 900;
+  margin-top: 18px;
+  padding: 14px 18px;
+}
+
+.book-action a:hover {
+  background: var(--white);
 }
 
 .editorial {
@@ -383,6 +476,13 @@ h3 {
   padding-left: 18px;
 }
 
+.article-content .article-lead {
+  color: var(--ink);
+  font-size: clamp(1.16rem, 1.7vw, 1.34rem);
+  line-height: 1.72;
+  margin: 0 0 1.45em;
+}
+
 .article-references {
   background: #fffdf8;
   border: 1px solid var(--line);
@@ -413,6 +513,59 @@ h3 {
   font-family: Georgia, "Times New Roman", serif;
   line-height: 1.68;
   margin-bottom: 7px;
+}
+
+.related-reading {
+  border-top: 1px solid var(--line);
+  margin: clamp(42px, 7vw, 78px) auto 0;
+  max-width: 980px;
+  padding-top: clamp(24px, 4vw, 38px);
+}
+
+.related-reading > p {
+  color: var(--sage);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.related-reading h2 {
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+
+.related-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.related-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.related-card strong {
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  line-height: 1.15;
+}
+
+.related-card span {
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+.related-card:hover {
+  border-color: var(--gold);
 }
 
 .static-page .article-content p {
@@ -657,6 +810,14 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .book-callout {
+    grid-template-columns: 1fr;
+  }
+
   .contact-grid,
   .contact-form-section {
     grid-template-columns: 1fr;
@@ -706,6 +867,23 @@ h3 {
     flex: 0 0 auto;
     font-size: 0.78rem;
     padding: 7px 10px;
+  }
+
+  .top-book-strip {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px 16px;
+    text-align: center;
+  }
+
+  .top-book-strip strong {
+    font-size: 1.02rem;
+  }
+
+  .top-book-strip a {
+    align-self: center;
+    margin-top: 2px;
   }
 
   .hero {
@@ -775,6 +953,23 @@ h3 {
   .article-grid {
     gap: 16px;
     padding: 20px 16px 42px;
+  }
+
+  .book-callout {
+    margin: 0 16px 42px;
+    padding: 26px 18px;
+  }
+
+  .book-action {
+    border-left: 0;
+    border-top: 4px solid #d8b06d;
+    padding-left: 0;
+    padding-top: 18px;
+  }
+
+  .book-action a {
+    justify-content: center;
+    width: 100%;
   }
 
   .editorial {

@@ -73,6 +73,21 @@ def draft_pub_date(draft: ArticleDraft) -> str:
     return format_datetime(parsed.astimezone(timezone.utc))
 
 
+def draft_description(draft: ArticleDraft) -> str:
+    return (draft.seo_description or draft.excerpt).strip()
+
+
+def sitemap_entry(url: str) -> str:
+    today = datetime.now(timezone.utc).date().isoformat()
+    return f"""  <url>
+    <loc>{url}</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+"""
+
+
 def update_local_indexes(draft: ArticleDraft) -> list[Path]:
     changed: list[Path] = []
 
@@ -90,9 +105,12 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
             flags=re.DOTALL,
         )
         if not article_was_listed:
-            marker = '<section class="article-grid" aria-label="Lista de artigos">'
-            replacement = marker + "\n        " + article_card(draft)
-            index_html = index_html.replace(marker, replacement, 1)
+            index_html = re.sub(
+                r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)',
+                lambda match: match.group(1) + "\n        " + article_card(draft),
+                index_html,
+                count=1,
+            )
         if index_html != original_html:
             index_path.write_text(index_html, encoding="utf-8")
             changed.append(index_path)
@@ -107,7 +125,7 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
       <title>{escape(draft.title)}</title>
       <link>{url}</link>
       <guid>{url}</guid>
-      <description>{escape(draft.excerpt)}</description>
+      <description>{escape(draft_description(draft))}</description>
       <pubDate>{draft_pub_date(draft)}</pubDate>
     </item>"""
             marker = "    <item>"
@@ -120,7 +138,7 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
         sitemap_xml = sitemap_path.read_text(encoding="utf-8")
         url = f"{DOMAIN}/artigos/{draft.slug}.html"
         if url not in sitemap_xml:
-            sitemap_xml = sitemap_xml.replace("</urlset>", f"  <url><loc>{url}</loc></url>\n</urlset>", 1)
+            sitemap_xml = sitemap_xml.replace("</urlset>", sitemap_entry(url) + "</urlset>", 1)
             sitemap_path.write_text(sitemap_xml, encoding="utf-8")
             changed.append(sitemap_path)
 

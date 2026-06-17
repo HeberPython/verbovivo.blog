@@ -20,6 +20,9 @@ class ArticleDraft:
     image_prompt: str
     image_filename: str
     author_socials: dict[str, str] = field(default_factory=dict)
+    seo_title: str = ""
+    seo_description: str = ""
+    seo_keywords: str = ""
     local_image_path: str = ""
     status: str = "pending_review"
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())

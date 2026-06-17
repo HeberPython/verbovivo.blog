@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import smtplib
+import imaplib
 from email.message import EmailMessage
 from html import escape
 
@@ -11,9 +12,9 @@ from .content import author_socials_html
 from .models import ArticleDraft
 
 
-def unread_messages():
+def unread_messages(limit: int | None = None):
     with MailBox(settings.imap_host, settings.imap_port).login(settings.imap_user, settings.imap_password) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), mark_seen=True):
+        for message in mailbox.fetch(AND(seen=False), limit=limit, mark_seen=False):
             yield message
 
 
@@ -22,8 +23,27 @@ def unread_publish_messages():
         settings.publish_imap_user,
         settings.publish_imap_password,
     ) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), mark_seen=True):
+        for message in mailbox.fetch(AND(seen=False), mark_seen=False):
             yield message
+
+
+def mark_seen(inbox: str, uid: str | int) -> None:
+    if inbox == "publicar@verbovivo.blog":
+        host = settings.publish_imap_host
+        port = settings.publish_imap_port
+        user = settings.publish_imap_user
+        password = settings.publish_imap_password
+    else:
+        host = settings.imap_host
+        port = settings.imap_port
+        user = settings.imap_user
+        password = settings.imap_password
+    with imaplib.IMAP4_SSL(host, port) as imap:
+        imap.login(user, password)
+        imap.select("INBOX")
+        status, _ = imap.uid("STORE", str(uid), "+FLAGS", r"(\Seen)")
+        if status != "OK":
+            raise RuntimeError(f"Could not mark message {uid} as seen in {inbox}.")
 
 
 def email_article_preview(draft: ArticleDraft, review_url: str) -> str:

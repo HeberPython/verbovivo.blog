@@ -10,7 +10,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .ai import generate_cover_image, refine_with_openai
 from .config import settings
 from .content import ready_article_from_email, slugify
-from .mail import send_review_email, unread_messages, unread_publish_messages
+from .mail import mark_seen, send_review_email, unread_messages, unread_publish_messages
 from .publisher import publish_article, upload_review_draft
 from .security import request_authorization_if_needed
 from .store import save_draft
@@ -90,10 +90,11 @@ def is_service_email(message) -> bool:
     return message.from_.endswith("@email.hostinger.com")
 
 
-def poll_once() -> None:
-    for message in unread_messages():
+def poll_once(limit: int | None = None) -> None:
+    for message in unread_messages(limit=limit):
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
+            mark_seen("artigo@verbovivo.blog", message.uid)
             continue
         if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
             continue
@@ -107,6 +108,7 @@ def poll_once() -> None:
         recipient = settings.approver_email or message.from_
         review_url = f"{settings.approval_base_url}/revisao.php?token={draft.token}"
         send_review_email(recipient, draft, review_url)
+        mark_seen("artigo@verbovivo.blog", message.uid)
         print(f"Draft created: {draft.id} -> {review_url}")
 
 
@@ -114,6 +116,7 @@ def publish_once() -> None:
     for message in unread_publish_messages():
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
+            mark_seen("publicar@verbovivo.blog", message.uid)
             continue
         if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "publicar@verbovivo.blog", str(message.uid)):
             continue
@@ -125,15 +128,17 @@ def publish_once() -> None:
         draft = ready_article_from_email(message.subject or "Nova reflexão", source_text, message.from_, image_filename, image_path)
         save_draft(draft)
         publish_article(draft)
+        mark_seen("publicar@verbovivo.blog", message.uid)
         print(f"Published directly: {draft.slug}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["poll-once", "publish-once"])
+    parser.add_argument("--limit", type=int, default=None, help="Processa no máximo esta quantidade de mensagens novas.")
     args = parser.parse_args()
     if args.command == "poll-once":
-        poll_once()
+        poll_once(limit=args.limit)
     elif args.command == "publish-once":
         publish_once()
 

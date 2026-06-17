@@ -19,6 +19,8 @@ automation/_allowed_senders.json
 automation/_sender_authorizations/
 automation/_credentials/
 automation/_logs/
+automation/_backups/
+automation/_diagnostics/
 _drafts/
 automation/_generated_images/
 automation/_publish_images/
