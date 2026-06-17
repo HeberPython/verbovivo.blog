@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import smtplib
 import imaplib
+import ssl
 from email.message import EmailMessage
 from html import escape
 
@@ -12,19 +13,33 @@ from .content import author_socials_html
 from .models import ArticleDraft
 
 
+IMAP_CLOSE_ERRORS = (imaplib.IMAP4.abort, ssl.SSLError, OSError)
+
+
+def _fetch_unread(host: str, port: int, user: str, password: str, limit: int | None = None):
+    mailbox = MailBox(host, port).login(user, password)
+    try:
+        # Fetch everything up front, then close IMAP before OpenAI/FTP work starts.
+        # Hostinger can close long-lived idle IMAP sockets while articles/images are processed.
+        return list(mailbox.fetch(AND(seen=False), limit=limit, mark_seen=False))
+    finally:
+        try:
+            mailbox.logout()
+        except IMAP_CLOSE_ERRORS as exc:
+            print(f"Warning: IMAP logout ignored after fetch: {exc.__class__.__name__}")
+
+
 def unread_messages(limit: int | None = None):
-    with MailBox(settings.imap_host, settings.imap_port).login(settings.imap_user, settings.imap_password) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), limit=limit, mark_seen=False):
-            yield message
+    return _fetch_unread(settings.imap_host, settings.imap_port, settings.imap_user, settings.imap_password, limit=limit)
 
 
 def unread_publish_messages():
-    with MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
+    return _fetch_unread(
+        settings.publish_imap_host,
+        settings.publish_imap_port,
         settings.publish_imap_user,
         settings.publish_imap_password,
-    ) as mailbox:
-        for message in mailbox.fetch(AND(seen=False), mark_seen=False):
-            yield message
+    )
 
 
 def mark_seen(inbox: str, uid: str | int) -> None:
@@ -38,12 +53,18 @@ def mark_seen(inbox: str, uid: str | int) -> None:
         port = settings.imap_port
         user = settings.imap_user
         password = settings.imap_password
-    with imaplib.IMAP4_SSL(host, port) as imap:
+    imap = imaplib.IMAP4_SSL(host, port)
+    try:
         imap.login(user, password)
         imap.select("INBOX")
         status, _ = imap.uid("STORE", str(uid), "+FLAGS", r"(\Seen)")
         if status != "OK":
             raise RuntimeError(f"Could not mark message {uid} as seen in {inbox}.")
+    finally:
+        try:
+            imap.logout()
+        except IMAP_CLOSE_ERRORS as exc:
+            print(f"Warning: IMAP logout ignored after mark_seen: {exc.__class__.__name__}")
 
 
 def email_article_preview(draft: ArticleDraft, review_url: str) -> str:
