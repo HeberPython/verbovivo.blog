@@ -18,7 +18,7 @@ from .mail import (
     unread_messages,
     unread_publish_messages,
 )
-from .publisher import article_is_fully_published, publish_article, upload_review_draft
+from .publisher import article_publication_status, publish_article, upload_review_draft
 from .security import request_authorization_if_needed
 from .store import save_draft
 
@@ -121,8 +121,11 @@ def poll_once(limit: int | None = None) -> None:
 
 def publish_once() -> None:
     messages = {}
+    unread_uids: set[str] = set()
     for message in unread_publish_messages():
-        messages[str(message.uid)] = message
+        uid = str(message.uid)
+        unread_uids.add(uid)
+        messages[uid] = message
     for message in recent_publish_messages():
         messages.setdefault(str(message.uid), message)
     for message in messages.values():
@@ -132,10 +135,15 @@ def publish_once() -> None:
             continue
         if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "publicar@verbovivo.blog", str(message.uid)):
             continue
+        uid = str(message.uid)
         slug = slugify(message.subject or "nova-reflexao")
-        if article_is_fully_published(slug):
+        publication_status = article_publication_status(slug)
+        if publication_status is True:
             print(f"Already published and indexed: {slug}")
             mark_seen("publicar@verbovivo.blog", message.uid)
+            continue
+        if publication_status is None and uid not in unread_uids:
+            print(f"Deferred read-message recovery because site verification is unavailable: {slug}")
             continue
         message = publish_message_by_uid(message.uid) or message
         source_text = extract_message_text(message)

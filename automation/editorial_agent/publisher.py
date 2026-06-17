@@ -9,6 +9,7 @@ import base64
 import json
 from pathlib import Path
 import re
+import time
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from urllib.error import URLError
@@ -187,9 +188,18 @@ def http_upload(remote_path: str, payload: bytes) -> None:
         },
         method="POST",
     )
-    with urlopen(request, timeout=120) as response:
-        if response.status >= 400:
-            raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with urlopen(request, timeout=45) as response:
+                if response.status >= 400:
+                    raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
+                return
+        except (OSError, URLError, RuntimeError) as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(5 * (attempt + 1))
+    raise RuntimeError(f"HTTP upload failed for {remote_path} after 3 attempts: {last_error}")
 
 
 def remote_text(path: str) -> str:
@@ -207,7 +217,7 @@ def remote_text(path: str) -> str:
     raise RuntimeError(f"Remote check failed for {path}: {last_error}")
 
 
-def article_is_fully_published(slug: str) -> bool:
+def article_publication_status(slug: str) -> bool | None:
     article_path = f"artigos/{slug}.html"
     article_url = f"{DOMAIN}/{article_path}"
     try:
@@ -216,13 +226,17 @@ def article_is_fully_published(slug: str) -> bool:
         feed_xml = remote_text("feed.xml")
         sitemap_xml = remote_text("sitemap.xml")
     except RuntimeError:
-        return False
+        return None
     return (
         "<article" in article_html
         and article_path in index_html
         and article_url in feed_xml
         and article_url in sitemap_xml
     )
+
+
+def article_is_fully_published(slug: str) -> bool:
+    return article_publication_status(slug) is True
 
 
 def verify_article_publication(draft: ArticleDraft) -> None:
