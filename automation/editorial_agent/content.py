@@ -40,6 +40,92 @@ def paragraphs_from_text(text: str) -> list[str]:
     return blocks
 
 
+DIRECT_METADATA_LABELS = {
+    "tema",
+    "texto-chave",
+    "texto chave",
+    "palavra-chave exegetica",
+    "palavra chave exegetica",
+}
+
+
+def strip_markdown_wrapper(value: str) -> str:
+    value = value.strip()
+    while len(value) >= 2 and value[:1] == value[-1:] and value[0] in {"*", "_"}:
+        value = value[1:-1].strip()
+    return value.strip("*_").strip()
+
+
+def direct_line_kind(value: str) -> str:
+    clean = value.strip()
+    plain = strip_markdown_wrapper(clean.lstrip("#> "))
+    if not clean:
+        return "blank"
+    if re.match(r"^[-*+]\s+\S", clean):
+        return "list"
+    if clean.startswith(">"):
+        return "quote"
+    if clean.startswith("#") or re.match(r"^\*{0,2}\d+\.\s+", clean):
+        return "heading"
+    if looks_like_direct_heading(plain):
+        return "heading"
+    label_match = re.match(r"^\*{0,2}([^:*]{2,45}):\*{0,2}\s*(.*)$", clean)
+    if label_match and normalized_heading(label_match.group(1)) in DIRECT_METADATA_LABELS:
+        return "metadata"
+    return "text"
+
+
+def reflow_direct_submission(text: str) -> list[str]:
+    """Recompose email/Markdown lines without losing real block boundaries."""
+    source_lines = [line.strip() for line in text.splitlines()]
+    blocks: list[str] = []
+    current = ""
+    current_kind = ""
+
+    def flush() -> None:
+        nonlocal current, current_kind
+        if current:
+            blocks.append(current.strip())
+        current = ""
+        current_kind = ""
+
+    for line in source_lines:
+        if not line:
+            # A blank line is advisory only. HTML email often inserts one after
+            # every visually wrapped line, so punctuation and block markers are
+            # more reliable than whitespace here.
+            continue
+        kind = direct_line_kind(line)
+        if kind in {"heading", "metadata", "quote", "list"}:
+            flush()
+            current = line
+            current_kind = kind
+            heading_is_wrapped = kind == "heading" and (
+                (line.startswith("**") and not line.endswith("**"))
+                or bool(re.search(r"\b(?:cap[ií]tulo|vers[ií]culo|de|da|do|das|dos|e|em|para)$", line, re.IGNORECASE))
+            )
+            if kind == "list" or (kind == "heading" and not heading_is_wrapped):
+                flush()
+            continue
+        if current_kind in {"heading", "metadata", "quote"}:
+            current = f"{current} {line}".strip()
+            balanced_parentheses = current.count("(") <= current.count(")")
+            closes_markdown = current_kind == "heading" and line.endswith("**")
+            terminal_punctuation = bool(re.search(r"[.!?;\u201d\"](?:\*{1,2})?$", line))
+            if closes_markdown or (balanced_parentheses and terminal_punctuation):
+                flush()
+            continue
+        if not current:
+            current = line
+            current_kind = "text"
+            continue
+        current = f"{current} {line}".strip()
+        if re.search(r"[.!?\u201d\"](?:\*{1,2})?$", line):
+            flush()
+    flush()
+    return blocks
+
+
 def normalize_direct_submission_text(text: str) -> str:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     kept_lines: list[str] = []
@@ -112,7 +198,7 @@ def direct_references_html(text: str) -> str:
 def inline_direct_markup(text: str) -> str:
     text = re.sub(r"\$\\alpha\s+\\gamma\s+\\omega\s+\\nu\$", "agōn", text)
     text = re.sub(
-        r"\b([1-3]?\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÀ-ÿ]+)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?",
+        r"\b([1-3]?\s?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-Za-zÀ-ÿ]+)\s+(\d{1,3}):(\d{1,3})(?:\s*-\s*(\d{1,3}))?",
         lambda match: (
             f"{match.group(1)}, capítulo {match.group(2)}, versículos {match.group(3)} a {match.group(4)}"
             if match.group(4)
@@ -124,6 +210,16 @@ def inline_direct_markup(text: str) -> str:
     value = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", value)
     value = re.sub(r"\*(.+?)\*", r"<em>\1</em>", value)
     return value
+
+
+def direct_metadata(value: str) -> tuple[str, str] | None:
+    match = re.match(r"^\*{0,2}([^:*]{2,45}):\*{0,2}\s*(.*)$", value.strip())
+    if not match:
+        return None
+    label = normalized_heading(match.group(1))
+    if label not in DIRECT_METADATA_LABELS:
+        return None
+    return label, strip_markdown_wrapper(match.group(2))
 
 
 def looks_like_direct_heading(text: str) -> bool:
@@ -141,7 +237,7 @@ def looks_like_direct_heading(text: str) -> bool:
 def direct_article_html(text: str, title: str) -> str:
     cleaned_text = normalize_direct_submission_text(text)
     article_text, reference_text = split_direct_references(cleaned_text)
-    blocks = paragraphs_from_text(article_text)
+    blocks = reflow_direct_submission(article_text)
     body: list[str] = []
     list_items: list[str] = []
 
@@ -155,21 +251,31 @@ def direct_article_html(text: str, title: str) -> str:
         clean = re.sub(r"\s*\n\s*", " ", block.strip())
         if not clean:
             continue
-        if clean.startswith("- "):
-            list_items.append(inline_direct_markup(clean[2:]))
+        metadata = direct_metadata(clean)
+        if metadata:
+            label, value = metadata
+            if label == "tema":
+                continue
+            label_text = "Texto-chave" if label in {"texto-chave", "texto chave"} else "Palavra-chave exegética"
+            body.append(f'<p class="article-keyline"><strong>{label_text}:</strong> {inline_direct_markup(value)}</p>')
+            continue
+        if re.match(r"^[-*+]\s+", clean):
+            list_items.append(inline_direct_markup(re.sub(r"^[-*+]\s+", "", clean)))
             continue
         flush_list()
-        heading = clean.strip("*# ").strip()
+        heading = strip_markdown_wrapper(clean.lstrip("# "))
         if slugify(heading) == normalized_title or slugify(heading).startswith(normalized_title + "-"):
             continue
-        if re.match(r"^\*?\d+\.\s+.+?\*?$", clean):
+        if re.match(r"^\*{0,2}\d+\.\s+", clean):
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
         elif clean.startswith("#"):
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
-        elif clean.startswith("*") and clean.endswith("*") and len(clean) < 100:
+        elif clean.startswith("**") and clean.endswith("**") and len(clean) < 140:
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
-        elif looks_like_direct_heading(clean):
+        elif looks_like_direct_heading(heading):
             body.append(f"<h2>{inline_direct_markup(heading)}</h2>")
+        elif clean.startswith(">"):
+            body.append(f"<blockquote>{inline_direct_markup(clean.lstrip('> '))}</blockquote>")
         elif clean.startswith(("“", '"')) and ("—" in clean or re.search(r"\b[A-ZÁÉÍÓÚÂÊÔÃÕÇ][\wÀ-ÿ]+\s+\d+:\d+", clean)):
             body.append(f"<blockquote>{inline_direct_markup(clean)}</blockquote>")
         else:
@@ -179,6 +285,20 @@ def direct_article_html(text: str, title: str) -> str:
     if references_html:
         body.append(references_html)
     return "\n".join(body)
+
+
+def validate_direct_article_html(value: str) -> None:
+    plain = re.sub(r"<[^>]+>", " ", value)
+    word_count = len(re.findall(r"\b[\wÀ-ÿ'-]+\b", plain))
+    problems: list[str] = []
+    if word_count < 40:
+        problems.append("conteúdo insuficiente")
+    if "**" in value or re.search(r"<p>\s*&gt;", value):
+        problems.append("marcação editorial não convertida")
+    if re.search(r"<h2>[^<]*(?:cap[ií]tulo|vers[ií]culo)\s*</h2>", value, re.IGNORECASE):
+        problems.append("título quebrado no meio de uma referência bíblica")
+    if problems:
+        raise ValueError("Publicação direta bloqueada: " + "; ".join(problems))
 
 
 def normalize_social_url(value: str) -> str:
@@ -195,23 +315,27 @@ def extract_submission_metadata(source_text: str) -> tuple[dict, str]:
     metadata = {"author": "", "guest_author": False, "socials": {}}
     body_lines: list[str] = []
     in_header = True
+    saw_header_field = False
     for line in source_text.splitlines():
         clean = line.strip()
         if in_header and not clean:
-            in_header = False
-            body_lines.append(line)
+            if saw_header_field:
+                in_header = False
             continue
         if in_header and ":" in clean:
             key, value = clean.split(":", 1)
             key_norm = unicodedata.normalize("NFKD", key).encode("ascii", "ignore").decode("ascii").lower().strip()
             value = value.strip()
             if key_norm in {"autor convidado", "author guest", "guest author"}:
+                saw_header_field = True
                 metadata["author"] = value
                 metadata["guest_author"] = bool(value)
                 continue
             if key_norm in {"autor", "author", "nome", "nome do autor"}:
+                saw_header_field = True
                 continue
             if key_norm in {"instagram", "facebook", "youtube", "x", "twitter", "linkedin", "site", "website"}:
+                saw_header_field = True
                 if value:
                     metadata["socials"][key_norm] = normalize_social_url(value)
                 continue
@@ -701,9 +825,15 @@ def render_article_page(draft: ArticleDraft) -> str:
 def ready_article_from_email(subject: str, source_text: str, sender: str, image_filename: str = "", image_path: str = "") -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     article_text = normalize_direct_submission_text(article_text)
-    blocks = paragraphs_from_text(article_text)
+    blocks = reflow_direct_submission(article_text)
     title = subject.strip() or (blocks[0][:80] if blocks else "Nova reflexão")
     slug = slugify(title)
+    description_source = " ".join(
+        block for block in blocks
+        if direct_line_kind(block) == "text" and not direct_metadata(block)
+    )
+    body_html = direct_article_html(article_text, title)
+    validate_direct_article_html(body_html)
     return ArticleDraft(
         id=secrets.token_hex(8),
         token=secrets.token_urlsafe(24),
@@ -715,13 +845,13 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
         category="Reflexão",
         author=submission_author(metadata),
-        body_html=direct_article_html(article_text, title),
+        body_html=body_html,
         image_prompt="",
         image_filename=image_filename,
         author_socials=submission_socials(metadata),
         local_image_path=image_path,
-        seo_title=seo_title_from_text(title, article_text),
-        seo_description=seo_description_from_text(article_text),
+        seo_title=seo_title_from_text(title, description_source),
+        seo_description=seo_description_from_text(description_source),
         seo_keywords=seo_keywords_from_title(title),
         status="published_direct",
     )
