@@ -47,11 +47,7 @@ jobs:
       EDITORIAL_APPROVER_EMAIL: ${{ secrets.EDITORIAL_APPROVER_EMAIL }}
       EDITORIAL_ALLOWED_SENDERS: ${{ secrets.EDITORIAL_ALLOWED_SENDERS }}
       EDITORIAL_ADMIN_TOKEN: ${{ secrets.EDITORIAL_ADMIN_TOKEN }}
-      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
-      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
-      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
-      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+      EDITORIAL_UPLOAD_URL: https://verbovivo.blog/receber-arquivo-editorial.php
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
@@ -76,8 +72,7 @@ jobs:
               "EDITORIAL_SMTP_HOST", "EDITORIAL_SMTP_USER", "EDITORIAL_SMTP_PASSWORD",
               "PUBLISH_IMAP_HOST", "PUBLISH_IMAP_USER", "PUBLISH_IMAP_PASSWORD",
               "EDITORIAL_APPROVAL_BASE_URL", "EDITORIAL_APPROVER_EMAIL", "EDITORIAL_ALLOWED_SENDERS",
-              "HOSTINGER_FTP_HOST", "HOSTINGER_FTP_USER", "HOSTINGER_FTP_PASSWORD",
-              "HOSTINGER_FTP_DIR", "OPENAI_API_KEY",
+              "EDITORIAL_ADMIN_TOKEN", "EDITORIAL_UPLOAD_URL", "OPENAI_API_KEY",
           ]
           missing = [name for name in required if not os.getenv(name)]
           if missing:

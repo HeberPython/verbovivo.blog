@@ -47,6 +47,7 @@ class Settings:
     ftp_user: str = os.getenv("HOSTINGER_FTP_USER", "u454442761.codex")
     ftp_password: str = os.getenv("HOSTINGER_FTP_PASSWORD", "")
     ftp_dir: str = os.getenv("HOSTINGER_FTP_DIR", "/")
+    editorial_upload_url: str = os.getenv("EDITORIAL_UPLOAD_URL", "")
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
 

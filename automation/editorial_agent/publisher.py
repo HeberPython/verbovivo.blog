@@ -5,9 +5,12 @@ from email.utils import format_datetime
 from ftplib import FTP, error_perm
 from html import escape
 from io import BytesIO
+import base64
 import json
 from pathlib import Path
 import re
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from .config import settings
 from .content import render_article_page
@@ -164,10 +167,50 @@ def write_local_article(draft: ArticleDraft, html: bytes) -> list[Path]:
     return changed
 
 
+def http_upload(remote_path: str, payload: bytes) -> None:
+    if not settings.editorial_upload_url:
+        raise RuntimeError("EDITORIAL_UPLOAD_URL is not configured.")
+    body = urlencode(
+        {
+            "token": settings.admin_token,
+            "path": remote_path,
+            "content_base64": base64.b64encode(payload).decode("ascii"),
+        }
+    ).encode("utf-8")
+    request = Request(
+        settings.editorial_upload_url,
+        data=body,
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "VerboVivoEditorialAgent/1.0",
+        },
+        method="POST",
+    )
+    with urlopen(request, timeout=120) as response:
+        if response.status >= 400:
+            raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
+
+
+def publish_article_http(draft: ArticleDraft, html: bytes, changed_paths: list[Path]) -> None:
+    http_upload(f"artigos/{draft.slug}.html", html)
+    if draft.local_image_path and draft.image_filename:
+        image_path = Path(draft.local_image_path)
+        if image_path.exists():
+            http_upload(f"images/articles/{draft.image_filename}", image_path.read_bytes())
+    for path in changed_paths:
+        if path.name == f"{draft.slug}.html" or path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+            continue
+        http_upload(path.relative_to(SITE_DIR).as_posix(), path.read_bytes())
+
+
 def publish_article(draft: ArticleDraft) -> None:
     html = render_article_page(draft).encode("utf-8")
     changed_paths = write_local_article(draft, html)
     changed_paths.extend(update_local_indexes(draft))
+
+    if settings.editorial_upload_url:
+        publish_article_http(draft, html, changed_paths)
+        return
 
     with FTP() as ftp:
         ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
@@ -191,6 +234,14 @@ def publish_article(draft: ArticleDraft) -> None:
 
 def upload_review_draft(draft: ArticleDraft) -> None:
     payload = json.dumps(draft.__dict__, ensure_ascii=False, indent=2).encode("utf-8")
+    if settings.editorial_upload_url:
+        http_upload(f"_editorial_drafts/{draft.token}.json", payload)
+        if draft.local_image_path and draft.image_filename:
+            image_path = Path(draft.local_image_path)
+            if image_path.exists():
+                http_upload(f"images/articles/{draft.image_filename}", image_path.read_bytes())
+        return
+
     with FTP() as ftp:
         ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
         ftp.login(settings.ftp_user, settings.ftp_password)
