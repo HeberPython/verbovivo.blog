@@ -5,10 +5,12 @@ from email.utils import format_datetime
 from ftplib import FTP, error_perm
 from html import escape
 from io import BytesIO
+from contextlib import contextmanager
 import base64
 import json
 from pathlib import Path
 import re
+import socket
 import time
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -22,6 +24,23 @@ from .models import ArticleDraft
 DOMAIN = "https://verbovivo.blog"
 SITE_DIR = Path("site")
 DEFAULT_IMAGE = "o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png"
+
+
+@contextmanager
+def prefer_ipv4():
+    """Avoid broken IPv6 routes observed between GitHub Actions and Hostinger."""
+    original = socket.getaddrinfo
+
+    def ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
+        results = original(host, port, family, type, proto, flags)
+        ipv4 = [item for item in results if item[0] == socket.AF_INET]
+        return ipv4 or results
+
+    socket.getaddrinfo = ipv4_only
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original
 
 
 def ensure_dir(ftp: FTP, path: str) -> None:
@@ -191,7 +210,7 @@ def http_upload(remote_path: str, payload: bytes) -> None:
     last_error: Exception | None = None
     for attempt in range(3):
         try:
-            with urlopen(request, timeout=45) as response:
+            with prefer_ipv4(), urlopen(request, timeout=45) as response:
                 if response.status >= 400:
                     raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
                 return
@@ -208,7 +227,7 @@ def remote_text(path: str) -> str:
     last_error: Exception | None = None
     for _ in range(3):
         try:
-            with urlopen(request, timeout=30) as response:
+            with prefer_ipv4(), urlopen(request, timeout=30) as response:
                 if response.status >= 400:
                     raise RuntimeError(f"Remote check failed for {path}: {response.status}")
                 return response.read().decode("utf-8", errors="replace")
