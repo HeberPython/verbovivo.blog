@@ -54,7 +54,7 @@ def search_console_summary() -> tuple[list[str], str | None]:
         return [], None
     try:
         from googleapiclient.discovery import build
-        from google.oauth2 import service_account
+        import google.auth
     except ImportError as exc:
         return [], f"Bibliotecas Google ausentes: {exc.name}"
 
@@ -66,8 +66,7 @@ def search_console_summary() -> tuple[list[str], str | None]:
             return [], oauth_error or "Search Console pendente: autorize OAuth ou configure GOOGLE_APPLICATION_CREDENTIALS."
         if not path.exists():
             return [], f"Credencial Search Console nao encontrada em {path}"
-        credentials = service_account.Credentials.from_service_account_file(
-            str(path),
+        credentials, _ = google.auth.default(
             scopes=["https://www.googleapis.com/auth/webmasters"],
         )
 
