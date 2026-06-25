@@ -68,7 +68,7 @@ def search_console_summary() -> tuple[list[str], str | None]:
             return [], f"Credencial Search Console nao encontrada em {path}"
         credentials = service_account.Credentials.from_service_account_file(
             str(path),
-            scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+            scopes=["https://www.googleapis.com/auth/webmasters"],
         )
 
     try:
@@ -125,7 +125,7 @@ def authorize_search_console() -> str:
         return f"Biblioteca OAuth ausente: {exc.name}"
     flow = InstalledAppFlow.from_client_secrets_file(
         str(client),
-        scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+        scopes=["https://www.googleapis.com/auth/webmasters"],
     )
     credentials = flow.run_local_server(port=0, open_browser=False)
     token.parent.mkdir(parents=True, exist_ok=True)
@@ -144,10 +144,13 @@ def oauth_credentials():
         return None, f"Bibliotecas OAuth ausentes: {exc.name}"
     credentials = Credentials.from_authorized_user_file(
         str(token),
-        scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+        scopes=["https://www.googleapis.com/auth/webmasters"],
     )
     if credentials.expired and credentials.refresh_token:
-        credentials.refresh(Request())
+        try:
+            credentials.refresh(Request())
+        except Exception as exc:
+            return None, f"Token OAuth invalido ou expirado; execute --authorize-search-console novamente. Detalhe: {exc}"
         token.write_text(credentials.to_json(), encoding="utf-8")
     if not credentials.valid:
         return None, "Token OAuth invalido; execute --authorize-search-console novamente."

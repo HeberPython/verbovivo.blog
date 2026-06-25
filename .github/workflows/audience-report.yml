@@ -1,0 +1,96 @@
+name: Verbo Vivo Audience Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 13:30 UTC = 10:30 em Sao Paulo.
+    - cron: "30 13 * * 1"
+
+concurrency:
+  group: verbo-vivo-audience-report
+  cancel-in-progress: false
+
+jobs:
+  audience-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    env:
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+      HOSTINGER_ANALYTICS_REMOTE_LOG: _private/analytics-events.jsonl
+      HOSTINGER_ANALYTICS_LOCAL_LOG: automation/_logs/hostinger/first-party-analytics.jsonl
+      HOSTINGER_ACCESS_LOG_PATH: automation/_logs/hostinger
+      GSC_SITE_URL: https://verbovivo.blog/
+      GSC_OAUTH_CLIENT_SECRETS: automation/_credentials/search-console-oauth-client.json
+      GSC_OAUTH_TOKEN: automation/_credentials/search-console-oauth-token.json
+      GA4_MEASUREMENT_ID: G-KRH6PSKSMV
+      GOOGLE_ADSENSE_CLIENT: ca-pub-5233928852442075
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Prepare Search Console OAuth credentials
+        shell: python
+        env:
+          GSC_OAUTH_CLIENT_JSON: ${{ secrets.GSC_OAUTH_CLIENT_JSON }}
+          GSC_OAUTH_TOKEN_JSON: ${{ secrets.GSC_OAUTH_TOKEN_JSON }}
+        run: |
+          from pathlib import Path
+          import os
+
+          credentials = Path("automation/_credentials")
+          credentials.mkdir(parents=True, exist_ok=True)
+          client = os.environ.get("GSC_OAUTH_CLIENT_JSON", "").strip()
+          token = os.environ.get("GSC_OAUTH_TOKEN_JSON", "").strip()
+          if client:
+              (credentials / "search-console-oauth-client.json").write_text(client, encoding="utf-8")
+          if token:
+              (credentials / "search-console-oauth-token.json").write_text(token, encoding="utf-8")
+
+      - name: Generate audience report
+        run: python -m automation.editorial_agent.audience_report > audience-report.md
+
+      - name: Add report to workflow summary
+        shell: bash
+        run: |
+          {
+            echo "## Verbo Vivo Audience Report"
+            echo
+            cat audience-report.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub issue with report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const report = fs.readFileSync("audience-report.md", "utf8");
+            const date = new Date().toISOString().slice(0, 10);
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Relatorio semanal Verbo Vivo - ${date}`,
+              body: report.slice(0, 60000)
+            });
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audience-report
+          path: audience-report.md
