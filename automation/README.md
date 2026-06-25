@@ -85,6 +85,7 @@ OPENAI_API_KEY=
 GA4_MEASUREMENT_ID=
 GSC_SITE_URL=https://verbovivo.blog/
 GOOGLE_APPLICATION_CREDENTIALS=
+GSC_SERVICE_ACCOUNT_JSON=
 GSC_OAUTH_CLIENT_SECRETS=
 GSC_OAUTH_TOKEN=
 GOOGLE_ADSENSE_CLIENT=
@@ -136,6 +137,20 @@ Autorizar o Search Console por OAuth, quando a conta de servico nao puder ser ad
 ```powershell
 python -m automation.editorial_agent.audience_report --authorize-search-console
 ```
+
+### Search Console no GitHub Actions
+
+O relatorio local pode usar OAuth, mas o relatorio semanal em nuvem deve preferir uma conta de servico limitada. Nao use o token OAuth pessoal da conta Google como secret do GitHub.
+
+Para ativar Search Console no workflow semanal:
+
+1. Crie uma conta de servico no Google Cloud com acesso apenas ao projeto usado para a API do Search Console.
+2. Gere uma chave JSON dessa conta de servico.
+3. Adicione o e-mail da conta de servico como usuario da propriedade `https://verbovivo.blog/` no Google Search Console, com permissao suficiente para leitura.
+4. No repositorio GitHub `HeberPython/verbovivo.blog`, crie o secret `GSC_SERVICE_ACCOUNT_JSON` com o conteudo completo do JSON.
+5. Rode manualmente o workflow `Verbo Vivo Audience Report` para validar.
+
+O workflow grava essa chave apenas no ambiente temporario da execucao em `automation/_credentials/search-console-service-account.json`, usa `GOOGLE_APPLICATION_CREDENTIALS` para consultar a API e descarta o arquivo quando a execucao termina.
 
 Enviar o resumo curto para o Telegram, quando `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` estiverem configurados:
 
