@@ -770,7 +770,7 @@ def render_article_page(draft: ArticleDraft) -> str:
     <meta property="og:url" content="{escape(article_url)}" />
     {f'<meta property="og:image" content="{escape(image_url)}" />' if image_url else ''}
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
+    <link rel="stylesheet" href="../styles.css?v=20260625-adsense-quality" />
     <script type="application/ld+json">
 {schema_json}
     </script>
@@ -842,7 +842,7 @@ def ready_article_from_email(subject: str, source_text: str, sender: str, image_
         source_text=article_text,
         title=title,
         slug=slug,
-        excerpt="Uma reflexão cristã para fortalecer a fé na vida cotidiana.",
+        excerpt=seo_description_from_text(description_source),
         category="Reflexão",
         author=submission_author(metadata),
         body_html=body_html,
