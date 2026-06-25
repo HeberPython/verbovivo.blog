@@ -1,4 +1,4 @@
-# Relatorio de metricas - Verbo Vivo
+﻿# Relatorio de metricas - Verbo Vivo
 
 Gerado em: 25/06/2026, com dados disponiveis ate 25/06/2026 07:11 BRT.
 
@@ -7,7 +7,7 @@ Gerado em: 25/06/2026, com dados disponiveis ate 25/06/2026 07:11 BRT.
 - Analytics proprio do site: OK.
 - Arquivo analisado: `automation/_logs/hostinger/first-party-analytics.jsonl`.
 - Periodo disponivel: 27/05/2026 a 25/06/2026.
-- Google Search Console: indisponivel na execucao; token OAuth expirado/revogado e conta de servico sem permissao suficiente para `https://verbovivo.blog/`.
+- Google Search Console: OAuth renovado e API validada apos a primeira execucao deste relatorio. A API conectou com `https://verbovivo.blog/`, mas ainda nao retornou consultas no periodo de 27/05/2026 a 23/06/2026.
 - GA4/AdSense: configurados no projeto, mas o relatorio local atual ainda nao consulta as APIs dessas plataformas.
 
 ## Resumo geral do periodo disponivel
@@ -158,13 +158,13 @@ Observacao: alguns tempos muito altos podem ocorrer quando a aba fica aberta por
 - O blog esta coletando dados reais pelo analytics proprio.
 - A semana teve pouco volume de audiencia, entao conclusoes editoriais ainda precisam ser vistas como sinais iniciais.
 - A home concentra a maior parte dos acessos, o que reforca a importancia de manter capa, chamadas e links internos bem claros.
-- O Google apareceu em apenas 1 acesso na semana pelo analytics proprio; para saber consultas, impressoes, CTR e posicao media, o OAuth do Search Console precisa ser renovado.
-- O relatorio semanal provavelmente nao chegou porque a automacao de metricas nao esta registrada como workflow fixo no GitHub do blog, e o envio via Telegram depende de uma execucao externa.
+- O Google apareceu em apenas 1 acesso na semana pelo analytics proprio; o Search Console ja foi reconectado, mas ainda precisa acumular impressoes e consultas reais.
+- O relatorio semanal agora tambem roda por GitHub Actions e cria uma Issue no repositorio com o historico da semana, sem depender do computador local ligado.
 
 ## Acoes recomendadas
 
-1. Renovar o OAuth do Search Console e garantir permissao da conta usada na propriedade `https://verbovivo.blog/`.
-2. Transformar o relatorio de audiencia em GitHub Actions semanal, separado do agente editorial de e-mails.
+1. Acompanhar semanalmente consultas, CTR e paginas indexadas no Search Console.
+2. Conferir a Issue semanal criada pelo GitHub Actions e comparar evolucao contra o relatorio anterior.
 3. Manter links internos ao final dos artigos, especialmente levando da home para Autor, FAQ e textos relacionados.
 4. Melhorar a chamada da home para converter mais acessos da pagina inicial em leitura de artigos.
 5. Acompanhar a pagina Autor, pois ela tem o segundo maior volume historico e pode fortalecer confianca editorial.

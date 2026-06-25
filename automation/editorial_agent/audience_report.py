@@ -384,6 +384,24 @@ def build_report() -> tuple[str, str]:
         for name, needed, impact in missing:
             lines.append(f"- {name}: configurar {needed}. Impacto: libera {impact}.")
 
+    next_actions = []
+    if sources.get("Google Search Console API"):
+        next_actions.append("Acompanhar semanalmente consultas, CTR e paginas indexadas no Search Console.")
+    else:
+        next_actions.append("Conectar Search Console API para transformar buscas reais em pautas.")
+    if analytics_data:
+        next_actions.append("Revisar as paginas mais acessadas e criar links internos para manter o leitor no blog.")
+    else:
+        next_actions.append("Conectar GA4 ou logs de acesso para medir tempo, retencao, origem, geografia e dispositivos.")
+    if gsc_lines and any("sem consultas" in line for line in gsc_lines):
+        next_actions.append("Aguardar o processamento do sitemap e novas impressoes antes de pedir nova revisao do AdSense.")
+    elif sources.get("Google AdSense"):
+        next_actions.append("Revisar conteudo, datas, titulos e paginas institucionais antes de solicitar nova revisao do AdSense.")
+    elif sources.get("Hostinger access logs"):
+        next_actions.append("Usar logs da Hostinger para validar 404, paginas lentas e acessos que nao aparecem no analytics proprio.")
+    else:
+        next_actions.append("Exportar ou apontar logs da Hostinger para validar acessos, 404 e paginas acessadas sem depender de cookies.")
+
     lines.extend([
         "",
         "## O que esses numeros significam",
@@ -394,10 +412,8 @@ def build_report() -> tuple[str, str]:
         "- Paginas de entrada e saida indicam quais textos atraem e onde a leitura termina.",
         "",
         "## Proximas acoes editoriais",
-        "1. Conectar GA4 para medir tempo, retencao, origem, geografia e dispositivos.",
-        "2. Conectar Search Console API para transformar buscas reais em pautas.",
-        "3. Exportar ou apontar logs da Hostinger para validar acessos, 404 e paginas acessadas sem depender de cookies.",
     ])
+    lines.extend(f"{idx}. {action}" for idx, action in enumerate(next_actions, 1))
 
     telegram = "\n".join([
         "Verbo Vivo - resumo editorial",
@@ -405,7 +421,7 @@ def build_report() -> tuple[str, str]:
         f"Artigos locais: {len(articles)}",
         "Search Console: conectado" if gsc_lines and not gsc_error else "Search Console: pendente/erro",
         f"Pageviews proprios: {analytics_data['pageviews']}" if analytics_data else (f"Paginas com log: {len(page_counts)}" if page_counts else "Dados de audiencia: pendentes"),
-        "Proxima acao: acumular dados reais e conectar Telegram.",
+        f"Proxima acao: {next_actions[0]}",
     ])
     return "\n".join(lines), telegram
 
