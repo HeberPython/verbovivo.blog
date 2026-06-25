@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      id-token: write
     env:
       HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
       HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
@@ -27,7 +28,6 @@ jobs:
       HOSTINGER_ANALYTICS_LOCAL_LOG: automation/_logs/hostinger/first-party-analytics.jsonl
       HOSTINGER_ACCESS_LOG_PATH: automation/_logs/hostinger
       GSC_SITE_URL: https://verbovivo.blog/
-      GOOGLE_APPLICATION_CREDENTIALS: automation/_credentials/search-console-service-account.json
       GSC_OAUTH_CLIENT_SECRETS: automation/_credentials/search-console-oauth-client.json
       GSC_OAUTH_TOKEN: automation/_credentials/search-console-oauth-token.json
       GA4_MEASUREMENT_ID: G-KRH6PSKSMV
@@ -46,6 +46,14 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
 
+      - name: Authenticate to Google Cloud with Workload Identity
+        if: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && vars.GCP_SERVICE_ACCOUNT != '' }}
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
       - name: Prepare Search Console credentials
         shell: python
         env:
@@ -62,7 +70,10 @@ jobs:
           client = os.environ.get("GSC_OAUTH_CLIENT_JSON", "").strip()
           token = os.environ.get("GSC_OAUTH_TOKEN_JSON", "").strip()
           if service_account:
-              (credentials / "search-console-service-account.json").write_text(service_account, encoding="utf-8")
+              service_account_path = credentials / "search-console-service-account.json"
+              service_account_path.write_text(service_account, encoding="utf-8")
+              with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as github_env:
+                  github_env.write(f"GOOGLE_APPLICATION_CREDENTIALS={service_account_path.as_posix()}\n")
           if client:
               (credentials / "search-console-oauth-client.json").write_text(client, encoding="utf-8")
           if token:
