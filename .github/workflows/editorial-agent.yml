@@ -12,6 +12,7 @@ on:
           - all
           - artigo
           - publicar
+          - test-image
       artigo_limit:
         description: "Limite opcional para artigo@; vazio processa todos"
         required: false
@@ -97,3 +98,16 @@ jobs:
           else
             python -m automation.editorial_agent.worker poll-once
           fi
+
+      - name: Test Gemini image generation
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}
+        run: python -m automation.editorial_agent.image_diagnostic
+
+      - name: Save Gemini diagnostic image
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-image-diagnostic
+          path: automation/_diagnostics/gemini-image/gemini-diagnostic.png
+          if-no-files-found: error
+          retention-days: 3
