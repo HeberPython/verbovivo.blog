@@ -3,6 +3,8 @@
 import base64
 import json
 import secrets
+import urllib.error
+import urllib.request
 from html import escape
 from pathlib import Path
 
@@ -33,6 +35,19 @@ Regras:
 - Crie excerpt/seo_description com atÃ© 155 caracteres, claro, fiel ao texto e com termos que pessoas buscariam.
 - Crie seo_keywords com uma expressÃ£o principal de busca, curta e natural.
 """
+
+
+IMAGE_STYLE_PROMPT = (
+    "Crie uma imagem editorial cristã premium para o blog Verbo Vivo, com aparência viva, nítida e realista, "
+    "semelhante às melhores imagens enviadas prontas para publicação: cores ricas e naturais, contraste bem definido, "
+    "luz cinematográfica quente, textura visível, profundidade de campo controlada e composição limpa. "
+    "Priorize cenas simbólicas cristãs com paisagens reais, caminhos, luz natural, céu dramático, pedras, oliveiras, "
+    "madeira, pergaminho, arquitetura antiga e mãos em oração quando fizer sentido, sempre com atmosfera reverente e esperançosa. "
+    "A imagem não pode parecer leitosa, embaçada, lavada, genérica, infantil, caricata, aquarela, pintura borrada, "
+    "baixa resolução, stock artificial ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
+    "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou elementos exageradamente clichês. "
+    "Use enquadramento horizontal editorial 3:2, sujeito claro, fundo harmonioso e qualidade visual pronta para capa de artigo. "
+)
 
 
 def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDraft:
@@ -101,6 +116,70 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
 
 
 def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
+    if settings.image_provider == "gemini":
+        gemini_path = generate_cover_image_with_gemini(draft, output_dir)
+        if gemini_path:
+            return gemini_path
+    return generate_cover_image_with_openai(draft, output_dir)
+
+
+def generate_cover_image_with_gemini(draft: ArticleDraft, output_dir: Path) -> Path | None:
+    if not settings.gemini_api_key:
+        return None
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / draft.image_filename
+    prompt = IMAGE_STYLE_PROMPT + f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_image_model}:generateContent"
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}],
+            }
+        ],
+        "generationConfig": {
+            "responseModalities": ["IMAGE"],
+        },
+    }
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": settings.gemini_api_key,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        print(f"Gemini image generation unavailable, falling back to OpenAI: {exc.__class__.__name__}")
+        return None
+
+    image_base64 = first_gemini_image_base64(data)
+    if not image_base64:
+        print("Gemini image generation returned no image, falling back to OpenAI.")
+        return None
+    path.write_bytes(base64.b64decode(image_base64))
+    draft.local_image_path = str(path)
+    return path
+
+
+def first_gemini_image_base64(data: dict) -> str:
+    for candidate in data.get("candidates", []):
+        content = candidate.get("content") or {}
+        for part in content.get("parts", []):
+            inline_data = part.get("inlineData") or part.get("inline_data") or {}
+            mime_type = inline_data.get("mimeType") or inline_data.get("mime_type") or ""
+            image_data = inline_data.get("data") or ""
+            if image_data and mime_type.startswith("image/"):
+                return image_data
+    return ""
+
+
+def generate_cover_image_with_openai(draft: ArticleDraft, output_dir: Path) -> Path | None:
     if not settings.openai_api_key:
         return None
 
@@ -110,18 +189,7 @@ def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
     try:
         result = client.images.generate(
             model="gpt-image-1",
-            prompt=(
-                "Crie uma imagem editorial cristã premium para o blog Verbo Vivo, com aparência viva, nítida e realista, "
-                "semelhante às melhores imagens enviadas prontas para publicação: cores ricas e naturais, contraste bem definido, "
-                "luz cinematográfica quente, textura visível, profundidade de campo controlada e composição limpa. "
-                "Priorize cenas simbólicas cristãs com paisagens reais, caminhos, luz natural, céu dramático, pedras, oliveiras, "
-                "madeira, pergaminho, arquitetura antiga e mãos em oração quando fizer sentido, sempre com atmosfera reverente e esperançosa. "
-                "A imagem não pode parecer leitosa, embaçada, lavada, genérica, infantil, caricata, aquarela, pintura borrada, "
-                "baixa resolução, stock artificial ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
-                "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou elementos exageradamente clichês. "
-                "Use enquadramento horizontal editorial 3:2, sujeito claro, fundo harmonioso e qualidade visual pronta para capa de artigo. "
-                f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}"
-            ),
+            prompt=IMAGE_STYLE_PROMPT + f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}",
             size="1536x1024",
         )
     except OpenAIError as exc:

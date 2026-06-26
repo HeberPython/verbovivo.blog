@@ -49,6 +49,9 @@ jobs:
       EDITORIAL_ADMIN_TOKEN: ${{ secrets.EDITORIAL_ADMIN_TOKEN }}
       EDITORIAL_UPLOAD_URL: https://verbovivo.blog/receber-arquivo-editorial.php
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      EDITORIAL_IMAGE_PROVIDER: gemini
+      GEMINI_IMAGE_MODEL: gemini-3.1-flash-image
 
     steps:
       - name: Checkout

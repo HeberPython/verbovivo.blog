@@ -50,6 +50,9 @@ class Settings:
     editorial_upload_url: str = os.getenv("EDITORIAL_UPLOAD_URL", "")
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    image_provider: str = os.getenv("EDITORIAL_IMAGE_PROVIDER", "gemini").lower()
+    gemini_image_model: str = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
 
 
 settings = Settings()

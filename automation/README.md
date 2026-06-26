@@ -81,6 +81,9 @@ HOSTINGER_FTP_PASSWORD=
 HOSTINGER_FTP_DIR=/
 
 OPENAI_API_KEY=
+GEMINI_API_KEY=
+EDITORIAL_IMAGE_PROVIDER=gemini
+GEMINI_IMAGE_MODEL=gemini-3.1-flash-image
 
 GA4_MEASUREMENT_ID=
 GSC_SITE_URL=https://verbovivo.blog/
@@ -113,6 +116,22 @@ Ler `artigo@verbovivo.blog`, preparar rascunho, gerar imagem e enviar link de re
 ```powershell
 python -m automation.editorial_agent.worker poll-once
 ```
+
+### Imagens dos artigos enviados para `artigo@`
+
+O agente pode gerar capas por Gemini ou OpenAI.
+
+Configuracao recomendada:
+
+```txt
+EDITORIAL_IMAGE_PROVIDER=gemini
+GEMINI_API_KEY=<chave da API Gemini>
+GEMINI_IMAGE_MODEL=gemini-3.1-flash-image
+```
+
+Com essa configuracao, o fluxo de `artigo@verbovivo.blog` tenta gerar a capa pelo Gemini primeiro. Se o Gemini estiver sem chave, indisponivel ou nao retornar imagem, o agente cai automaticamente para a geracao pela OpenAI usando `OPENAI_API_KEY`. Isso evita que um erro de imagem bloqueie a preparacao do artigo.
+
+Use Gemini para imagens mais nitidas, vivas e com aparencia visual mais moderna. Use OpenAI como fallback operacional.
 
 Publicar mensagens prontas enviadas para `publicar@verbovivo.blog`:
 
