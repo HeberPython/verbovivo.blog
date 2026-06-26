@@ -154,6 +154,10 @@ def generate_cover_image_with_gemini(draft: ArticleDraft, output_dir: Path) -> P
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
             data = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        message = gemini_http_error_message(exc)
+        print(f"Gemini image generation unavailable ({exc.code}): {message}")
+        return None
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
         print(f"Gemini image generation unavailable, falling back to OpenAI: {exc.__class__.__name__}")
         return None
@@ -177,6 +181,15 @@ def first_gemini_image_base64(data: dict) -> str:
             if image_data and mime_type.startswith("image/"):
                 return image_data
     return ""
+
+
+def gemini_http_error_message(exc: urllib.error.HTTPError) -> str:
+    try:
+        payload = json.loads(exc.read().decode("utf-8"))
+        message = str((payload.get("error") or {}).get("message") or "erro sem mensagem")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        message = "resposta de erro nao reconhecida"
+    return " ".join(message.split())[:500]
 
 
 def generate_cover_image_with_openai(draft: ArticleDraft, output_dir: Path) -> Path | None:
