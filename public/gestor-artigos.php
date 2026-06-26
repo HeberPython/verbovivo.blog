@@ -233,7 +233,7 @@ function update_feed(array $article): void {
     if (text_contains($xml, $url)) {
         $xml = (string) preg_replace('/<item>.*?' . preg_quote($url, '/') . '.*?<\/item>/s', $item, $xml, 1);
     } else {
-        $xml = str_replace('    <item>', "    $item\n    <item>", $xml);
+        $xml = (string) preg_replace('/    <item>/', "    $item\n    <item>", $xml, 1);
     }
     file_put_contents($path, $xml);
 }

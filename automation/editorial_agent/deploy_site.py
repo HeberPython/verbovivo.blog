@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .config import settings
+from .content import render_article_page
 from .models import ArticleDraft
 from .publisher import ensure_dir, update_local_indexes
 
@@ -67,22 +68,22 @@ def sync_approved_remote_articles(ftp: FTP) -> None:
     ftp.cwd(settings.ftp_dir)
     for draft in approved_remote_drafts(ftp):
         local_article = ARTICLE_DIR / f"{draft.slug}.html"
-        downloaded_article = download_remote_file(
+        download_remote_file(
             ftp,
             f"artigos/{draft.slug}.html",
             local_article,
         )
         if not local_article.exists():
-            print(f"Skipped indexing missing article {draft.slug}.html")
-            continue
+            local_article.parent.mkdir(parents=True, exist_ok=True)
+            local_article.write_text(render_article_page(draft), encoding="utf-8")
+            print(f"Rebuilt missing approved article {draft.slug}.html")
         if draft.image_filename:
             download_remote_file(
                 ftp,
                 f"images/articles/{draft.image_filename}",
                 IMAGE_DIR / draft.image_filename,
             )
-        if downloaded_article:
-            update_local_indexes(draft)
+        update_local_indexes(draft)
 
 
 def deploy_site() -> None:

@@ -443,7 +443,7 @@ function update_feed(array $draft): void {
       <description>' . esc($description) . '</description>
       <pubDate>' . gmdate(DATE_RSS) . '</pubDate>
     </item>';
-    $xml = str_replace('    <item>', $item . "\n    <item>", $xml);
+    $xml = (string) preg_replace('/    <item>/', $item . "\n    <item>", $xml, 1);
     file_put_contents($path, $xml);
 }
 

@@ -13,6 +13,7 @@ on:
           - artigo
           - publicar
           - test-image
+          - repair-content
       artigo_limit:
         description: "Limite opcional para artigo@; vazio processa todos"
         required: false
@@ -53,6 +54,11 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       EDITORIAL_IMAGE_PROVIDER: gemini
       GEMINI_IMAGE_MODEL: gemini-3.1-flash-image
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
 
     steps:
       - name: Checkout
@@ -111,3 +117,7 @@ jobs:
           path: automation/_diagnostics/gemini-image/gemini-diagnostic.png
           if-no-files-found: error
           retention-days: 3
+
+      - name: Repair and synchronize approved content
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'repair-content' }}
+        run: python -m automation.editorial_agent.deploy_site
