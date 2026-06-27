@@ -22,6 +22,7 @@ Estas regras sao obrigatorias em qualquer manutencao deste projeto.
    - correspondencia entre artigos, feed e sitemap.
 9. O ultimo artigo por data de publicacao fica em destaque, salvo excecao explicitamente registrada pelo usuario.
 10. Se uma verificacao falhar, interromper a implantacao. Nao tentar “corrigir por cima”.
+11. Recursos presentes em todas as paginas de artigo devem ser mantidos nos tres caminhos de geracao: template Python, aprovacao em `revisao.php` e edicao em `gestor-artigos.php`.
 
 Comandos seguros no GitHub Actions:
 

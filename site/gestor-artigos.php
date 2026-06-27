@@ -163,6 +163,10 @@ function related_articles_html(string $currentSlug): string {
     return '<aside class="related-reading" aria-label="Leia tambem"><p>Leia também</p><h2>Continue a reflexão</h2><div class="related-grid">' . $cards . '</div></aside>';
 }
 
+function article_navigation_html(): string {
+    return '<!-- ARTICLE_NAV_START --><nav class="article-pagination" data-article-pagination aria-label="Navegação entre artigos"><a class="article-pagination__link" data-article-previous aria-disabled="true"><span>← Artigo anterior</span><strong data-article-previous-title>Carregando...</strong></a><a class="article-pagination__link article-pagination__link--next" data-article-next aria-disabled="true"><span>Próximo artigo →</span><strong data-article-next-title>Carregando...</strong></a></nav><!-- ARTICLE_NAV_END -->';
+}
+
 function listen_script(): string {
     return '<script>(()=>{const c=document.querySelector(".listen-tools"),a=document.querySelector(".article-content");if(!c||!a)return;const s=c.querySelector("[data-listen-status]"),b=c.querySelector("[data-listen-toggle]"),y=window.speechSynthesis;if(!("speechSynthesis" in window)){if(b)b.disabled=true;if(s)s.textContent="Narracao indisponivel neste navegador.";return}const set=t=>{if(s)s.textContent=t};const btn=t=>{if(!b)return;b.classList.toggle("is-speaking",t);b.setAttribute("aria-label",t?"Pausar narracao":"Ouvir artigo")};c.addEventListener("click",e=>{if(!e.target.closest("[data-listen-toggle]"))return;if(y.speaking&&!y.paused){y.pause();btn(false);set("Narracao pausada.");return}if(y.paused){y.resume();btn(true);set("Narrando artigo.");return}y.cancel();const u=new SpeechSynthesisUtterance(a.innerText.replace(/\s+/g," ").trim());u.lang="pt-BR";u.rate=.95;u.onend=()=>{btn(false);set("Narracao concluida.")};y.speak(u);btn(true);set("Narrando artigo.")});window.addEventListener("beforeunload",()=>y.cancel())})();</script>';
 }
@@ -218,7 +222,7 @@ function render_article_page(array $article): string {
     ' . ($imageUrl !== '' ? '<meta property="og:image" content="' . esc($imageUrl) . '" />' : '') . '
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">' . $schemaJson . '</script>
-    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
+    <link rel="stylesheet" href="../styles.css?v=20260627-article-navigation" />
   </head>
   <body>
     <header class="site-header">
@@ -240,6 +244,7 @@ function render_article_page(array $article): string {
         </header>
         <div class="article-content">' . (string) $article['body_html'] . '</div>
         <p class="publication-date">Publicado em <time datetime="' . esc(article_publication_iso($article)) . '">' . esc(article_publication_label($article)) . '</time>.</p>
+        ' . article_navigation_html() . '
         ' . related_articles_html($slug) . '
       </article>
     </main>
@@ -248,6 +253,7 @@ function render_article_page(array $article): string {
       <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     ' . listen_script() . '
+    <script src="../article-navigation.js?v=20260627-article-navigation" defer></script>
   </body>
 </html>';
 }

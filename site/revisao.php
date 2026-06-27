@@ -140,6 +140,10 @@ function related_articles_html(string $currentSlug): string {
     return '<aside class="related-reading" aria-label="Leia tambem"><p>Leia também</p><h2>Continue a reflexão</h2><div class="related-grid">' . $cards . '</div></aside>';
 }
 
+function article_navigation_html(): string {
+    return '<!-- ARTICLE_NAV_START --><nav class="article-pagination" data-article-pagination aria-label="Navegação entre artigos"><a class="article-pagination__link" data-article-previous aria-disabled="true"><span>← Artigo anterior</span><strong data-article-previous-title>Carregando...</strong></a><a class="article-pagination__link article-pagination__link--next" data-article-next aria-disabled="true"><span>Próximo artigo →</span><strong data-article-next-title>Carregando...</strong></a></nav><!-- ARTICLE_NAV_END -->';
+}
+
 function listen_script(): string {
     return '
     <script>
@@ -332,7 +336,7 @@ function render_article_page(array $draft): string {
     ' . ($imageUrl !== '' ? '<meta property="og:image" content="' . esc($imageUrl) . '" />' : '') . '
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">' . $schemaJson . '</script>
-    <link rel="stylesheet" href="../styles.css?v=20260617-publication-date" />
+    <link rel="stylesheet" href="../styles.css?v=20260627-article-navigation" />
   </head>
   <body>
     <header class="site-header">
@@ -355,6 +359,7 @@ function render_article_page(array $draft): string {
         </header>
         <div class="article-content">' . $bodyHtml . '</div>
         <p class="publication-date">Publicado em <time datetime="' . esc(article_publication_iso($draft)) . '">' . esc(article_publication_label($draft)) . '</time>.</p>
+        ' . article_navigation_html() . '
         ' . related_articles_html($slug) . '
       </article>
     </main>
@@ -363,6 +368,7 @@ function render_article_page(array $draft): string {
       <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     ' . listen_script() . '
+    <script src="../article-navigation.js?v=20260627-article-navigation" defer></script>
   </body>
 </html>';
 }
