@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import fields
+from datetime import datetime, timezone
 from ftplib import FTP
+from html import escape, unescape
 from io import BytesIO
 import json
 from pathlib import Path
+import re
+from urllib.parse import urlparse
 
 from .config import settings
 from .content import render_article_page
 from .models import ArticleDraft
-from .publisher import ensure_dir, update_local_indexes
+from .publisher import DOMAIN, article_card, draft_pub_date, ensure_dir, featured_article, sitemap_entry
 
 
 SITE_DIR = Path("site")
@@ -83,7 +87,174 @@ def sync_approved_remote_articles(ftp: FTP) -> None:
                 f"images/articles/{draft.image_filename}",
                 IMAGE_DIR / draft.image_filename,
             )
-        update_local_indexes(draft)
+
+
+def article_draft_from_html(slug: str, html: str) -> ArticleDraft:
+    data: dict = {}
+    match = re.search(
+        r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+        html,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if match:
+        try:
+            parsed = json.loads(unescape(match.group(1)))
+            if isinstance(parsed, dict):
+                data = parsed
+        except json.JSONDecodeError:
+            pass
+
+    def meta(property_name: str) -> str:
+        pattern = (
+            r'<meta[^>]+(?:property|name)=["\']'
+            + re.escape(property_name)
+            + r'["\'][^>]+content=["\']([^"\']+)["\']'
+        )
+        found = re.search(pattern, html, flags=re.IGNORECASE)
+        return unescape(found.group(1)).strip() if found else ""
+
+    image = data.get("image") or meta("og:image")
+    if isinstance(image, list):
+        image = image[0] if image else ""
+    image_filename = Path(urlparse(str(image)).path).name
+    title = str(data.get("headline") or meta("og:title") or slug).strip()
+    description = str(data.get("description") or meta("description") or "").strip()
+    category = str(data.get("articleSection") or "Reflexão Cristã").strip()
+    author_data = data.get("author") or {}
+    author = str(author_data.get("name") if isinstance(author_data, dict) else author_data).strip()
+    published = str(data.get("datePublished") or "").strip()
+    if not published:
+        published = datetime.now(timezone.utc).isoformat()
+
+    return ArticleDraft(
+        id=f"catalog-{slug}",
+        token="catalog",
+        sender="",
+        source_subject=title,
+        source_text="",
+        title=title,
+        slug=slug,
+        excerpt=description,
+        category=category,
+        author=author or "Pastor Antônio Lemos",
+        body_html="",
+        image_prompt="",
+        image_filename=image_filename,
+        seo_description=description,
+        created_at=published,
+        status="published",
+    )
+
+
+def article_sort_key(draft: ArticleDraft) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(draft.created_at)
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def sync_remote_article_catalog(ftp: FTP) -> list[ArticleDraft]:
+    ftp.cwd(settings.ftp_dir)
+    try:
+        names = sorted(
+            name.rsplit("/", 1)[-1]
+            for name in ftp.nlst("artigos")
+            if name.lower().endswith(".html")
+        )
+    except Exception:
+        names = []
+
+    catalog: list[ArticleDraft] = []
+    for name in names:
+        slug = name[:-5]
+        local_article = ARTICLE_DIR / name
+        download_remote_file(ftp, f"artigos/{name}", local_article, overwrite=True)
+        html = local_article.read_text(encoding="utf-8", errors="replace")
+        draft = article_draft_from_html(slug, html)
+        catalog.append(draft)
+        if draft.image_filename:
+            download_remote_file(
+                ftp,
+                f"images/articles/{draft.image_filename}",
+                IMAGE_DIR / draft.image_filename,
+            )
+    return sorted(catalog, key=article_sort_key, reverse=True)
+
+
+def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:
+    if not catalog:
+        raise RuntimeError("Remote article catalog is empty; deployment aborted.")
+
+    index_path = SITE_DIR / "index.html"
+    index = index_path.read_text(encoding="utf-8")
+    index = re.sub(
+        r'\s*<article class="featured">.*?</article>',
+        "\n" + featured_article(catalog[0]),
+        index,
+        count=1,
+        flags=re.DOTALL,
+    )
+    cards = "".join(article_card(draft) for draft in catalog[1:])
+    index, replacements = re.subn(
+        r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>).*?(</section>)',
+        lambda match: match.group(1) + "\n" + cards + match.group(2),
+        index,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if replacements != 1:
+        raise RuntimeError("Article grid was not found; deployment aborted.")
+    index_path.write_text(index, encoding="utf-8")
+
+    feed_path = SITE_DIR / "feed.xml"
+    feed = feed_path.read_text(encoding="utf-8")
+    feed = re.sub(r"\s*<item>.*?</item>", "", feed, flags=re.DOTALL)
+    items = []
+    for draft in catalog:
+        url = f"{DOMAIN}/artigos/{draft.slug}.html"
+        items.append(
+            "\n    <item>\n"
+            f"      <title>{escape(draft.title)}</title>\n"
+            f"      <link>{url}</link>\n"
+            f"      <guid>{url}</guid>\n"
+            f"      <description>{escape(draft.excerpt)}</description>\n"
+            f"      <pubDate>{draft_pub_date(draft)}</pubDate>\n"
+            "    </item>"
+        )
+    feed = feed.replace("</channel>", "".join(items) + "\n  </channel>", 1)
+    feed_path.write_text(feed, encoding="utf-8")
+
+    sitemap_path = SITE_DIR / "sitemap.xml"
+    sitemap = sitemap_path.read_text(encoding="utf-8")
+    sitemap = re.sub(
+        r"\s*<url>\s*<loc>https://verbovivo\.blog/artigos/.*?</url>",
+        "",
+        sitemap,
+        flags=re.DOTALL,
+    )
+    entries = "".join(sitemap_entry(f"{DOMAIN}/artigos/{draft.slug}.html") for draft in catalog)
+    sitemap = sitemap.replace("</urlset>", entries + "</urlset>", 1)
+    sitemap_path.write_text(sitemap, encoding="utf-8")
+
+    validate_catalog_indexes(catalog)
+
+
+def validate_catalog_indexes(catalog: list[ArticleDraft]) -> None:
+    index = (SITE_DIR / "index.html").read_text(encoding="utf-8")
+    feed = (SITE_DIR / "feed.xml").read_text(encoding="utf-8")
+    sitemap = (SITE_DIR / "sitemap.xml").read_text(encoding="utf-8")
+    missing: list[str] = []
+    for draft in catalog:
+        relative = f"artigos/{draft.slug}.html"
+        absolute = f"{DOMAIN}/{relative}"
+        if relative not in index or absolute not in feed or absolute not in sitemap:
+            missing.append(draft.slug)
+    if missing:
+        raise RuntimeError("Catalog validation failed; missing from indexes: " + ", ".join(missing))
+    print(f"Catalog validated: {len(catalog)} articles in home, feed and sitemap.")
 
 
 def deploy_site() -> None:
@@ -93,6 +264,8 @@ def deploy_site() -> None:
         ftp.set_pasv(True)
         ftp.cwd(settings.ftp_dir)
         sync_approved_remote_articles(ftp)
+        catalog = sync_remote_article_catalog(ftp)
+        rebuild_catalog_indexes(catalog)
 
         for path in SITE_DIR.rglob("*"):
             if not path.is_file():
