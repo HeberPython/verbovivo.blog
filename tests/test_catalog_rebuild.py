@@ -27,6 +27,20 @@ def draft(slug: str, title: str, created_at: str) -> ArticleDraft:
 
 
 class CatalogRebuildTests(unittest.TestCase):
+    def test_adds_article_navigation_once(self):
+        html = (
+            '<link rel="stylesheet" href="../styles.css?v=old" />'
+            '<p class="publication-date">Publicado em <time>hoje</time>.</p>'
+            "</body>"
+        )
+
+        updated = deploy_site.with_article_navigation(html)
+        updated_twice = deploy_site.with_article_navigation(updated)
+
+        self.assertEqual(updated_twice.count("ARTICLE_NAV_START"), 1)
+        self.assertEqual(updated_twice.count("article-navigation.js"), 1)
+        self.assertIn("20260627-article-navigation", updated_twice)
+
     def test_rebuilds_all_indexes_without_losing_articles(self):
         first = draft("mais-recente", "Mais recente", "2026-06-27T12:00:00+00:00")
         second = draft("mais-antigo", "Mais antigo", "2026-06-26T12:00:00+00:00")

@@ -11,7 +11,7 @@ import re
 from urllib.parse import urlparse
 
 from .config import settings
-from .content import render_article_page
+from .content import article_navigation_html, render_article_page
 from .models import ArticleDraft
 from .publisher import DOMAIN, article_card, draft_pub_date, ensure_dir, featured_article, sitemap_entry
 
@@ -175,6 +175,7 @@ def sync_remote_article_catalog(ftp: FTP) -> list[ArticleDraft]:
         html = local_article.read_text(encoding="utf-8", errors="replace")
         draft = article_draft_from_html(slug, html)
         catalog.append(draft)
+        local_article.write_text(with_article_navigation(html), encoding="utf-8")
         if draft.image_filename:
             download_remote_file(
                 ftp,
@@ -182,6 +183,39 @@ def sync_remote_article_catalog(ftp: FTP) -> list[ArticleDraft]:
                 IMAGE_DIR / draft.image_filename,
             )
     return sorted(catalog, key=article_sort_key, reverse=True)
+
+
+def with_article_navigation(html: str) -> str:
+    navigation = article_navigation_html().strip()
+    if "<!-- ARTICLE_NAV_START -->" in html:
+        html = re.sub(
+            r"<!-- ARTICLE_NAV_START -->.*?<!-- ARTICLE_NAV_END -->",
+            navigation,
+            html,
+            count=1,
+            flags=re.DOTALL,
+        )
+    else:
+        html, replacements = re.subn(
+            r'(<p class="publication-date">.*?</p>)',
+            lambda match: match.group(1) + "\n" + navigation,
+            html,
+            count=1,
+            flags=re.DOTALL,
+        )
+        if replacements != 1:
+            raise RuntimeError("Publication date marker not found while adding article navigation.")
+
+    html = re.sub(
+        r"\.\./styles\.css(?:\?v=[^\"']+)?",
+        "../styles.css?v=20260627-article-navigation",
+        html,
+        count=1,
+    )
+    script = '<script src="../article-navigation.js?v=20260627-article-navigation" defer></script>'
+    if "article-navigation.js" not in html:
+        html = html.replace("</body>", f"  {script}\n  </body>", 1)
+    return html
 
 
 def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:

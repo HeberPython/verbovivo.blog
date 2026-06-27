@@ -478,6 +478,23 @@ def related_articles_html(current_slug: str) -> str:
     )
 
 
+def article_navigation_html() -> str:
+    return """
+        <!-- ARTICLE_NAV_START -->
+        <nav class="article-pagination" data-article-pagination aria-label="Navegação entre artigos">
+          <a class="article-pagination__link" data-article-previous aria-disabled="true">
+            <span>← Artigo anterior</span>
+            <strong data-article-previous-title>Carregando...</strong>
+          </a>
+          <a class="article-pagination__link article-pagination__link--next" data-article-next aria-disabled="true">
+            <span>Próximo artigo →</span>
+            <strong data-article-next-title>Carregando...</strong>
+          </a>
+        </nav>
+        <!-- ARTICLE_NAV_END -->
+"""
+
+
 def seo_page_title(draft: ArticleDraft) -> str:
     value = (draft.seo_title or "").strip()
     if not value:
@@ -770,7 +787,7 @@ def render_article_page(draft: ArticleDraft) -> str:
     <meta property="og:url" content="{escape(article_url)}" />
     {f'<meta property="og:image" content="{escape(image_url)}" />' if image_url else ''}
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="../styles.css?v=20260625-adsense-quality" />
+    <link rel="stylesheet" href="../styles.css?v=20260627-article-navigation" />
     <script type="application/ld+json">
 {schema_json}
     </script>
@@ -808,6 +825,7 @@ def render_article_page(draft: ArticleDraft) -> str:
           {draft.body_html}
         </div>
         <p class="publication-date">Publicado em <time datetime="{escape(article_publication_iso(draft))}">{escape(article_publication_label(draft))}</time>.</p>
+        {article_navigation_html()}
         {related_articles_html(draft.slug)}
       </article>
     </main>
@@ -816,6 +834,7 @@ def render_article_page(draft: ArticleDraft) -> str:
       <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     {listen_script()}
+    <script src="../article-navigation.js?v=20260627-article-navigation" defer></script>
     {analytics_script("../analytics.php")}
   </body>
 </html>
