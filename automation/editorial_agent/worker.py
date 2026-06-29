@@ -98,7 +98,12 @@ def is_service_email(message) -> bool:
 
 
 def poll_once(limit: int | None = None) -> None:
-    for message in unread_messages(limit=limit):
+    messages = unread_messages(limit=limit)
+    if not messages:
+        print("No unread messages in artigo@verbovivo.blog.")
+        return
+    print(f"Found {len(messages)} unread message(s) in artigo@verbovivo.blog.")
+    for message in messages:
         if is_service_email(message):
             print(f"Ignored service email: {message.subject}")
             mark_seen("artigo@verbovivo.blog", message.uid)
@@ -122,7 +127,12 @@ def poll_once(limit: int | None = None) -> None:
 def publish_once() -> None:
     messages = {}
     unread_uids: set[str] = set()
-    for message in unread_publish_messages():
+    unread_publish = unread_publish_messages()
+    if not unread_publish:
+        print("No unread messages in publicar@verbovivo.blog.")
+    else:
+        print(f"Found {len(unread_publish)} unread message(s) in publicar@verbovivo.blog.")
+    for message in unread_publish:
         uid = str(message.uid)
         unread_uids.add(uid)
         messages[uid] = message

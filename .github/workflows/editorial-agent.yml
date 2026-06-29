@@ -20,8 +20,9 @@ on:
         required: false
         default: ""
   schedule:
-    # UTC. 13:00 UTC = 10:00 em Sao Paulo. 01:00 UTC = 22:00 em Sao Paulo.
-    - cron: "0 1,13 * * *"
+    # UTC. Sao Paulo = UTC-3. Check every 15 minutes from 07:00 to 22:59 BRT.
+    - cron: "*/15 10-23 * * *"
+    - cron: "*/15 0-1 * * *"
 
 concurrency:
   group: verbo-vivo-editorial-agent
