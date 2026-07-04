@@ -29,6 +29,11 @@ Regras:
 - Escreva em portuguÃªs do Brasil.
 - O tom deve ser pastoral, claro, reverente e acessÃ­vel.
 - Compacte o texto bruto em uma reflexÃ£o publicÃ¡vel, sem perder o contexto bÃ­blico central.
+- Produza uma reflexÃ£o substancial e autossuficiente, normalmente entre 550 e 900 palavras, desde que o texto-fonte ofereÃ§a conteÃºdo para isso. NÃ£o alongue com repetiÃ§Ãµes ou frases vazias.
+- DÃª a cada artigo uma contribuiÃ§Ã£o prÃ³pria: evite introduÃ§Ãµes, subtÃ­tulos, conclusÃµes e aplicaÃ§Ãµes genÃ©ricas ou reaproveitadas de outros textos.
+- Organize a leitura com uma abertura que apresente a pergunta central, desenvolvimento bÃ­blico claro, aplicaÃ§Ã£o concreta e conclusÃ£o coerente.
+- Quando o texto-fonte trouxer livros, autores, dicionÃ¡rios ou outras fontes, preserve essas referÃªncias para aprofundamento. Nunca invente fontes para completar o artigo.
+- Diferencie com clareza a explicaÃ§Ã£o do texto bÃ­blico, a reflexÃ£o pastoral e a aplicaÃ§Ã£o prÃ¡tica.
 - Escreva referÃªncias bÃ­blicas por extenso: "Mateus, capÃ­tulo 21, versÃ­culo 17" ou "Filipenses, capÃ­tulo 2, versÃ­culos 14 a 16", nunca no formato "21:17".
 - Mantenha title como tÃ­tulo editorial bonito para aparecer no artigo.
 - Crie seo_title com atÃ© 60 caracteres, mais pesquisÃ¡vel no Google, sem sensacionalismo.

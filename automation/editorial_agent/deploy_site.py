@@ -24,10 +24,14 @@ PUBLISHED_STATUSES = {"approved", "corrected_approved", "published_direct"}
 
 def remote_file_exists(ftp: FTP, remote_path: str) -> bool:
     try:
+        ftp.voidcmd("TYPE I")
         ftp.size(remote_path)
         return True
     except Exception:
-        return False
+        try:
+            return bool(ftp.nlst(remote_path))
+        except Exception:
+            return False
 
 
 def download_remote_file(ftp: FTP, remote_path: str, local_path: Path, overwrite: bool = False) -> bool:

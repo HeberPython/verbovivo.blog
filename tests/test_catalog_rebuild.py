@@ -27,6 +27,25 @@ def draft(slug: str, title: str, created_at: str) -> ArticleDraft:
 
 
 class CatalogRebuildTests(unittest.TestCase):
+    def test_remote_file_check_uses_binary_mode_and_listing_fallback(self):
+        class FTPStub:
+            def __init__(self):
+                self.commands = []
+
+            def voidcmd(self, command):
+                self.commands.append(command)
+
+            def size(self, path):
+                raise RuntimeError("SIZE unavailable")
+
+            def nlst(self, path):
+                return [path]
+
+        ftp = FTPStub()
+
+        self.assertTrue(deploy_site.remote_file_exists(ftp, "images/articles/capa.jpg"))
+        self.assertEqual(ftp.commands, ["TYPE I"])
+
     def test_adds_article_navigation_once(self):
         html = (
             '<link rel="stylesheet" href="../styles.css?v=old" />'

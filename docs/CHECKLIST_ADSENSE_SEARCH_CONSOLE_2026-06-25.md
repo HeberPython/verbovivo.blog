@@ -2,6 +2,21 @@
 
 Atualizado em: 25/06/2026.
 
+## Nova rodada de qualidade em 04/07/2026
+
+- Catálogo remoto completo sincronizado no repositório: 25 artigos.
+- Todos os 25 artigos aparecem na home, no feed e no sitemap.
+- Corrigida a ausência do artigo `consolacao-e-sacrificio-o-altar-que-transforma-a-dor` na home.
+- Recuperada e validada a imagem de `plenitude-recebida`.
+- Corrigida a sincronização FTP de imagens para consultar arquivos em modo binário e usar listagem como alternativa.
+- Criada a página pública `comece-aqui.html`, com 16 leituras organizadas em quatro trilhas temáticas.
+- Ampliadas as páginas Sobre e FAQ com autoria, tratamento de fontes e política de correções.
+- Agente editorial orientado a produzir textos substanciais, próprios e sem repetição artificial.
+- Search Console conectado por conta de serviço e apresentando consultas reais.
+- Validação visual ao vivo: sem imagens quebradas ou rolagem horizontal na home, na trilha de leitura e no artigo testado.
+
+O aviso `Conteúdo de baixo valor` não desaparece automaticamente após a correção. O Google precisa fazer uma nova avaliação do site. Não existe garantia de aprovação, pois o AdSense também considera sinais que não são publicados em detalhe.
+
 ## Estado atual
 
 - Propriedade do AdSense: verificada.
