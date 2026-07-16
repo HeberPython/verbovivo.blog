@@ -320,10 +320,28 @@ function update_index(array $draft): void {
     $html = (string) file_get_contents($path);
     $needle = 'artigos/' . (string) $draft['slug'] . '.html';
     $wasListed = str_contains($html, $needle);
+    $previousFeaturedCard = '';
+    $previousFeaturedUrl = '';
+    if (preg_match('/\s*(<article class="featured">.*?<\/article>)/s', $html, $featuredMatch)) {
+        $previousMarkup = $featuredMatch[1];
+        if (preg_match('/href="([^"]+)"/', $previousMarkup, $hrefMatch)) {
+            $previousFeaturedUrl = $hrefMatch[1];
+        }
+        if ($previousFeaturedUrl !== '' && $previousFeaturedUrl !== $needle) {
+            $previousFeaturedCard = str_replace('class="featured"', 'class="article-card"', $previousMarkup);
+        }
+    }
     $html = (string) preg_replace('/\s*<article class="featured">.*?<\/article>/s', "\n" . featured_article($draft), $html, 1);
+    $cardsToInsert = [];
+    if ($previousFeaturedCard !== '' && !str_contains($html, $previousFeaturedUrl)) {
+        $cardsToInsert[] = $previousFeaturedCard;
+    }
     if (!$wasListed) {
+        $cardsToInsert[] = article_card($draft);
+    }
+    if ($cardsToInsert) {
     $marker = '<section class="article-grid" aria-label="Lista de artigos">';
-    $html = str_replace($marker, $marker . "\n        " . article_card($draft), $html);
+    $html = str_replace($marker, $marker . "\n        " . implode("\n        ", $cardsToInsert), $html);
     }
     file_put_contents($path, $html);
 }

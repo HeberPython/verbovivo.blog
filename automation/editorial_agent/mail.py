@@ -33,6 +33,22 @@ def unread_messages(limit: int | None = None):
     return _fetch_unread(settings.imap_host, settings.imap_port, settings.imap_user, settings.imap_password, limit=limit)
 
 
+def recent_article_messages(limit: int = 25):
+    mailbox = MailBox(settings.imap_host, settings.imap_port).login(
+        settings.imap_user,
+        settings.imap_password,
+    )
+    try:
+        # Recovery path for artigo@: if a previous run sent an approval email but
+        # the remote draft was not persisted, the source email may already be read.
+        return list(mailbox.fetch(limit=limit, reverse=True, mark_seen=False))
+    finally:
+        try:
+            mailbox.logout()
+        except IMAP_CLOSE_ERRORS as exc:
+            print(f"Warning: IMAP logout ignored after article recovery fetch: {exc.__class__.__name__}")
+
+
 def unread_publish_messages():
     return _fetch_unread(
         settings.publish_imap_host,

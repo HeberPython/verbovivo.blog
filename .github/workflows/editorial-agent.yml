@@ -12,6 +12,7 @@ on:
           - all
           - artigo
           - publicar
+          - recover-artigo
           - test-image
           - repair-content
           - audit-content
@@ -105,6 +106,16 @@ jobs:
             python -m automation.editorial_agent.worker poll-once --limit "${{ inputs.artigo_limit }}"
           else
             python -m automation.editorial_agent.worker poll-once
+          fi
+
+      - name: Recover recent artigo approvals
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'recover-artigo' }}
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.artigo_limit }}" ]; then
+            python -m automation.editorial_agent.worker recover-artigo --limit "${{ inputs.artigo_limit }}"
+          else
+            python -m automation.editorial_agent.worker recover-artigo --limit 4
           fi
 
       - name: Test Gemini image generation

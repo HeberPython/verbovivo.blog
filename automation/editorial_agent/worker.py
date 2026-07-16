@@ -13,6 +13,7 @@ from .content import ready_article_from_email, slugify
 from .mail import (
     mark_seen,
     publish_message_by_uid,
+    recent_article_messages,
     recent_publish_messages,
     send_review_email,
     unread_messages,
@@ -97,6 +98,29 @@ def is_service_email(message) -> bool:
     return message.from_.endswith("@email.hostinger.com")
 
 
+def process_article_message(message) -> bool:
+    if is_service_email(message):
+        print(f"Ignored service email: {message.subject}")
+        mark_seen("artigo@verbovivo.blog", message.uid)
+        return False
+    if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
+        return False
+    source_text = extract_message_text(message)
+    if not source_text.strip():
+        print(f"Ignored empty article message: {message.subject}")
+        return False
+    draft = refine_with_openai(source_text, message.subject or "Nova reflexão", message.from_)
+    generate_cover_image(draft, Path("automation/_generated_images"))
+    save_draft(draft)
+    upload_review_draft(draft)
+    recipient = settings.approver_email or message.from_
+    review_url = f"{settings.approval_base_url}/revisao.php?token={draft.token}"
+    send_review_email(recipient, draft, review_url)
+    mark_seen("artigo@verbovivo.blog", message.uid)
+    print(f"Draft created and verified: {draft.id} -> {review_url}")
+    return True
+
+
 def poll_once(limit: int | None = None) -> None:
     messages = unread_messages(limit=limit)
     if not messages:
@@ -104,24 +128,17 @@ def poll_once(limit: int | None = None) -> None:
         return
     print(f"Found {len(messages)} unread message(s) in artigo@verbovivo.blog.")
     for message in messages:
-        if is_service_email(message):
-            print(f"Ignored service email: {message.subject}")
-            mark_seen("artigo@verbovivo.blog", message.uid)
-            continue
-        if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
-            continue
-        source_text = extract_message_text(message)
-        if not source_text.strip():
-            continue
-        draft = refine_with_openai(source_text, message.subject or "Nova reflexão", message.from_)
-        generate_cover_image(draft, Path("automation/_generated_images"))
-        save_draft(draft)
-        upload_review_draft(draft)
-        recipient = settings.approver_email or message.from_
-        review_url = f"{settings.approval_base_url}/revisao.php?token={draft.token}"
-        send_review_email(recipient, draft, review_url)
-        mark_seen("artigo@verbovivo.blog", message.uid)
-        print(f"Draft created: {draft.id} -> {review_url}")
+        process_article_message(message)
+
+
+def recover_article_reviews(limit: int | None = None) -> None:
+    messages = recent_article_messages(limit=limit or 10)
+    if not messages:
+        print("No recent messages found in artigo@verbovivo.blog for recovery.")
+        return
+    print(f"Recovering {len(messages)} recent artigo@ message(s).")
+    for message in messages:
+        process_article_message(message)
 
 
 def publish_once() -> None:
@@ -169,13 +186,15 @@ def publish_once() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["poll-once", "publish-once"])
+    parser.add_argument("command", choices=["poll-once", "publish-once", "recover-artigo"])
     parser.add_argument("--limit", type=int, default=None, help="Processa no máximo esta quantidade de mensagens novas.")
     args = parser.parse_args()
     if args.command == "poll-once":
         poll_once(limit=args.limit)
     elif args.command == "publish-once":
         publish_once()
+    elif args.command == "recover-artigo":
+        recover_article_reviews(limit=args.limit)
 
 
 if __name__ == "__main__":

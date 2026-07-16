@@ -121,6 +121,15 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
         original_html = index_html
         article_url = f"artigos/{draft.slug}.html"
         article_was_listed = article_url in index_html
+        previous_featured_card = ""
+        previous_featured_url = ""
+        previous_featured = re.search(r'\s*(<article class="featured">.*?</article>)', index_html, re.DOTALL)
+        if previous_featured:
+            previous_markup = previous_featured.group(1)
+            href_match = re.search(r'href="([^"]+)"', previous_markup)
+            previous_featured_url = href_match.group(1) if href_match else ""
+            if previous_featured_url and previous_featured_url != article_url:
+                previous_featured_card = previous_markup.replace('class="featured"', 'class="article-card"', 1)
         index_html = re.sub(
             r'\s*<article class="featured">.*?</article>',
             "\n" + featured_article(draft),
@@ -128,10 +137,15 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
             count=1,
             flags=re.DOTALL,
         )
+        cards_to_insert: list[str] = []
+        if previous_featured_card and previous_featured_url not in index_html:
+            cards_to_insert.append(previous_featured_card)
         if not article_was_listed:
+            cards_to_insert.append(article_card(draft))
+        if cards_to_insert:
             index_html = re.sub(
                 r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)',
-                lambda match: match.group(1) + "\n        " + article_card(draft),
+                lambda match: match.group(1) + "\n        " + "\n        ".join(cards_to_insert),
                 index_html,
                 count=1,
             )
@@ -258,6 +272,19 @@ def article_is_fully_published(slug: str) -> bool:
     return article_publication_status(slug) is True
 
 
+def review_draft_is_available(token: str) -> bool:
+    try:
+        html = remote_text(f"revisao.php?token={token}")
+    except RuntimeError:
+        return False
+    return "Rascunho nao encontrado" not in html and "Revisão editorial" in html
+
+
+def verify_review_draft_upload(draft: ArticleDraft) -> None:
+    if not review_draft_is_available(draft.token):
+        raise RuntimeError(f"Review draft upload verification failed for draft {draft.id}.")
+
+
 def verify_article_publication(draft: ArticleDraft) -> None:
     if not article_is_fully_published(draft.slug):
         raise RuntimeError(
@@ -317,6 +344,7 @@ def upload_review_draft(draft: ArticleDraft) -> None:
             image_path = Path(draft.local_image_path)
             if image_path.exists():
                 http_upload(f"images/articles/{draft.image_filename}", image_path.read_bytes())
+        verify_review_draft_upload(draft)
         return
 
     with FTP() as ftp:
@@ -332,3 +360,4 @@ def upload_review_draft(draft: ArticleDraft) -> None:
                 ensure_dir(ftp, "images/articles")
                 with image_path.open("rb") as image_file:
                     ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
+    verify_review_draft_upload(draft)
