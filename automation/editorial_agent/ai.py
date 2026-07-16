@@ -39,18 +39,23 @@ Regras:
 - Crie seo_title com atÃ© 60 caracteres, mais pesquisÃ¡vel no Google, sem sensacionalismo.
 - Crie excerpt/seo_description com atÃ© 155 caracteres, claro, fiel ao texto e com termos que pessoas buscariam.
 - Crie seo_keywords com uma expressÃ£o principal de busca, curta e natural.
+- Crie image_prompt como uma cena concreta, humana e cinematogrÃ¡fica, nÃ£o como uma lista de sÃ­mbolos. Priorize pessoas em caminhada de fÃ©, gestos pastorais, oraÃ§Ã£o, trabalho, espera, consolo, famÃ­lia, discipulado, paisagens bÃ­blicas realistas ou ambientes cotidianos iluminados por luz natural.
+- Evite image_prompt com objetos isolados como coroa, pedra, pergaminho, coraÃ§Ã£o, espada, chave, raio de luz ou cruz como protagonista literal. Esses elementos sÃ³ podem aparecer discretamente como apoio da cena, se forem necessÃ¡rios.
 """
 
 
 IMAGE_STYLE_PROMPT = (
-    "Crie uma imagem editorial cristã premium para o blog Verbo Vivo, com aparência viva, nítida e realista, "
-    "semelhante às melhores imagens enviadas prontas para publicação: cores ricas e naturais, contraste bem definido, "
-    "luz cinematográfica quente, textura visível, profundidade de campo controlada e composição limpa. "
-    "Priorize cenas simbólicas cristãs com paisagens reais, caminhos, luz natural, céu dramático, pedras, oliveiras, "
-    "madeira, pergaminho, arquitetura antiga e mãos em oração quando fizer sentido, sempre com atmosfera reverente e esperançosa. "
-    "A imagem não pode parecer leitosa, embaçada, lavada, genérica, infantil, caricata, aquarela, pintura borrada, "
-    "baixa resolução, stock artificial ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
-    "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou elementos exageradamente clichês. "
+    "Crie uma imagem editorial cristã premium para o blog Verbo Vivo, com aparência viva, nítida, realista e cinematográfica. "
+    "A imagem deve parecer uma cena fotografada ou filmada com direção de arte refinada, não uma ilustração religiosa genérica. "
+    "Priorize uma cena concreta com narrativa visual: pessoas em oração, serviço, caminhada, espera, consolo, discipulado, leitura bíblica, "
+    "família, trabalho humilde, comunidade, paisagens bíblicas realistas ou ambientes pastorais iluminados por luz natural. "
+    "Use cores ricas e naturais, contraste bem definido, textura visível, pele e tecidos realistas, profundidade de campo controlada, "
+    "composição limpa e luz cinematográfica quente, como fim de tarde ou amanhecer. "
+    "Símbolos cristãos podem existir apenas como detalhes discretos e integrados à cena. Não transforme conceitos do título em objetos literais. "
+    "Evite objetos isolados como coroa, pedra, pergaminho, coração, chave, espada, raio de luz, cruz gigante ou brilho saindo de objetos. "
+    "A imagem não pode parecer leitosa, embaçada, lavada, plástica, artificial, teatral, infantil, caricata, aquarela, pintura borrada, "
+    "baixa resolução, stock genérico, capa religiosa clichê ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
+    "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou efeitos sobrenaturais exagerados. "
     "Use enquadramento horizontal editorial 3:2, sujeito claro, fundo harmonioso e qualidade visual pronta para capa de artigo. "
 )
 
