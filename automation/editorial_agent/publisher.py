@@ -280,9 +280,42 @@ def review_draft_is_available(token: str) -> bool:
     return "Rascunho nao encontrado" not in html and "Revisão editorial" in html
 
 
+def review_draft_is_available(token: str) -> bool:
+    try:
+        html = remote_text(f"revisao.php?token={token}")
+    except RuntimeError:
+        return False
+    return (
+        "Rascunho nao encontrado" not in html
+        and (
+            "Revis" in html
+            or (
+                '<form class="review-actions"' in html
+                and f'value="{escape(token)}"' in html
+            )
+        )
+    )
+
+
 def verify_review_draft_upload(draft: ArticleDraft) -> None:
     if not review_draft_is_available(draft.token):
         raise RuntimeError(f"Review draft upload verification failed for draft {draft.id}.")
+
+
+def upload_review_draft_ftp(draft: ArticleDraft, payload: bytes) -> None:
+    with FTP() as ftp:
+        ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
+        ftp.login(settings.ftp_user, settings.ftp_password)
+        ftp.set_pasv(True)
+        ftp.cwd(settings.ftp_dir)
+        ensure_dir(ftp, "_editorial_drafts")
+        ftp.storbinary(f"STOR _editorial_drafts/{draft.token}.json", BytesIO(payload))
+        if draft.local_image_path and draft.image_filename:
+            image_path = Path(draft.local_image_path)
+            if image_path.exists():
+                ensure_dir(ftp, "images/articles")
+                with image_path.open("rb") as image_file:
+                    ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
 
 
 def verify_article_publication(draft: ArticleDraft) -> None:
@@ -344,20 +377,12 @@ def upload_review_draft(draft: ArticleDraft) -> None:
             image_path = Path(draft.local_image_path)
             if image_path.exists():
                 http_upload(f"images/articles/{draft.image_filename}", image_path.read_bytes())
+        if review_draft_is_available(draft.token):
+            return
+        print(f"HTTP review draft upload was not visible for {draft.id}; retrying with FTP.")
+        upload_review_draft_ftp(draft, payload)
         verify_review_draft_upload(draft)
         return
 
-    with FTP() as ftp:
-        ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
-        ftp.login(settings.ftp_user, settings.ftp_password)
-        ftp.set_pasv(True)
-        ftp.cwd(settings.ftp_dir)
-        ensure_dir(ftp, "_editorial_drafts")
-        ftp.storbinary(f"STOR _editorial_drafts/{draft.token}.json", BytesIO(payload))
-        if draft.local_image_path and draft.image_filename:
-            image_path = Path(draft.local_image_path)
-            if image_path.exists():
-                ensure_dir(ftp, "images/articles")
-                with image_path.open("rb") as image_file:
-                    ftp.storbinary(f"STOR images/articles/{draft.image_filename}", image_file)
+    upload_review_draft_ftp(draft, payload)
     verify_review_draft_upload(draft)
