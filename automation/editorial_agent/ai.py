@@ -41,6 +41,8 @@ Regras:
 - Crie seo_keywords com uma expressÃ£o principal de busca, curta e natural.
 - Crie image_prompt como uma cena concreta, humana e cinematogrÃ¡fica, nÃ£o como uma lista de sÃ­mbolos. Priorize pessoas em caminhada de fÃ©, gestos pastorais, oraÃ§Ã£o, trabalho, espera, consolo, famÃ­lia, discipulado, paisagens bÃ­blicas realistas ou ambientes cotidianos iluminados por luz natural.
 - Evite image_prompt com objetos isolados como coroa, pedra, pergaminho, coraÃ§Ã£o, espada, chave, raio de luz ou cruz como protagonista literal. Esses elementos sÃ³ podem aparecer discretamente como apoio da cena, se forem necessÃ¡rios.
+- Quando o titulo ou o texto tiver um simbolo teologico central, como pedra angular, fundamento, videira, pao da vida, caminho, luz, coroa, armadura ou cruz, preserve esse simbolo como parte organica da cena. Nao substitua o simbolo central por uma cena generica de caminhada, grupo ou comunidade.
+- Para temas sobre pedra angular, fundamento ou ressurreicao, use arquitetura antiga, base de pedra, tumulo vazio, amanhecer, caminho e pessoas em contemplacao como cena integrada, sem teatralidade, brilho magico ou literalidade cafona.
 """
 
 
@@ -51,7 +53,10 @@ IMAGE_STYLE_PROMPT = (
     "família, trabalho humilde, comunidade, paisagens bíblicas realistas ou ambientes pastorais iluminados por luz natural. "
     "Use cores ricas e naturais, contraste bem definido, textura visível, pele e tecidos realistas, profundidade de campo controlada, "
     "composição limpa e luz cinematográfica quente, como fim de tarde ou amanhecer. "
-    "Símbolos cristãos podem existir apenas como detalhes discretos e integrados à cena. Não transforme conceitos do título em objetos literais. "
+    "Quando o artigo tiver um símbolo teológico central, represente-o como elemento visual integrado e necessário à cena, "
+    "como fundamento de pedra, videira, caminho, luz natural, mesa, pão, água, campo, casa ou arquitetura bíblica realista. "
+    "Não substitua o símbolo central por uma cena genérica de caminhada, grupo ou comunidade. "
+    "Símbolos cristãos secundários podem existir apenas como detalhes discretos e integrados à cena. Não transforme conceitos abstratos do título em objetos literais. "
     "Evite objetos isolados como coroa, pedra, pergaminho, coração, chave, espada, raio de luz, cruz gigante ou brilho saindo de objetos. "
     "A imagem não pode parecer leitosa, embaçada, lavada, plástica, artificial, teatral, infantil, caricata, aquarela, pintura borrada, "
     "baixa resolução, stock genérico, capa religiosa clichê ou ilustração sem vida. Não inclua texto escrito, letras, marcas, logotipos, "
