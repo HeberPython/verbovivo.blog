@@ -2,6 +2,7 @@
 
 import base64
 import json
+import re
 import secrets
 import urllib.error
 import urllib.request
@@ -39,7 +40,9 @@ Regras:
 - Crie seo_title com atÃ© 60 caracteres, mais pesquisÃ¡vel no Google, sem sensacionalismo.
 - Crie excerpt/seo_description com atÃ© 155 caracteres, claro, fiel ao texto e com termos que pessoas buscariam.
 - Crie seo_keywords com uma expressÃ£o principal de busca, curta e natural.
-- Crie image_prompt como uma cena concreta, humana e cinematogrÃ¡fica, nÃ£o como uma lista de sÃ­mbolos. Priorize pessoas em caminhada de fÃ©, gestos pastorais, oraÃ§Ã£o, trabalho, espera, consolo, famÃ­lia, discipulado, paisagens bÃ­blicas realistas ou ambientes cotidianos iluminados por luz natural.
+- Crie image_prompt como uma cena concreta, humana e cinematogrÃ¡fica, nÃ£o como uma lista de sÃ­mbolos.
+- O image_prompt deve ter assinatura visual prÃ³pria: lugar especÃ­fico, hora do dia, personagem ou grupo, aÃ§Ã£o observÃ¡vel, objeto integrado Ã cena e emoÃ§Ã£o pastoral do artigo.
+- NÃ£o use image_prompt genÃ©rico como "pessoas caminhando", "homem orando", "paisagem bÃ­blica", "luz dourada", "estrada ao pÃ´r do sol", "cruz no horizonte", "mesa com BÃ­blia" sem uma razÃ£o direta no texto.
 - Evite image_prompt com objetos isolados como coroa, pedra, pergaminho, coraÃ§Ã£o, espada, chave, raio de luz ou cruz como protagonista literal. Esses elementos sÃ³ podem aparecer discretamente como apoio da cena, se forem necessÃ¡rios.
 - Quando o titulo ou o texto tiver um simbolo teologico central, como pedra angular, fundamento, videira, pao da vida, caminho, luz, coroa, armadura ou cruz, preserve esse simbolo como parte organica da cena. Nao substitua o simbolo central por uma cena generica de caminhada, grupo ou comunidade.
 - Para temas sobre pedra angular, fundamento ou ressurreicao, use arquitetura antiga, base de pedra, tumulo vazio, amanhecer, caminho e pessoas em contemplacao como cena integrada, sem teatralidade, brilho magico ou literalidade cafona.
@@ -63,6 +66,45 @@ IMAGE_STYLE_PROMPT = (
     "versículos na imagem, rostos em close, representação literal de Jesus, mãos deformadas ou efeitos sobrenaturais exagerados. "
     "Use enquadramento horizontal editorial 3:2, sujeito claro, fundo harmonioso e qualidade visual pronta para capa de artigo. "
 )
+
+
+GENERIC_IMAGE_GUARDRAILS = """
+
+DIRECAO VISUAL OBRIGATORIA PARA NAO GERAR CAPA GENERICA:
+- A imagem precisa ser imediatamente distinguivel das outras capas do blog quando vista em uma grade.
+- Crie uma cena unica baseada no titulo, no resumo e no corpo do artigo, nao uma imagem devocional padrao.
+- Use pelo menos quatro detalhes concretos do artigo para decidir ambiente, personagem, acao, objeto e clima.
+- Escolha uma composicao especifica: interior, exterior, mesa, rua, casa, oficina, deserto, cidade antiga, campo, beira-mar, templo ou comunidade somente se isso nascer do texto.
+- Varie camera, distancia, luz, quantidade de pessoas, arquitetura, cor dominante e gesto humano.
+- Proibido usar por padrao: pessoa isolada orando em paisagem bonita, estrada de terra ao por do sol, cruz no horizonte, pedra iluminada, oliveiras genericas, pergaminho, Biblia aberta decorativa, feixes magicos de luz, silhuetas sem identidade visual, grupo sentado conversando sem relacao direta com o tema.
+- Se o artigo realmente exigir pedra, caminho, luz, cruz, mesa ou Biblia, use esse elemento como parte organica de uma cena especifica, nunca como objeto decorativo isolado.
+- A imagem deve ter nitidez alta, contraste vivo, cor natural rica, textura realista e atmosfera contemporanea/editorial, sem aparencia leitosa, lavada, embaçada ou envelhecida.
+"""
+
+
+def plain_text_from_html(value: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", value or "")
+    return " ".join(text.split())
+
+
+def build_image_generation_prompt(draft: ArticleDraft) -> str:
+    article_context = "\n".join(
+        part.strip()
+        for part in [
+            f"Titulo: {draft.title}",
+            f"Resumo: {draft.excerpt}",
+            f"Direcao visual proposta pelo editor: {draft.image_prompt}",
+            f"Trecho do artigo: {plain_text_from_html(draft.body_html)[:1200]}",
+        ]
+        if part.strip()
+    )
+    return (
+        IMAGE_STYLE_PROMPT
+        + GENERIC_IMAGE_GUARDRAILS
+        + "\nCONTEXTO ESPECIFICO DO ARTIGO:\n"
+        + article_context
+        + "\n\nAntes de imaginar a imagem, escolha mentalmente qual detalhe torna este artigo diferente dos demais e faça esse detalhe aparecer na cena."
+    )
 
 
 def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDraft:
@@ -144,7 +186,7 @@ def generate_cover_image_with_gemini(draft: ArticleDraft, output_dir: Path) -> P
 
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / draft.image_filename
-    prompt = IMAGE_STYLE_PROMPT + f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}"
+    prompt = build_image_generation_prompt(draft)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_image_model}:generateContent"
     payload = {
         "contents": [
@@ -217,7 +259,7 @@ def generate_cover_image_with_openai(draft: ArticleDraft, output_dir: Path) -> P
     try:
         result = client.images.generate(
             model="gpt-image-1",
-            prompt=IMAGE_STYLE_PROMPT + f"Contexto bíblico/reflexivo para orientar a cena: {draft.image_prompt}",
+            prompt=build_image_generation_prompt(draft),
             size="1536x1024",
         )
     except OpenAIError as exc:
