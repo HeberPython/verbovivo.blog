@@ -801,6 +801,7 @@ def render_article_page(draft: ArticleDraft) -> str:
       </a>
       <nav aria-label="Navegação principal">
         <a href="../index.html#artigos">Artigos</a>
+        <a href="../licoes-escola-dominical.html">Lições</a>
         <a href="../autor.html">Autor</a>
         <a href="../sobre.html">Sobre</a>
         <a href="../contato.html">Contato</a>
@@ -831,7 +832,7 @@ def render_article_page(draft: ArticleDraft) -> str:
     </main>
     <footer class="site-footer">
       <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
-      <div><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
+      <div><a href="../licoes-escola-dominical.html">Lições</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a><a href="https://instagram.com/tec.agora" target="_blank" rel="noopener">By @tec.agora</a></div>
     </footer>
     {listen_script()}
     <script src="../article-navigation.js?v=20260627-article-navigation" defer></script>

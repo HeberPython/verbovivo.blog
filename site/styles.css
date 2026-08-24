@@ -639,6 +639,254 @@ h3 {
   line-height: 1.75;
 }
 
+.lessons-page .plain-hero {
+  margin-bottom: clamp(24px, 5vw, 52px);
+}
+
+.lesson-publisher-callout {
+  align-items: center;
+  background: linear-gradient(135deg, #17201b 0%, #26342d 58%, #4f7059 100%);
+  color: var(--white);
+  display: grid;
+  gap: clamp(20px, 4vw, 42px);
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  margin: 0 auto clamp(28px, 5vw, 56px);
+  max-width: 1120px;
+  padding: clamp(24px, 5vw, 48px);
+}
+
+.lesson-publisher-callout .eyebrow {
+  color: #d8b06d;
+}
+
+.lesson-publisher-callout h2 {
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  line-height: 1.05;
+  margin-bottom: 14px;
+}
+
+.lesson-publisher-callout p {
+  color: rgba(255, 253, 248, 0.86);
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.lesson-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.lesson-actions a,
+.lesson-card-link {
+  align-items: center;
+  border: 1px solid #d8b06d;
+  color: #d8b06d;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  padding: 13px 16px;
+  text-align: center;
+}
+
+.lesson-actions a:hover,
+.lesson-card-link:hover {
+  background: #d8b06d;
+  color: var(--ink);
+}
+
+.lesson-list {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto clamp(34px, 6vw, 66px);
+  max-width: 1120px;
+}
+
+.lesson-card {
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.lesson-card h2 {
+  font-size: clamp(1.65rem, 3vw, 3rem);
+  line-height: 1.04;
+}
+
+.lesson-card p:last-child,
+.lesson-note p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.lesson-card-link {
+  border-color: var(--gold);
+  color: var(--gold);
+  min-width: 130px;
+}
+
+.lesson-note {
+  background: var(--cream);
+  border: 1px solid var(--line);
+  margin: 0 auto;
+  max-width: 920px;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+.lesson-note h2 {
+  font-size: clamp(1.45rem, 2.4vw, 2.2rem);
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.lesson-hero {
+  align-items: center;
+  display: grid;
+  gap: clamp(24px, 5vw, 58px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+  margin-bottom: clamp(28px, 5vw, 58px);
+}
+
+.lesson-hero h1 {
+  font-size: clamp(2.3rem, 5vw, 5.1rem);
+  line-height: 0.96;
+}
+
+.lesson-cover-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+  min-height: 330px;
+  padding: clamp(24px, 4vw, 38px);
+  place-content: center;
+  position: relative;
+  text-align: center;
+}
+
+.lesson-cover-card::before {
+  background: linear-gradient(180deg, rgba(216, 176, 109, 0.24), rgba(79, 112, 89, 0.08));
+  content: "";
+  inset: 18px;
+  position: absolute;
+}
+
+.lesson-cover-card > * {
+  position: relative;
+}
+
+.lesson-cover-card span {
+  color: var(--gold);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lesson-cover-card strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 3.2vw, 3.5rem);
+  line-height: 1;
+}
+
+.lesson-cover-card p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.lesson-content .lesson-key-box,
+.lesson-content .lesson-application,
+.lesson-content .lesson-reflection {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  margin: clamp(24px, 5vw, 46px) 0;
+  padding: clamp(18px, 4vw, 30px);
+}
+
+.lesson-source-note {
+  background: rgba(239, 230, 212, 0.62);
+  border: 1px solid var(--line);
+  margin: 0 auto clamp(24px, 5vw, 42px);
+  max-width: 1120px;
+  padding: clamp(18px, 3vw, 26px);
+}
+
+.lesson-source-note p {
+  color: #2d3831;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.lesson-source-note p + p {
+  margin-top: 9px;
+}
+
+.lesson-source-note a,
+.lesson-content a {
+  color: var(--sage);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.lesson-outline {
+  display: grid;
+  gap: clamp(20px, 4vw, 34px);
+  margin-top: clamp(24px, 5vw, 46px);
+}
+
+.lesson-topic {
+  border-top: 1px solid var(--line);
+  padding-top: clamp(20px, 4vw, 34px);
+}
+
+.lesson-topic article {
+  background: var(--white);
+  border: 1px solid var(--line);
+  margin-top: 14px;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.lesson-topic h3 {
+  color: var(--sage);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+.lesson-content .lesson-key-box h2,
+.lesson-content .lesson-application h2,
+.lesson-content .lesson-reflection h2 {
+  margin-top: 0;
+}
+
+.lesson-daily-list {
+  background: rgba(239, 230, 212, 0.55);
+  border: 1px solid var(--line);
+  list-style: none;
+  margin: 0 0 1.5em;
+  padding: clamp(18px, 3vw, 26px);
+}
+
+.lesson-daily-list li {
+  border-bottom: 1px solid rgba(216, 208, 191, 0.7);
+  color: #2d3831;
+  line-height: 1.65;
+  padding: 9px 0;
+}
+
+.lesson-daily-list li:last-child {
+  border-bottom: 0;
+}
+
 .author-profile {
   align-items: center;
   display: grid;
@@ -863,7 +1111,9 @@ h3 {
 @media (max-width: 900px) {
   .hero,
   .article-hero,
-  .editorial {
+  .editorial,
+  .lesson-publisher-callout,
+  .lesson-hero {
     grid-template-columns: 1fr;
   }
 
@@ -889,7 +1139,8 @@ h3 {
   }
 
   .author-profile,
-  .author-facts {
+  .author-facts,
+  .lesson-card {
     grid-template-columns: 1fr;
   }
 }
@@ -1084,6 +1335,17 @@ h3 {
 
   .author-facts div {
     padding: 16px;
+  }
+
+  .lesson-publisher-callout,
+  .lesson-cover-card,
+  .lesson-card,
+  .lesson-note {
+    padding: 18px;
+  }
+
+  .lesson-cover-card {
+    min-height: 240px;
   }
 }
 

@@ -51,6 +51,34 @@ Referencias bibliograficas:
 
 - A secao e opcional. Quando nao houver referencias no e-mail, o artigo termina normalmente depois da reflexao.
 
+### Licoes Escola Dominical
+
+A area `Licoes Escola Dominical` publica resumos por topicos, nao transcricoes integrais de revistas protegidas por direitos autorais.
+
+Quando o usuario enviar fotos de uma licao, o agente deve:
+
+1. Identificar o e-mail como licao quando o assunto seguir o padrao `Licao 08`, `Licao 8` ou equivalente, com ou sem acento.
+2. Identificar numero da licao, mes/periodo, titulo, autor da licao, texto-chave, referencias biblicas e secoes principais.
+3. Preservar os titulos originais, a ordem e a disposicao dos topicos.
+4. Manter texto-chave, sugestoes de leitura e referencias biblicas sem reescrita.
+5. Preparar uma sintese autoral curta para cada topico, explicando o que o texto quer dizer.
+6. Incluir data da publicacao, numero da licao, mes/periodo quando houver e credito ao autor identificado nas fotos.
+7. Nao publicar imagens da revista.
+8. Criar bloco fixo de propaganda da Editora Kaleo em toda pagina de licao.
+9. Linkar o produto especifico quando conhecido e tambem a loja geral da editora.
+10. Atualizar `sitemap.xml` para indexacao.
+
+A sequencia atual esperada e: Licao 09, 10, 11, 12, 13 e depois retorno para Licao 01 do novo ciclo. O numero do assunto do e-mail continua sendo a fonte principal, mas o agente deve sinalizar ao usuario se houver quebra aparente da sequencia.
+
+Links oficiais usados nesta area:
+
+```txt
+Revista da serie atual: https://www.editorakaleo.com/product-page/revista-escola-b%C3%ADblica-jesus-aluno
+Loja da Editora Kaleo: https://www.editorakaleo.com/shop
+```
+
+Se houver autorizacao expressa da editora para republicar a licao integral, essa permissao deve ser registrada no projeto antes de alterar a regra editorial.
+
 ## Variaveis
 
 As credenciais ficam fora do GitHub, em variaveis de ambiente:
@@ -203,4 +231,4 @@ O site tambem possui uma medicao editorial propria em `analytics.php`, que salva
 
 ## Observacao
 
-O agente precisa rodar em algum ambiente persistente para verificar e-mails automaticamente. Por enquanto, ele pode ser executado sob demanda pelo Codex ou por um computador ligado. Depois, pode ser colocado em uma VPS ou rotina agendada.
+O agente editorial deve rodar em nuvem pelo GitHub Actions. Execucoes locais pelo Codex servem apenas para manutencao, diagnostico ou acionamento manual autorizado pelo usuario.
