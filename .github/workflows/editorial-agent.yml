@@ -57,7 +57,7 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       EDITORIAL_IMAGE_PROVIDER: gemini
       GEMINI_IMAGE_MODEL: gemini-3.1-flash-image
-      GEMINI_TEXT_MODEL: gemini-2.5-flash
+      GEMINI_TEXT_MODEL: gemini-3.6-flash
       HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
       HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
       HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}

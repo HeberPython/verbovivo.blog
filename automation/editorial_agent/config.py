@@ -53,7 +53,7 @@ class Settings:
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     image_provider: str = os.getenv("EDITORIAL_IMAGE_PROVIDER", "gemini").lower()
     gemini_image_model: str = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image")
-    gemini_text_model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+    gemini_text_model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.6-flash")
 
 
 settings = Settings()
