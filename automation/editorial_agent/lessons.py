@@ -591,9 +591,12 @@ def update_lesson_sitemap(lesson: LessonSummary) -> Path:
 
 def upload_lesson_files(paths: list[Path]) -> None:
     if settings.editorial_upload_url:
-        for path in paths:
-            http_upload(path.relative_to(SITE_DIR).as_posix(), path.read_bytes())
-        return
+        try:
+            for path in paths:
+                http_upload(path.relative_to(SITE_DIR).as_posix(), path.read_bytes())
+            return
+        except RuntimeError as exc:
+            print(f"HTTP lesson upload unavailable, retrying with FTP: {exc}")
 
     with FTP() as ftp:
         ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
