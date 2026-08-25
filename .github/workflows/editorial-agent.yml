@@ -57,6 +57,7 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       EDITORIAL_IMAGE_PROVIDER: gemini
       GEMINI_IMAGE_MODEL: gemini-3.1-flash-image
+      GEMINI_TEXT_MODEL: gemini-2.5-flash
       HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
       HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
       HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
@@ -88,7 +89,7 @@ jobs:
               "EDITORIAL_SMTP_HOST", "EDITORIAL_SMTP_USER", "EDITORIAL_SMTP_PASSWORD",
               "PUBLISH_IMAP_HOST", "PUBLISH_IMAP_USER", "PUBLISH_IMAP_PASSWORD",
               "EDITORIAL_APPROVAL_BASE_URL", "EDITORIAL_APPROVER_EMAIL", "EDITORIAL_ALLOWED_SENDERS",
-              "EDITORIAL_ADMIN_TOKEN", "EDITORIAL_UPLOAD_URL", "OPENAI_API_KEY",
+              "EDITORIAL_ADMIN_TOKEN", "EDITORIAL_UPLOAD_URL", "OPENAI_API_KEY", "GEMINI_API_KEY",
           ]
           missing = [name for name in required if not os.getenv(name)]
           if missing:

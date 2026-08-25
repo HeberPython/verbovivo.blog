@@ -10,6 +10,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from .ai import generate_cover_image, refine_with_openai
 from .config import settings
 from .content import ready_article_from_email, slugify
+from .lessons import is_lesson_subject, publish_lesson_from_message
 from .mail import (
     mark_seen,
     publish_message_by_uid,
@@ -105,6 +106,11 @@ def process_article_message(message) -> bool:
         return False
     if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
         return False
+    if is_lesson_subject(message.subject or ""):
+        lesson = publish_lesson_from_message(message)
+        mark_seen("artigo@verbovivo.blog", message.uid)
+        print(f"Lesson published from images: Lição {lesson.number} -> {lesson.slug}")
+        return True
     source_text = extract_message_text(message)
     if not source_text.strip():
         print(f"Ignored empty article message: {message.subject}")
