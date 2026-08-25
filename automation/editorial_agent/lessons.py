@@ -415,6 +415,7 @@ def render_lesson_page(lesson: LessonSummary) -> str:
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
       <nav aria-label="Navegação principal">
         <a href="../index.html#artigos">Artigos</a>
+        <a href="../comece-aqui.html">Comece aqui</a>
         <a href="../licoes-escola-dominical.html">Lições</a>
         <a href="../autor.html">Autor</a>
         <a href="../sobre.html">Sobre</a>
@@ -495,6 +496,7 @@ def render_lesson_page(lesson: LessonSummary) -> str:
       <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
       <div>
         <a href="../licoes-escola-dominical.html">Lições</a>
+        <a href="../comece-aqui.html">Comece aqui</a>
         <a href="../autor.html">Autor</a>
         <a href="../sobre.html">Sobre</a>
         <a href="../contato.html">Contato</a>
