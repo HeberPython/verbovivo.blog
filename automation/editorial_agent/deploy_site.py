@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from .config import settings
 from .content import article_navigation_html, render_article_page
+from .lessons import rebuild_lesson_catalog
 from .models import ArticleDraft
 from .publisher import DOMAIN, article_card, draft_pub_date, ensure_dir, featured_article, sitemap_entry
 
@@ -304,6 +305,9 @@ def deploy_site() -> None:
         sync_approved_remote_articles(ftp)
         catalog = sync_remote_article_catalog(ftp)
         rebuild_catalog_indexes(catalog)
+        lesson_slugs = rebuild_lesson_catalog()
+        if lesson_slugs:
+            print(f"Lesson catalog validated: {len(lesson_slugs)} lessons in lesson index and sitemap.")
 
         for path in SITE_DIR.rglob("*"):
             if not path.is_file():

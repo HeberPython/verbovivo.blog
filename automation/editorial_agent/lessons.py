@@ -11,7 +11,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from ftplib import FTP
-from html import escape
+from html import escape, unescape
 from io import BytesIO
 from pathlib import Path
 
@@ -517,7 +517,7 @@ def lesson_card(lesson: LessonSummary) -> str:
         f"Compêndio retrospectivo da Lição {lesson.number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
     return f"""
-          <article class="lesson-card" data-lesson-number="{lesson.number}">
+          <article class="lesson-card" data-lesson-number="{lesson.number}" data-lesson-slug="{escape(lesson.slug)}">
             <div>
               <p class="category">Lição {lesson.number}{escape(series)}</p>
               <h2><a href="licoes/{escape(lesson.slug)}.html">{escape(lesson.title)}</a></h2>
@@ -528,36 +528,176 @@ def lesson_card(lesson: LessonSummary) -> str:
 """
 
 
-def merge_lesson_card(index_html: str, card_html: str, number: int) -> str:
-    index_html = re.sub(
-        rf'\s*<article class="lesson-card" data-lesson-number="{number}".*?</article>',
-        "",
-        index_html,
-        flags=re.DOTALL,
+def html_text(value: str) -> str:
+    return unescape(re.sub(r"<[^>]+>", "", value, flags=re.DOTALL)).strip()
+
+
+def lesson_card_from_html(slug: str, html: str) -> str | None:
+    title_match = re.search(r"<h1[^>]*>\s*Lição\s+(\d+)\s*:\s*(.*?)</h1>", html, flags=re.DOTALL | re.IGNORECASE)
+    if not title_match:
+        title_match = re.search(r"<title[^>]*>\s*Lição\s+(\d+)\s*:\s*(.*?)\s*\|", html, flags=re.DOTALL | re.IGNORECASE)
+    if not title_match:
+        return None
+    number = int(title_match.group(1))
+    title = html_text(title_match.group(2))
+    series_match = re.search(r"<p[^>]*class=\"series\"[^>]*>(.*?)</p>", html, flags=re.DOTALL | re.IGNORECASE)
+    series = html_text(series_match.group(1)) if series_match else ""
+    description_match = re.search(
+        r'<meta\s+name="description"\s+content="([^"]+)"',
+        html,
+        flags=re.IGNORECASE,
     )
-    index_html = re.sub(
-        rf'\s*<article class="lesson-card">(?=.*?Lição {number}\b).*?</article>',
-        "",
-        index_html,
-        flags=re.DOTALL,
+    excerpt = html_text(description_match.group(1)) if description_match else (
+        f"Compêndio retrospectivo da Lição {number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
+    series_suffix = f" · {series}" if series else ""
+    return f"""
+          <article class="lesson-card" data-lesson-number="{number}" data-lesson-slug="{escape(slug)}">
+            <div>
+              <p class="category">Lição {number}{escape(series_suffix)}</p>
+              <h2><a href="licoes/{escape(slug)}.html">{escape(title)}</a></h2>
+              <p>{escape(excerpt)}</p>
+            </div>
+            <a class="lesson-card-link" href="licoes/{escape(slug)}.html">Abrir compêndio</a>
+          </article>
+"""
+
+
+def card_slug(card: str) -> str:
+    data_match = re.search(r'data-lesson-slug="([^"]+)"', card)
+    if data_match:
+        return data_match.group(1)
+    link_match = re.search(r'href="licoes/([^"]+)\.html"', card)
+    return link_match.group(1) if link_match else ""
+
+
+def card_number(card: str) -> int:
+    data_match = re.search(r'data-lesson-number="(\d+)"', card)
+    if data_match:
+        return int(data_match.group(1))
+    title_match = re.search(r"Lição\s+(\d+)", card)
+    slug_match = re.search(r"licao-(\d+)-", card)
+    if title_match:
+        return int(title_match.group(1))
+    return int(slug_match.group(1)) if slug_match else 999
+
+
+def merge_lesson_cards(index_html: str, card_htmls: list[str]) -> str:
     match = re.search(r'(<section class="lesson-list"[^>]*>)(.*?)(\s*</section>)', index_html, flags=re.DOTALL)
     if not match:
         return index_html
     existing = match.group(2).strip()
-    cards = re.findall(r'<article class="lesson-card".*?</article>', existing, flags=re.DOTALL)
-    cards.append(card_html.strip())
+    cards_by_slug: dict[str, str] = {}
+    for card in re.findall(r'<article class="lesson-card".*?</article>', existing, flags=re.DOTALL):
+        slug = card_slug(card)
+        if slug:
+            cards_by_slug[slug] = card.strip()
+    for card in card_htmls:
+        slug = card_slug(card)
+        if slug:
+            cards_by_slug[slug] = card.strip()
 
-    def card_number(card: str) -> int:
-        data_match = re.search(r'data-lesson-number="(\d+)"', card)
-        if data_match:
-            return int(data_match.group(1))
-        title_match = re.search(r"Lição\s+(\d+)", card)
-        return int(title_match.group(1)) if title_match else 999
-
-    ordered = sorted(cards, key=card_number)
+    ordered = sorted(cards_by_slug.values(), key=lambda card: (card_number(card), card_slug(card)))
     new_body = "\n".join("          " + card.strip() for card in ordered)
     return index_html[: match.start(2)] + "\n" + new_body + "\n        " + index_html[match.end(2) :]
+
+
+def merge_lesson_card(index_html: str, card_html: str, number: int) -> str:
+    return merge_lesson_cards(index_html, [card_html])
+
+
+def remote_lesson_cards() -> list[str]:
+    cards: list[str] = []
+    try:
+        with FTP() as ftp:
+            ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
+            ftp.login(settings.ftp_user, settings.ftp_password)
+            ftp.set_pasv(True)
+            ftp.cwd(settings.ftp_dir)
+            names = sorted(
+                name.rsplit("/", 1)[-1]
+                for name in ftp.nlst("licoes")
+                if name.lower().endswith(".html")
+            )
+            for name in names:
+                payload = BytesIO()
+                ftp.retrbinary(f"RETR licoes/{name}", payload.write)
+                html = payload.getvalue().decode("utf-8", errors="replace")
+                card = lesson_card_from_html(name[:-5], html)
+                if card:
+                    cards.append(card)
+    except Exception as exc:
+        print(f"Remote lesson catalog unavailable; preserving index cards only: {exc}")
+    return cards
+
+
+def sync_remote_lessons() -> list[str]:
+    slugs: list[str] = []
+    LESSON_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        with FTP() as ftp:
+            ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
+            ftp.login(settings.ftp_user, settings.ftp_password)
+            ftp.set_pasv(True)
+            ftp.cwd(settings.ftp_dir)
+            names = sorted(
+                name.rsplit("/", 1)[-1]
+                for name in ftp.nlst("licoes")
+                if name.lower().endswith(".html")
+            )
+            for name in names:
+                local_path = LESSON_DIR / name
+                payload = BytesIO()
+                ftp.retrbinary(f"RETR licoes/{name}", payload.write)
+                local_path.write_bytes(payload.getvalue())
+                slugs.append(name[:-5])
+                print(f"Synced licoes/{name}")
+    except Exception as exc:
+        print(f"Remote lesson sync unavailable; preserving local lessons only: {exc}")
+    return slugs
+
+
+def remote_lesson_urls() -> list[str]:
+    urls: list[str] = []
+    try:
+        with FTP() as ftp:
+            ftp.connect(settings.ftp_host, settings.ftp_port, timeout=60)
+            ftp.login(settings.ftp_user, settings.ftp_password)
+            ftp.set_pasv(True)
+            ftp.cwd(settings.ftp_dir)
+            names = sorted(
+                name.rsplit("/", 1)[-1]
+                for name in ftp.nlst("licoes")
+                if name.lower().endswith(".html")
+            )
+            urls = [f"{DOMAIN}/licoes/{name}" for name in names]
+    except Exception as exc:
+        print(f"Remote lesson URLs unavailable; preserving existing sitemap entries only: {exc}")
+    return urls
+
+
+def rebuild_lesson_catalog() -> list[str]:
+    synced_slugs = sync_remote_lessons()
+    index_path = SITE_DIR / "licoes-escola-dominical.html"
+    try:
+        index_html = remote_text("licoes-escola-dominical.html")
+    except RuntimeError:
+        index_html = index_path.read_text(encoding="utf-8")
+    cards = remote_lesson_cards()
+    index_html = merge_lesson_cards(index_html, cards)
+    index_path.write_text(index_html, encoding="utf-8")
+
+    sitemap_path = SITE_DIR / "sitemap.xml"
+    try:
+        sitemap_xml = remote_text("sitemap.xml")
+    except RuntimeError:
+        sitemap_xml = sitemap_path.read_text(encoding="utf-8")
+    for url in remote_lesson_urls():
+        if url not in sitemap_xml:
+            sitemap_xml = sitemap_xml.replace("</urlset>", sitemap_entry(url) + "</urlset>", 1)
+    sitemap_path.write_text(sitemap_xml, encoding="utf-8")
+    card_slugs = [card_slug(card) for card in cards if card_slug(card)]
+    return card_slugs or synced_slugs
 
 
 def update_lesson_index(lesson: LessonSummary) -> Path:
@@ -573,7 +713,7 @@ def update_lesson_index(lesson: LessonSummary) -> Path:
         "Esta área reúne resumos retrospectivos por tópicos das lições já estudadas na Escola Bíblica Dominical.",
     )
     index_html = index_html.replace("Abrir guia", "Abrir compêndio")
-    index_html = merge_lesson_card(index_html, lesson_card(lesson), lesson.number)
+    index_html = merge_lesson_cards(index_html, [*remote_lesson_cards(), lesson_card(lesson)])
     index_path.write_text(index_html, encoding="utf-8")
     return index_path
 

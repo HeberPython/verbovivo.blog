@@ -40,17 +40,32 @@ class LessonWorkflowTests(unittest.TestCase):
     def test_merge_lesson_card_replaces_same_lesson(self) -> None:
         html = """
         <section class="lesson-list" aria-label="Lições publicadas">
-          <article class="lesson-card" data-lesson-number="1"><h2>Antiga</h2></article>
+          <article class="lesson-card" data-lesson-number="1" data-lesson-slug="licao-1-antiga"><h2>Antiga</h2></article>
         </section>
         """
         updated = merge_lesson_card(
             html,
-            '<article class="lesson-card" data-lesson-number="1"><h2>Nova</h2></article>',
+            '<article class="lesson-card" data-lesson-number="1" data-lesson-slug="licao-1-antiga"><h2>Nova</h2></article>',
             1,
         )
         self.assertIn("Nova", updated)
         self.assertNotIn("Antiga", updated)
         self.assertEqual(updated.count('data-lesson-number="1"'), 1)
+
+    def test_merge_lesson_card_preserves_different_cycle_same_number(self) -> None:
+        html = """
+        <section class="lesson-list" aria-label="Lições publicadas">
+          <article class="lesson-card" data-lesson-number="1" data-lesson-slug="licao-1-ciclo-antigo"><h2>Ciclo antigo</h2></article>
+        </section>
+        """
+        updated = merge_lesson_card(
+            html,
+            '<article class="lesson-card" data-lesson-number="1" data-lesson-slug="licao-1-ciclo-novo"><h2>Ciclo novo</h2></article>',
+            1,
+        )
+        self.assertIn("Ciclo antigo", updated)
+        self.assertIn("Ciclo novo", updated)
+        self.assertEqual(updated.count('data-lesson-number="1"'), 2)
 
 
 if __name__ == "__main__":
