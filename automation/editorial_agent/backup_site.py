@@ -24,7 +24,6 @@ ROOT_FILES = [
 ]
 DIRECTORIES = [
     "artigos",
-    "images/articles",
     "licoes",
     "_editorial_drafts",
 ]
