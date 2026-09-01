@@ -277,14 +277,18 @@ def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:
         sitemap,
         flags=re.DOTALL,
     )
-    articles_index_url = f"{DOMAIN}/artigos.html"
-    if articles_index_url not in sitemap:
-        sitemap = sitemap.replace("</urlset>", sitemap_entry(articles_index_url) + "</urlset>", 1)
+    sitemap = ensure_sitemap_url(sitemap, f"{DOMAIN}/artigos.html")
     entries = "".join(sitemap_entry(f"{DOMAIN}/artigos/{draft.slug}.html") for draft in catalog)
     sitemap = sitemap.replace("</urlset>", entries + "</urlset>", 1)
     sitemap_path.write_text(sitemap, encoding="utf-8")
 
     validate_catalog_indexes(catalog)
+
+
+def ensure_sitemap_url(sitemap_xml: str, url: str) -> str:
+    if url in sitemap_xml:
+        return sitemap_xml
+    return sitemap_xml.replace("</urlset>", sitemap_entry(url) + "</urlset>", 1)
 
 
 def render_articles_page(catalog: list[ArticleDraft]) -> str:
@@ -362,6 +366,8 @@ def validate_catalog_indexes(catalog: list[ArticleDraft]) -> None:
     feed = (SITE_DIR / "feed.xml").read_text(encoding="utf-8")
     sitemap = (SITE_DIR / "sitemap.xml").read_text(encoding="utf-8")
     missing: list[str] = []
+    if f"{DOMAIN}/artigos.html" not in sitemap:
+        missing.append("artigos.html")
     for draft in catalog:
         relative = f"artigos/{draft.slug}.html"
         absolute = f"{DOMAIN}/{relative}"
@@ -387,6 +393,10 @@ def deploy_site() -> None:
         lesson_slugs = rebuild_lesson_catalog()
         if lesson_slugs:
             print(f"Lesson catalog validated: {len(lesson_slugs)} lessons in lesson index and sitemap.")
+        sitemap_path = SITE_DIR / "sitemap.xml"
+        sitemap = sitemap_path.read_text(encoding="utf-8")
+        sitemap_path.write_text(ensure_sitemap_url(sitemap, f"{DOMAIN}/artigos.html"), encoding="utf-8")
+        validate_catalog_indexes(catalog)
 
         for path in SITE_DIR.rglob("*"):
             if not path.is_file():
