@@ -227,7 +227,7 @@ function render_article_page(array $article): string {
   <body>
     <header class="site-header">
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
-      <nav aria-label="Navegacao principal"><a href="../index.html#artigos">Artigos</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
+      <nav aria-label="Navegacao principal"><a href="../artigos.html">Artigos</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
     </header>
     ' . top_book_strip() . '
     <main>
@@ -280,8 +280,11 @@ function featured_article(array $article): string {
 
 function remove_article_from_indexes(string $slug): void {
     $urlPart = 'artigos/' . $slug . '.html';
-    $index = __DIR__ . '/index.html';
-    if (is_file($index)) {
+    foreach (['index.html', 'artigos.html'] as $file) {
+        $index = __DIR__ . '/' . $file;
+        if (!is_file($index)) {
+            continue;
+        }
         $html = (string) file_get_contents($index);
         $html = (string) preg_replace('/\s*<article class="(?:featured|article-card)">(?:(?!<article class=).)*?' . preg_quote($urlPart, '/') . '.*?<\/article>/s', '', $html);
         file_put_contents($index, $html);
@@ -315,7 +318,29 @@ function update_indexes(array $article, ?string $oldSlug = null): void {
             $marker = '<section class="article-grid" aria-label="Lista de artigos">';
             $html = str_replace($marker, $marker . "\n        " . article_card($article), $html);
         }
+        $html = (string) preg_replace_callback(
+            '/(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)(.*?)(<\/section>)/s',
+            function ($matches) {
+                preg_match_all('/\s*<article class="article-card">.*?<\/article>/s', $matches[2], $cards);
+                return $matches[1] . "\n" . implode('', array_slice($cards[0], 0, 2)) . "\n" . $matches[3];
+            },
+            $html,
+            1
+        );
         file_put_contents($index, $html);
+    }
+    $articles = __DIR__ . '/artigos.html';
+    if (is_file($articles)) {
+        $html = (string) file_get_contents($articles);
+        $urlPart = 'artigos/' . (string) $article['slug'] . '.html';
+        $card = article_card($article);
+        if (text_contains($html, $urlPart)) {
+            $html = (string) preg_replace('/\s*<article class="article-card">(?:(?!<article class=).)*?' . preg_quote($urlPart, '/') . '.*?<\/article>/s', "\n" . $card, $html, 1);
+        } else {
+            $marker = '<section class="article-grid" aria-label="Lista de artigos">';
+            $html = str_replace($marker, $marker . "\n        " . $card, $html);
+        }
+        file_put_contents($articles, $html);
     }
     update_feed($article);
     update_sitemap($article);
@@ -360,7 +385,7 @@ function update_sitemap(array $article): void {
 }
 
 function page(string $title, string $body): void {
-    echo '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>' . esc($title) . ' | Verbo Vivo</title><link rel="stylesheet" href="styles.css?v=20260617-publication-date" /><style>.manager{padding:clamp(28px,5vw,70px) clamp(18px,4vw,64px)}.manager-wrap{margin:0 auto;max-width:1100px}.manager-panel{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:clamp(18px,3vw,30px);margin-top:22px}.manager-list{display:grid;gap:12px}.manager-item{border-bottom:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;padding:14px 0}.manager-actions{display:flex;flex-wrap:wrap;gap:10px}.manager-form label{display:grid;font-weight:800;gap:7px;margin-top:15px}.manager-form input,.manager-form textarea{border:1px solid var(--line);color:var(--ink);font:inherit;padding:12px 13px;width:100%}.manager-form textarea{font-family:Georgia,serif;line-height:1.65;min-height:460px}.danger{background:#8f2d2d}.primary{background:var(--sage)}.secondary{background:var(--gold)}.manager button,.button-link{border:0;color:var(--white);cursor:pointer;display:inline-block;font-weight:800;padding:11px 15px;text-decoration:none}</style></head><body><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a><nav aria-label="Navegacao principal"><a href="index.html#artigos">Artigos</a><a href="autor.html">Autor</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav></header><main class="manager"><div class="manager-wrap">' . $body . '</div></main></body></html>';
+    echo '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>' . esc($title) . ' | Verbo Vivo</title><link rel="stylesheet" href="styles.css?v=20260617-publication-date" /><style>.manager{padding:clamp(28px,5vw,70px) clamp(18px,4vw,64px)}.manager-wrap{margin:0 auto;max-width:1100px}.manager-panel{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow);padding:clamp(18px,3vw,30px);margin-top:22px}.manager-list{display:grid;gap:12px}.manager-item{border-bottom:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;padding:14px 0}.manager-actions{display:flex;flex-wrap:wrap;gap:10px}.manager-form label{display:grid;font-weight:800;gap:7px;margin-top:15px}.manager-form input,.manager-form textarea{border:1px solid var(--line);color:var(--ink);font:inherit;padding:12px 13px;width:100%}.manager-form textarea{font-family:Georgia,serif;line-height:1.65;min-height:460px}.danger{background:#8f2d2d}.primary{background:var(--sage)}.secondary{background:var(--gold)}.manager button,.button-link{border:0;color:var(--white);cursor:pointer;display:inline-block;font-weight:800;padding:11px 15px;text-decoration:none}</style></head><body><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a><nav aria-label="Navegacao principal"><a href="artigos.html">Artigos</a><a href="autor.html">Autor</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a></nav></header><main class="manager"><div class="manager-wrap">' . $body . '</div></main></body></html>';
 }
 
 $token = require_admin();

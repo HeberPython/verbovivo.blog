@@ -275,7 +275,7 @@ function page(string $title, string $body): void {
   <body>
     <header class="site-header">
       <a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
-      <nav aria-label="Navegação principal"><a href="index.html#artigos">Artigos</a><a href="comece-aqui.html">Comece aqui</a><a href="licoes-escola-dominical.html">Lições</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a><a href="faq.html">FAQ</a></nav>
+      <nav aria-label="Navegação principal"><a href="artigos.html">Artigos</a><a href="comece-aqui.html">Comece aqui</a><a href="licoes-escola-dominical.html">Lições</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a><a href="faq.html">FAQ</a></nav>
     </header>
     ' . top_book_strip() . '
     <main class="review-shell"><div class="review-wrap">' . $body . '</div></main>
@@ -341,7 +341,7 @@ function render_article_page(array $draft): string {
   <body>
     <header class="site-header">
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
-      <nav aria-label="Navegação principal"><a href="../index.html#artigos">Artigos</a><a href="../comece-aqui.html">Comece aqui</a><a href="../licoes-escola-dominical.html">Lições</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
+      <nav aria-label="Navegação principal"><a href="../artigos.html">Artigos</a><a href="../comece-aqui.html">Comece aqui</a><a href="../licoes-escola-dominical.html">Lições</a><a href="../autor.html">Autor</a><a href="../sobre.html">Sobre</a><a href="../contato.html">Contato</a><a href="../faq.html">FAQ</a></nav>
     </header>
     ' . top_book_strip() . '
     <main>
@@ -447,6 +447,41 @@ function update_index(array $draft): void {
             1
         );
     }
+    $html = (string) preg_replace_callback(
+        '/(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)(.*?)(<\/section>)/s',
+        function ($matches) {
+            preg_match_all('/\s*<article class="article-card">.*?<\/article>/s', $matches[2], $cards);
+            return $matches[1] . "\n" . implode('', array_slice($cards[0], 0, 2)) . "\n" . $matches[3];
+        },
+        $html,
+        1
+    );
+    file_put_contents($path, $html);
+}
+
+function update_articles_archive(array $draft): void {
+    $path = __DIR__ . '/artigos.html';
+    if (!is_file($path)) {
+        return;
+    }
+    $html = (string) file_get_contents($path);
+    $urlPart = 'artigos/' . (string) $draft['slug'] . '.html';
+    $card = article_card($draft);
+    if (str_contains($html, $urlPart)) {
+        $html = (string) preg_replace(
+            '/\s*<article class="article-card">(?:(?!<article class=).)*?' . preg_quote($urlPart, '/') . '.*?<\/article>/s',
+            "\n" . $card,
+            $html,
+            1
+        );
+    } else {
+        $html = (string) preg_replace(
+            '/(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)/',
+            '$1' . "\n        " . $card,
+            $html,
+            1
+        );
+    }
     file_put_contents($path, $html);
 }
 
@@ -495,6 +530,7 @@ function publish_draft(array $draft): void {
     }
     file_put_contents(ARTICLE_DIR . '/' . (string) $draft['slug'] . '.html', render_article_page($draft));
     update_index($draft);
+    update_articles_archive($draft);
     update_feed($draft);
     update_sitemap($draft);
 }

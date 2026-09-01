@@ -24,6 +24,7 @@ from .models import ArticleDraft
 DOMAIN = "https://verbovivo.blog"
 SITE_DIR = Path("site")
 DEFAULT_IMAGE = "o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png"
+HOME_ARTICLE_LIMIT = 3
 
 
 @contextmanager
@@ -87,6 +88,33 @@ def featured_article(draft: ArticleDraft) -> str:
 """
 
 
+def article_grid_html(drafts: list[ArticleDraft]) -> str:
+    return "".join(article_card(draft) for draft in drafts)
+
+
+def replace_article_grid(html: str, cards: str) -> str:
+    updated, replacements = re.subn(
+        r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>).*?(</section>)',
+        lambda match: match.group(1) + "\n" + cards + match.group(2),
+        html,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if replacements != 1:
+        raise RuntimeError("Article grid was not found.")
+    return updated
+
+
+def trim_home_articles(index_html: str, max_articles: int = HOME_ARTICLE_LIMIT) -> str:
+    card_limit = max(0, max_articles - 1)
+    match = re.search(r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)(.*?)(</section>)', index_html, flags=re.DOTALL)
+    if not match:
+        return index_html
+    cards = re.findall(r'\s*<article class="article-card">.*?</article>', match.group(2), flags=re.DOTALL)
+    kept = "".join(cards[:card_limit])
+    return index_html[: match.start(2)] + "\n" + kept + "\n" + index_html[match.end(2) :]
+
+
 def draft_pub_date(draft: ArticleDraft) -> str:
     try:
         parsed = datetime.fromisoformat(draft.created_at)
@@ -117,7 +145,10 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
 
     index_path = SITE_DIR / "index.html"
     if index_path.exists():
-        index_html = index_path.read_text(encoding="utf-8")
+        try:
+            index_html = remote_text("index.html")
+        except RuntimeError:
+            index_html = index_path.read_text(encoding="utf-8")
         original_html = index_html
         article_url = f"artigos/{draft.slug}.html"
         article_was_listed = article_url in index_html
@@ -149,9 +180,38 @@ def update_local_indexes(draft: ArticleDraft) -> list[Path]:
                 index_html,
                 count=1,
             )
+        index_html = trim_home_articles(index_html)
         if index_html != original_html:
             index_path.write_text(index_html, encoding="utf-8")
             changed.append(index_path)
+
+    articles_path = SITE_DIR / "artigos.html"
+    try:
+        articles_html = remote_text("artigos.html")
+    except RuntimeError:
+        articles_html = articles_path.read_text(encoding="utf-8") if articles_path.exists() else ""
+    if articles_html:
+        original_articles_html = articles_html
+        url_part = f"artigos/{draft.slug}.html"
+        card = article_card(draft)
+        if url_part in articles_html:
+            articles_html = re.sub(
+                r'\s*<article class="article-card">(?:(?!<article class=).)*?' + re.escape(url_part) + r'.*?</article>',
+                "\n" + card,
+                articles_html,
+                count=1,
+                flags=re.DOTALL,
+            )
+        else:
+            articles_html = re.sub(
+                r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)',
+                lambda match: match.group(1) + "\n        " + card,
+                articles_html,
+                count=1,
+            )
+        if articles_html != original_articles_html:
+            articles_path.write_text(articles_html, encoding="utf-8")
+            changed.append(articles_path)
 
     feed_path = SITE_DIR / "feed.xml"
     if feed_path.exists():
@@ -255,14 +315,14 @@ def article_publication_status(slug: str) -> bool | None:
     article_url = f"{DOMAIN}/{article_path}"
     try:
         article_html = remote_text(article_path)
-        index_html = remote_text("index.html")
+        articles_html = remote_text("artigos.html")
         feed_xml = remote_text("feed.xml")
         sitemap_xml = remote_text("sitemap.xml")
     except RuntimeError:
         return None
     return (
         "<article" in article_html
-        and article_path in index_html
+        and article_path in articles_html
         and article_url in feed_xml
         and article_url in sitemap_xml
     )
@@ -322,7 +382,7 @@ def verify_article_publication(draft: ArticleDraft) -> None:
     if not article_is_fully_published(draft.slug):
         raise RuntimeError(
             "Publication verification failed: "
-            f"{draft.slug} is not visible in article page, home, feed and sitemap."
+            f"{draft.slug} is not visible in article page, artigos.html, feed and sitemap."
         )
 
 

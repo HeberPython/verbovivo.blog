@@ -414,7 +414,7 @@ def render_lesson_page(lesson: LessonSummary) -> str:
     <header class="site-header">
       <a class="brand" href="../index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
       <nav aria-label="Navegação principal">
-        <a href="../index.html#artigos">Artigos</a>
+        <a href="../artigos.html">Artigos</a>
         <a href="../comece-aqui.html">Comece aqui</a>
         <a href="../licoes-escola-dominical.html">Lições</a>
         <a href="../autor.html">Autor</a>

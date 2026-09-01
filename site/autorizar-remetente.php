@@ -46,7 +46,7 @@ function page(string $title, string $message): void {
   <body>
     <header class="site-header">
       <a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
-      <nav aria-label="Navegacao principal"><a href="index.html#artigos">Artigos</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a><a href="faq.html">FAQ</a></nav>
+      <nav aria-label="Navegacao principal"><a href="artigos.html">Artigos</a><a href="sobre.html">Sobre</a><a href="contato.html">Contato</a><a href="faq.html">FAQ</a></nav>
     </header>
     <main class="auth-wrap"><section class="auth-box"><p class="eyebrow">Seguranca editorial</p><h1>' . esc($title) . '</h1><p>' . esc($message) . '</p></section></main>
   </body>

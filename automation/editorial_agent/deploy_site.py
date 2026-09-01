@@ -14,7 +14,17 @@ from .config import settings
 from .content import article_navigation_html, render_article_page
 from .lessons import rebuild_lesson_catalog
 from .models import ArticleDraft
-from .publisher import DOMAIN, article_card, draft_pub_date, ensure_dir, featured_article, sitemap_entry
+from .publisher import (
+    DOMAIN,
+    HOME_ARTICLE_LIMIT,
+    article_card,
+    article_grid_html,
+    draft_pub_date,
+    ensure_dir,
+    featured_article,
+    replace_article_grid,
+    sitemap_entry,
+)
 
 
 SITE_DIR = Path("site")
@@ -236,17 +246,13 @@ def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:
         count=1,
         flags=re.DOTALL,
     )
-    cards = "".join(article_card(draft) for draft in catalog[1:])
-    index, replacements = re.subn(
-        r'(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>).*?(</section>)',
-        lambda match: match.group(1) + "\n" + cards + match.group(2),
-        index,
-        count=1,
-        flags=re.DOTALL,
-    )
-    if replacements != 1:
-        raise RuntimeError("Article grid was not found; deployment aborted.")
+    home_cards = article_grid_html(catalog[1:HOME_ARTICLE_LIMIT])
+    index = replace_article_grid(index, home_cards)
     index_path.write_text(index, encoding="utf-8")
+
+    articles_path = SITE_DIR / "artigos.html"
+    articles_html = render_articles_page(catalog)
+    articles_path.write_text(articles_html, encoding="utf-8")
 
     feed_path = SITE_DIR / "feed.xml"
     feed = feed_path.read_text(encoding="utf-8")
@@ -274,6 +280,9 @@ def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:
         sitemap,
         flags=re.DOTALL,
     )
+    articles_index_url = f"{DOMAIN}/artigos.html"
+    if articles_index_url not in sitemap:
+        sitemap = sitemap.replace("</urlset>", sitemap_entry(articles_index_url) + "</urlset>", 1)
     entries = "".join(sitemap_entry(f"{DOMAIN}/artigos/{draft.slug}.html") for draft in catalog)
     sitemap = sitemap.replace("</urlset>", entries + "</urlset>", 1)
     sitemap_path.write_text(sitemap, encoding="utf-8")
@@ -281,19 +290,92 @@ def rebuild_catalog_indexes(catalog: list[ArticleDraft]) -> None:
     validate_catalog_indexes(catalog)
 
 
+def render_articles_page(catalog: list[ArticleDraft]) -> str:
+    cards = article_grid_html(catalog)
+    return f"""<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Artigos | Verbo Vivo</title>
+    <meta name="description" content="Arquivo completo de reflexões bíblicas publicadas no Verbo Vivo, com textos para leitura, oração e amadurecimento cristão." />
+    <link rel="canonical" href="{DOMAIN}/artigos.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Artigos | Verbo Vivo" />
+    <meta property="og:description" content="Arquivo completo de reflexões bíblicas publicadas no Verbo Vivo." />
+    <meta property="og:url" content="{DOMAIN}/artigos.html" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="alternate" type="application/rss+xml" title="Verbo Vivo" href="feed.xml" />
+    <link rel="stylesheet" href="styles.css?v=20260625-adsense-quality" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html"><span class="brand-mark">VV</span><span><strong>Verbo Vivo</strong><small>verbovivo.blog</small></span></a>
+      <nav aria-label="Navegação principal">
+        <a href="artigos.html">Artigos</a>
+        <a href="comece-aqui.html">Comece aqui</a>
+        <a href="licoes-escola-dominical.html">Lições</a>
+        <a href="autor.html">Autor</a>
+        <a href="sobre.html">Sobre</a>
+        <a href="contato.html">Contato</a>
+        <a href="faq.html">FAQ</a>
+        <a href="politica-de-privacidade.html">Privacidade</a>
+      </nav>
+    </header>
+    <section aria-label="Livro em destaque" class="top-book-strip">
+      <span>Livro gratuito do autor</span>
+      <strong>Servir através da Intercessão</strong>
+      <a href="https://www.editorakaleo.com/product-page/servir-atrav%C3%A9s-da-intercess%C3%A3o" rel="noopener" target="_blank">Acessar e-book</a>
+    </section>
+    <main>
+      <article class="article-page static-page">
+        <header class="plain-hero">
+          <p class="eyebrow">Arquivo de reflexões</p>
+          <h1>Artigos publicados no Verbo Vivo</h1>
+          <p class="article-excerpt">Todas as reflexões bíblicas publicadas no blog, reunidas em ordem de publicação para leitura, oração e estudo.</p>
+        </header>
+      </article>
+      <section aria-label="Lista de artigos" class="article-grid">
+{cards}
+      </section>
+    </main>
+    <footer class="site-footer">
+      <p><strong>Verbo Vivo</strong> publica reflexões cristãs para fortalecer a fé na vida cotidiana.</p>
+      <div>
+        <a href="artigos.html">Artigos</a>
+        <a href="licoes-escola-dominical.html">Lições</a>
+        <a href="comece-aqui.html">Comece aqui</a>
+        <a href="autor.html">Autor</a>
+        <a href="sobre.html">Sobre</a>
+        <a href="contato.html">Contato</a>
+        <a href="faq.html">FAQ</a>
+        <a href="politica-de-privacidade.html">Privacidade</a>
+        <a href="feed.xml">RSS</a>
+        <a href="https://instagram.com/tec.agora" rel="noopener" target="_blank">By @tec.agora</a>
+      </div>
+    </footer>
+  </body>
+</html>
+"""
+
+
 def validate_catalog_indexes(catalog: list[ArticleDraft]) -> None:
     index = (SITE_DIR / "index.html").read_text(encoding="utf-8")
+    articles = (SITE_DIR / "artigos.html").read_text(encoding="utf-8")
     feed = (SITE_DIR / "feed.xml").read_text(encoding="utf-8")
     sitemap = (SITE_DIR / "sitemap.xml").read_text(encoding="utf-8")
     missing: list[str] = []
     for draft in catalog:
         relative = f"artigos/{draft.slug}.html"
         absolute = f"{DOMAIN}/{relative}"
-        if relative not in index or absolute not in feed or absolute not in sitemap:
+        if relative not in articles or absolute not in feed or absolute not in sitemap:
             missing.append(draft.slug)
     if missing:
         raise RuntimeError("Catalog validation failed; missing from indexes: " + ", ".join(missing))
-    print(f"Catalog validated: {len(catalog)} articles in home, feed and sitemap.")
+    home_article_count = index.count('class="featured"') + index.count('class="article-card"')
+    if home_article_count > HOME_ARTICLE_LIMIT:
+        raise RuntimeError(f"Home has {home_article_count} articles; expected at most {HOME_ARTICLE_LIMIT}.")
+    print(f"Catalog validated: {len(catalog)} articles in artigos.html, feed and sitemap.")
 
 
 def deploy_site() -> None:

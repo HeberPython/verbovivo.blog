@@ -32,6 +32,10 @@ def main() -> None:
         ftp.cwd(settings.ftp_dir)
 
         index = download(ftp, "index.html").decode("utf-8", errors="replace")
+        try:
+            articles_index = download(ftp, "artigos.html").decode("utf-8", errors="replace")
+        except Exception:
+            articles_index = ""
         feed = download(ftp, "feed.xml").decode("utf-8", errors="replace")
         sitemap = download(ftp, "sitemap.xml").decode("utf-8", errors="replace")
 
@@ -47,7 +51,12 @@ def main() -> None:
             title = title_from_html(html, slug)
             locations = [
                 label
-                for label, content in (("home", index), ("feed", feed), ("sitemap", sitemap))
+                for label, content in (
+                    ("home", index),
+                    ("artigos", articles_index),
+                    ("feed", feed),
+                    ("sitemap", sitemap),
+                )
                 if f"artigos/{name}" in content
             ]
             state = ",".join(locations) if locations else "orphan"

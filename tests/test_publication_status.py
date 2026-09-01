@@ -31,7 +31,7 @@ class PublicationStatusTests(unittest.TestCase):
     def test_requires_article_home_feed_and_sitemap(self):
         values = {
             "artigos/reflexao.html": "<article>conteudo</article>",
-            "index.html": '<a href="artigos/reflexao.html">Reflexao</a>',
+            "artigos.html": '<a href="artigos/reflexao.html">Reflexao</a>',
             "feed.xml": "https://verbovivo.blog/artigos/reflexao.html",
             "sitemap.xml": "https://verbovivo.blog/artigos/reflexao.html",
         }
@@ -85,7 +85,8 @@ class PublicationStatusTests(unittest.TestCase):
             original_site_dir = publisher.SITE_DIR
             publisher.SITE_DIR = site_dir
             try:
-                publisher.update_local_indexes(draft)
+                with patch("automation.editorial_agent.publisher.remote_text", side_effect=RuntimeError("offline")):
+                    publisher.update_local_indexes(draft)
             finally:
                 publisher.SITE_DIR = original_site_dir
 
