@@ -96,12 +96,6 @@ def sync_approved_remote_articles(ftp: FTP) -> None:
             local_article.parent.mkdir(parents=True, exist_ok=True)
             local_article.write_text(render_article_page(draft), encoding="utf-8")
             print(f"Rebuilt missing approved article {draft.slug}.html")
-        if draft.image_filename:
-            download_remote_file(
-                ftp,
-                f"images/articles/{draft.image_filename}",
-                IMAGE_DIR / draft.image_filename,
-            )
 
 
 def article_draft_from_html(slug: str, html: str) -> ArticleDraft:
@@ -191,13 +185,16 @@ def sync_remote_article_catalog(ftp: FTP) -> list[ArticleDraft]:
         draft = article_draft_from_html(slug, html)
         catalog.append(draft)
         local_article.write_text(with_article_navigation(html), encoding="utf-8")
-        if draft.image_filename:
-            download_remote_file(
-                ftp,
-                f"images/articles/{draft.image_filename}",
-                IMAGE_DIR / draft.image_filename,
-            )
     return sorted(catalog, key=article_sort_key, reverse=True)
+
+
+def should_upload_repair_file(remote_path: str) -> bool:
+    if remote_path.startswith("images/"):
+        return False
+    if remote_path.startswith("_editorial_drafts/"):
+        return False
+    allowed_suffixes = (".html", ".php", ".css", ".js", ".xml", ".txt", ".json", ".ico")
+    return remote_path.endswith(allowed_suffixes)
 
 
 def with_article_navigation(html: str) -> str:
@@ -395,6 +392,8 @@ def deploy_site() -> None:
             if not path.is_file():
                 continue
             remote_path = path.relative_to(SITE_DIR).as_posix()
+            if not should_upload_repair_file(remote_path):
+                continue
             if "/" in remote_path:
                 ensure_dir(ftp, remote_path.rsplit("/", 1)[0])
             with path.open("rb") as file:
