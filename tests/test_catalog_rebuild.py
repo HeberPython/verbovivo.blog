@@ -65,6 +65,7 @@ class CatalogRebuildTests(unittest.TestCase):
         second = draft("mais-antigo", "Mais antigo", "2026-06-26T12:00:00+00:00")
         third = draft("terceiro", "Terceiro", "2026-06-25T12:00:00+00:00")
         fourth = draft("quarto", "Quarto", "2026-06-24T12:00:00+00:00")
+        fifth = draft("quinto", "Quinto", "2026-06-23T12:00:00+00:00")
 
         with TemporaryDirectory() as temp:
             site = Path(temp)
@@ -88,7 +89,7 @@ class CatalogRebuildTests(unittest.TestCase):
             original_site_dir = deploy_site.SITE_DIR
             deploy_site.SITE_DIR = site
             try:
-                deploy_site.rebuild_catalog_indexes([first, second, third, fourth])
+                deploy_site.rebuild_catalog_indexes([first, second, third, fourth, fifth])
             finally:
                 deploy_site.SITE_DIR = original_site_dir
 
@@ -99,17 +100,20 @@ class CatalogRebuildTests(unittest.TestCase):
             self.assertIn("artigos/mais-recente.html", index)
             self.assertIn("artigos/mais-antigo.html", index)
             self.assertIn("artigos/terceiro.html", index)
-            self.assertNotIn("artigos/quarto.html", index)
-            for slug in ("mais-recente", "mais-antigo", "terceiro", "quarto"):
+            self.assertIn("artigos/quarto.html", index)
+            self.assertNotIn("artigos/quinto.html", index)
+            for slug in ("mais-recente", "mais-antigo", "terceiro", "quarto", "quinto"):
                 self.assertIn(f"artigos/{slug}.html", articles)
             self.assertEqual(feed.count("artigos/mais-recente.html"), 2)
             self.assertEqual(feed.count("artigos/mais-antigo.html"), 2)
             self.assertEqual(feed.count("artigos/terceiro.html"), 2)
             self.assertEqual(feed.count("artigos/quarto.html"), 2)
+            self.assertEqual(feed.count("artigos/quinto.html"), 2)
             self.assertIn("artigos/mais-recente.html", sitemap)
             self.assertIn("artigos/mais-antigo.html", sitemap)
             self.assertIn("artigos/terceiro.html", sitemap)
             self.assertIn("artigos/quarto.html", sitemap)
+            self.assertIn("artigos/quinto.html", sitemap)
             self.assertNotIn("artigos/antigo.html", sitemap)
 
     def test_reads_catalog_metadata_from_json_ld(self):

@@ -24,7 +24,7 @@ from .models import ArticleDraft
 DOMAIN = "https://verbovivo.blog"
 SITE_DIR = Path("site")
 DEFAULT_IMAGE = "o-coracao-desordenado-guardando-a-fonte-da-vida-dcf1e0e616343e53.png"
-HOME_ARTICLE_LIMIT = 3
+HOME_ARTICLE_LIMIT = 4
 
 
 @contextmanager

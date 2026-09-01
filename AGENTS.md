@@ -12,7 +12,7 @@ Estas regras sao obrigatorias em qualquer manutencao deste projeto.
    - URLs do sitemap;
    - rascunhos aprovados.
 4. Antes de qualquer intervencao que possa alterar o site publicado, criar backup remoto do estado atual e guardar o artefato fora do deploy. Sem backup confirmado, nao implantar.
-5. A home deve exibir somente os 3 artigos mais recentes: 1 destaque e 2 cards. Os demais artigos devem continuar acessiveis pelo link superior `Artigos`, no acervo completo `artigos.html`.
+5. A home deve exibir somente os 4 artigos mais recentes: 1 destaque e 3 cards. Os demais artigos devem continuar acessiveis pelo link superior `Artigos`, no acervo completo `artigos.html`.
 6. Uma implantacao deve falhar se qualquer artigo fisico ficar ausente de `artigos.html`, do feed ou do sitemap.
 7. Nunca reduzir a quantidade de artigos publicados sem pedido explicito do usuario e backup anterior.
 8. Mudancas pontuais de layout, imagem, texto, SEO ou automacao nao podem reconstruir o site a partir de uma copia local desatualizada.
