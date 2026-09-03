@@ -7,6 +7,8 @@ from automation.editorial_agent.lessons import (
     LessonSummary,
     LessonTopic,
     is_lesson_subject,
+    lesson_card,
+    lesson_card_from_html,
     lesson_number_from_subject,
     merge_lesson_card,
     render_lesson_page,
@@ -36,6 +38,38 @@ class LessonWorkflowTests(unittest.TestCase):
         self.assertIn("Compêndio retrospectivo", html)
         self.assertIn("já estudada na Escola Bíblica Dominical", html)
         self.assertIn("Comprar esta revista", html)
+
+    def test_lesson_card_shows_only_lesson_number(self) -> None:
+        lesson = LessonSummary(
+            number=3,
+            title="Jesus e os Ritos Judaicos",
+            series="Jesus — O Glorioso Salvador",
+        )
+
+        card = lesson_card(lesson)
+
+        self.assertIn('<p class="category">Lição 3</p>', card)
+        self.assertNotIn("Glorioso Salvador", card)
+
+    def test_lesson_card_from_html_shows_only_lesson_number(self) -> None:
+        html = """
+        <html>
+          <head>
+            <title>Lição 3: Jesus e os Ritos Judaicos | Lições Escola Dominical</title>
+            <meta name="description" content="Compêndio retrospectivo da Lição 3." />
+          </head>
+          <body>
+            <h1>Lição 3: Jesus e os Ritos Judaicos</h1>
+            <p class="series">Jesus — O Glorioso Salvador</p>
+          </body>
+        </html>
+        """
+
+        card = lesson_card_from_html("licao-3-jesus-e-os-ritos-judaicos", html)
+
+        self.assertIsNotNone(card)
+        self.assertIn('<p class="category">Lição 3</p>', card or "")
+        self.assertNotIn("Glorioso Salvador", card or "")
 
     def test_merge_lesson_card_replaces_same_lesson(self) -> None:
         html = """

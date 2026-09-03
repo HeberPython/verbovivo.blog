@@ -512,14 +512,13 @@ def render_lesson_page(lesson: LessonSummary) -> str:
 
 
 def lesson_card(lesson: LessonSummary) -> str:
-    series = f" · {lesson.series}" if lesson.series else ""
     excerpt = (
         f"Compêndio retrospectivo da Lição {lesson.number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
     return f"""
           <article class="lesson-card" data-lesson-number="{lesson.number}" data-lesson-slug="{escape(lesson.slug)}">
             <div>
-              <p class="category">Lição {lesson.number}{escape(series)}</p>
+              <p class="category">Lição {lesson.number}</p>
               <h2><a href="licoes/{escape(lesson.slug)}.html">{escape(lesson.title)}</a></h2>
               <p>{escape(excerpt)}</p>
             </div>
@@ -550,11 +549,10 @@ def lesson_card_from_html(slug: str, html: str) -> str | None:
     excerpt = html_text(description_match.group(1)) if description_match else (
         f"Compêndio retrospectivo da Lição {number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
-    series_suffix = f" · {series}" if series else ""
     return f"""
           <article class="lesson-card" data-lesson-number="{number}" data-lesson-slug="{escape(slug)}">
             <div>
-              <p class="category">Lição {number}{escape(series_suffix)}</p>
+              <p class="category">Lição {number}</p>
               <h2><a href="licoes/{escape(slug)}.html">{escape(title)}</a></h2>
               <p>{escape(excerpt)}</p>
             </div>
