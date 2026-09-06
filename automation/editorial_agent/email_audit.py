@@ -169,7 +169,12 @@ def audit_inbox(name: str, host: str, port: int, user: str, password: str, publi
 
 
 def main() -> None:
-    published_slugs = remote_published_slugs()
+    try:
+        published_slugs = remote_published_slugs()
+        print(f"PUBLISHED_SLUGS\tstatus=ok\tcount={len(published_slugs)}")
+    except Exception as exc:
+        published_slugs = None
+        print(f"PUBLISHED_SLUGS\tstatus=error\terror={exc.__class__.__name__}")
     audit_inbox(
         "publicar@verbovivo.blog",
         settings.publish_imap_host,
@@ -185,7 +190,10 @@ def main() -> None:
         settings.imap_user,
         settings.imap_password,
     )
-    audit_remote_content()
+    try:
+        audit_remote_content()
+    except Exception as exc:
+        print(f"SITE_AUDIT\tstatus=error\terror={exc.__class__.__name__}")
 
 
 if __name__ == "__main__":
