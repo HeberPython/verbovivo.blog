@@ -14,6 +14,7 @@ on:
           - publicar
           - recover-artigo
           - test-image
+          - email-audit
           - backup-content
           - repair-content
           - audit-content
@@ -123,6 +124,10 @@ jobs:
       - name: Test Gemini image generation
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}
         run: python -m automation.editorial_agent.image_diagnostic
+
+      - name: Audit email queues without changes
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'email-audit' }}
+        run: python -m automation.editorial_agent.email_audit
 
       - name: Save Gemini diagnostic image
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}
