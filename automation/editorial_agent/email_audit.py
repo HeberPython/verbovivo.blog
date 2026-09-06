@@ -38,14 +38,23 @@ def safe_subject(value: str) -> str:
     return value[:120]
 
 
-def message_line(message, inbox: str, published_slugs: set[str] | None = None) -> str:
+def message_line(
+    message,
+    inbox: str,
+    published_slugs: set[str] | None = None,
+    *,
+    include_seen_flag: bool = True,
+) -> str:
     subject = safe_subject(message.subject or "")
     slug = slugify(subject) if subject else ""
     state = []
-    if getattr(message, "seen", False):
-        state.append("read")
+    if include_seen_flag:
+        if getattr(message, "seen", False):
+            state.append("read")
+        else:
+            state.append("unread")
     else:
-        state.append("unread")
+        state.append("recent")
     if is_sender_allowed(message.from_ or ""):
         state.append("allowed")
     else:
@@ -156,7 +165,7 @@ def audit_inbox(name: str, host: str, port: int, user: str, password: str, publi
         print(f"EMAIL\t{name}\tunread=none")
     print(f"RECENT_HEADER_SAMPLE\t{name}")
     for message in recent[:5]:
-        print(message_line(message, name, published_slugs))
+        print(message_line(message, name, published_slugs, include_seen_flag=False))
 
 
 def main() -> None:
