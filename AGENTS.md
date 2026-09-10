@@ -27,6 +27,7 @@ Estas regras sao obrigatorias em qualquer manutencao deste projeto.
 11. O ultimo artigo por data de publicacao fica em destaque, salvo excecao explicitamente registrada pelo usuario.
 12. Se uma verificacao falhar, interromper a implantacao. Nao tentar “corrigir por cima”.
 13. Recursos presentes em todas as paginas de artigo devem ser mantidos nos tres caminhos de geracao: template Python, aprovacao em `revisao.php` e edicao em `gestor-artigos.php`.
+14. Aprovacao, edicao e recebimento de index.html usam `home-catalog.php`: selecionar quatro URLs distintas por datePublished do catalogo fisico. Nunca limitar uma lista ja truncada nem repetir o destaque nos cards. Testar esses caminhos antes de implantar.
 
 Comandos seguros no GitHub Actions:
 

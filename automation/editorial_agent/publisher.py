@@ -111,6 +111,15 @@ def trim_home_articles(index_html: str, max_articles: int = HOME_ARTICLE_LIMIT) 
     if not match:
         return index_html
     cards = re.findall(r'\s*<article class="article-card">.*?</article>', match.group(2), flags=re.DOTALL)
+    featured = re.search(r'<article class="featured">.*?</article>', index_html, re.DOTALL)
+    seen = set(re.findall(r'href="([^"]+)"', featured.group(0))) if featured else set()
+    unique_cards = []
+    for card in cards:
+        url = re.search(r'href="([^"]+)"', card)
+        if url and url.group(1) not in seen:
+            seen.add(url.group(1))
+            unique_cards.append(card)
+    cards = unique_cards
     kept = "".join(cards[:card_limit])
     return index_html[: match.start(2)] + "\n" + kept + "\n" + index_html[match.end(2) :]
 

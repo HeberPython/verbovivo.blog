@@ -1,0 +1,35 @@
+name: Repair latest four home articles
+on:
+  workflow_dispatch:
+concurrency:
+  group: verbo-vivo-editorial-agent
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: php --version
+      - run: python -m unittest discover -s tests -v
+      - run: python -m automation.editorial_agent.repair_home prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: home-before-repair-${{ github.run_id }}
+          path: automation/_backups/home-repair
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: error
+      - run: python -m automation.editorial_agent.repair_home apply

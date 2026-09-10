@@ -56,6 +56,12 @@ if ($bytes === false) {
 }
 
 $target = __DIR__ . '/' . $path;
+if ($path === 'index.html') {
+    require_once __DIR__ . '/home-catalog.php';
+    refresh_current_home(__DIR__);
+    header('Content-Type: text/plain; charset=UTF-8');
+    exit('OK ' . $path);
+}
 $directory = dirname($target);
 if (!is_dir($directory) && !mkdir($directory, 0755, true)) {
     fail(500, 'Could not create directory.');

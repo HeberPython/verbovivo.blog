@@ -305,30 +305,8 @@ function update_indexes(array $article, ?string $oldSlug = null): void {
     if ($oldSlug && $oldSlug !== $article['slug']) {
         remove_article_from_indexes($oldSlug);
     }
-    $index = __DIR__ . '/index.html';
-    if (is_file($index)) {
-        $html = (string) file_get_contents($index);
-        $urlPart = 'artigos/' . (string) $article['slug'] . '.html';
-        $replacement = text_contains($html, '<article class="featured">') && text_contains((string) preg_replace('/^.*(<article class="featured">.*?<\/article>).*/s', '$1', $html), $urlPart)
-            ? featured_article($article)
-            : article_card($article);
-        if (text_contains($html, $urlPart)) {
-            $html = (string) preg_replace('/\s*<article class="(?:featured|article-card)">(?:(?!<article class=).)*?' . preg_quote($urlPart, '/') . '.*?<\/article>/s', "\n" . $replacement, $html, 1);
-        } else {
-            $marker = '<section class="article-grid" aria-label="Lista de artigos">';
-            $html = str_replace($marker, $marker . "\n        " . article_card($article), $html);
-        }
-        $html = (string) preg_replace_callback(
-            '/(<section\b[^>]*class="[^"]*\barticle-grid\b[^"]*"[^>]*>)(.*?)(<\/section>)/s',
-            function ($matches) {
-                preg_match_all('/\s*<article class="article-card">.*?<\/article>/s', $matches[2], $cards);
-                return $matches[1] . "\n" . implode('', array_slice($cards[0], 0, 2)) . "\n" . $matches[3];
-            },
-            $html,
-            1
-        );
-        file_put_contents($index, $html);
-    }
+    require_once __DIR__ . '/home-catalog.php';
+    refresh_current_home(__DIR__);
     $articles = __DIR__ . '/artigos.html';
     if (is_file($articles)) {
         $html = (string) file_get_contents($articles);
