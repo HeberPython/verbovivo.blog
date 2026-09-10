@@ -49,6 +49,10 @@ try {
         throw new RuntimeException('Dedicated GitHub token is missing.');
     }
     $check = in_array('--check', $argv, true);
+    $command = (string) ($config['command'] ?? 'email-audit');
+    if (!in_array($command, ['email-audit', 'all'], true)) {
+        throw new RuntimeException('Invalid scheduler command.');
+    }
     if (!$check && ($config['enabled'] ?? false) !== true) {
         throw new RuntimeException('Scheduler is not activated.');
     }
@@ -93,7 +97,7 @@ try {
     fwrite($lock, (string) $slot);
     fflush($lock);
     github_request($token, $workflow . '/dispatches', [
-        'ref' => 'main', 'inputs' => ['command' => 'all'],
+        'ref' => 'main', 'inputs' => ['command' => $command],
     ]);
     echo $now->format(DATE_ATOM) . " dispatch accepted; execution completion must be checked in GitHub\n";
 } catch (Throwable $error) {

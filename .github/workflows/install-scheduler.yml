@@ -1,0 +1,44 @@
+name: Install private scheduler in audit mode
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verbo-vivo-editorial-agent
+  cancel-in-progress: false
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: php -l automation/hostinger-scheduler/dispatch-editorial.php
+      - run: php -l automation/hostinger-scheduler/install-once.php
+      - run: python automation/hostinger-scheduler/test_install.py -v
+      - run: python automation/hostinger-scheduler/install_https.py prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-before-${{ github.run_id }}
+          path: automation/_backups/scheduler-install
+          if-no-files-found: error
+          retention-days: 30
+      - name: Install over authenticated HTTPS
+        env:
+          EDITORIAL_DISPATCH_TOKEN: ${{ secrets.EDITORIAL_DISPATCH_TOKEN }}
+          EDITORIAL_ADMIN_TOKEN: ${{ secrets.EDITORIAL_ADMIN_TOKEN }}
+        run: python automation/hostinger-scheduler/install_https.py install
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scheduler-result-${{ github.run_id }}
+          path: automation/_backups/scheduler-install/result.json
+          if-no-files-found: ignore
