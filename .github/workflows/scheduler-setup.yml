@@ -1,0 +1,25 @@
+name: Inspect Hostinger scheduler access
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate staged PHP syntax
+        run: php -l automation/hostinger-scheduler/dispatch-editorial.php
+      - name: Read-only credential and encrypted connection check
+        env:
+          EDITORIAL_DISPATCH_TOKEN: ${{ secrets.EDITORIAL_DISPATCH_TOKEN }}
+          HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+          HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+          HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+        run: python automation/hostinger-scheduler/check_access.py
