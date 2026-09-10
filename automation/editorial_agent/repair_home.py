@@ -89,6 +89,9 @@ def prepare(ftp):
     files = snapshot(ftp)
     validate_catalog(files)
     for name, data in files.items():
+        # Drafts contain private review links; retain only their hashes for comparison.
+        if name.startswith('_editorial_drafts/'):
+            continue
         path = BACKUP / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
