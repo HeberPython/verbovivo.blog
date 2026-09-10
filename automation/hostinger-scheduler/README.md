@@ -1,7 +1,17 @@
-# Hostinger scheduler - NOT DEPLOYED
+# Hostinger scheduler - INSTALLED IN AUDIT MODE, CRON NOT YET CONFIGURED
 
 Prepared on 2026-09-10. User confirmed no existing Hostinger cron jobs.
-The browser control connection is unavailable. Do not claim activation.
+The browser control connection is unavailable. Do not claim the cron is active.
+
+Installed 2026-09-10 by GitHub run 34502039757. The GitHub schedule is UNCHANGED.
+Verified script: /home/u454442761/domains/verbovivo.blog/_verbovivo_scheduler/dispatch-editorial.php
+Private directory is outside public_html. Config permissions: 0600.
+Current command: email-audit. No production dispatch was tested by installation.
+Local backup/result: automation/_backups/scheduler-install-34502039757/
+Temporary bootstrap was removed; public index bytes and catalog lists unchanged.
+FTPS inspection timed out. Existing FTP delivered only token-free bootstrap code;
+the new credential traveled exclusively over authenticated HTTPS without redirects.
+Installation authentication, private path, permissions and no-overwrite tests passed.
 
 This CLI-only dispatcher preserves the Python editorial workflow. It does not
 implement another publisher. Place it OUTSIDE public_html in a private directory;
@@ -15,8 +25,9 @@ Actions permission is repository-wide, not restricted to this one workflow. A
 compromised token can manage Actions in this repository. Record its expiration and
 arrange renewal. Never reuse the broad GitHub CLI OAuth credential.
 
-Private configuration keys: github_token (secret), enabled (boolean, false until
-validated). Run --check to test read access without publishing; this does NOT prove
+Private configuration keys: github_token (secret), enabled (boolean), command
+(email-audit for validation; all only after scheduler validation). Run --check to
+test read access without publishing; this does NOT prove
 write permission. No credential or private config is bundled here.
 
 Activation checklist:
