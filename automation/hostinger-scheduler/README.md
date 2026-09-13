@@ -1,17 +1,56 @@
-# Hostinger scheduler - INSTALLED IN AUDIT MODE, CRON NOT YET CONFIGURED
+# Hostinger scheduler - PROCESSING ACTIVE
 
-Prepared on 2026-09-10. User confirmed no existing Hostinger cron jobs.
-The browser control connection is unavailable. Do not claim the cron is active.
+Activated on 2026-09-13 by run 34768947871, after user authorization and backup.
+Hostinger cron was confirmed by the user and repeated workflow_dispatch runs.
+The private configuration now uses command=all, enabled=true. The old GitHub
+schedule trigger was removed; manual workflow_dispatch and concurrency remain.
+Cron: */15 * * * * (script enforces 07:00-22:59 America/Sao_Paulo).
+Activation passed 26 editorial tests and 8 PHP integration/security/rollback tests.
+All 78 checked public files were byte-identical before and after the mode change.
+Independent HTTP checks: 62 articles and 11 lessons unchanged and accessible;
+home=4, archive/feed/sitemap=62, four recent article images accessible.
+Two consecutive post-activation automatic processing runs passed:
+- 34769524537: dispatched 2026-09-13 13:45:13 BRT; publicar checked 13:45:59,
+  artigo checked 13:46:01; both processing steps succeeded, both inboxes unread=0.
+- 34770258180: dispatched 2026-09-13 14:00:17 BRT; publicar checked 14:01:08,
+  artigo checked 14:01:09; both processing steps succeeded, both inboxes unread=0.
+Dispatch interval was 15m04s; artigo scan log interval was about 15m08s.
+Manual all-mode smoke test 34769169141 also passed before these automatic runs.
+Read-only audit 34769606305: home=4, archive/feed/sitemap/physical articles=62,
+no orphans, both inboxes unread=0. Six existing pending-review drafts unchanged.
+Final independent HTTP comparison after the second automatic run: all 73 article
+and lesson pages byte-identical to the pre-change backup; recent images HTTP 200.
+These empty-inbox runs validate dispatch and mailbox access, not new-message SMTP
+delivery or an absolute maximum processing time for image generation.
 
-Installed 2026-09-10 by GitHub run 34502039757. The GitHub schedule is UNCHANGED.
+Initially installed in audit mode on 2026-09-10 by GitHub run 34502039757.
 Verified script: /home/u454442761/domains/verbovivo.blog/_verbovivo_scheduler/dispatch-editorial.php
 Private directory is outside public_html. Config permissions: 0600.
-Current command: email-audit. No production dispatch was tested by installation.
+Installation started in email-audit mode; activation changed ONLY command to all.
 Local backup/result: automation/_backups/scheduler-install-34502039757/
 Temporary bootstrap was removed; public index bytes and catalog lists unchanged.
 FTPS inspection timed out. Existing FTP delivered only token-free bootstrap code;
 the new credential traveled exclusively over authenticated HTTPS without redirects.
 Installation authentication, private path, permissions and no-overwrite tests passed.
+
+## Backups and rollback
+
+- Pre-change repository: f82e5d5; local verified Git bundle:
+  automation/_backups/pre-scheduler-activation-20260913.bundle
+- Published content backup run: 34768477816; local copy:
+  automation/_backups/pre-scheduler-activation-site-34768477816/
+- Activation inventories/results: run 34768947871; local copy:
+  automation/_backups/scheduler-activation-34768947871/
+- Private config and dispatcher backup remains outside public_html, under
+  _verbovivo_scheduler/before-mode-20260913-163612-555a6004b79f/.
+  Config backup contains a secret: never download it into artifacts or the repo.
+- To pause processing safely, run activate-scheduler.yml with command=email-audit.
+  This uses the same authenticated atomic update and creates a fresh private backup.
+- To restore the previous scheduling arrangement, switch to email-audit first,
+  then restore ONLY the editorial schedule trigger and schedule step conditions
+  from f82e5d5. Do not reset the repository or deploy old site files.
+- Scheduler activation scripts do not modify or deploy public content. Their
+  temporary authenticated PHP bootstrap is deleted immediately after the update.
 
 This CLI-only dispatcher preserves the Python editorial workflow. It does not
 implement another publisher. Place it OUTSIDE public_html in a private directory;
