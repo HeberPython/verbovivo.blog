@@ -22,10 +22,8 @@ on:
         description: "Limite opcional para artigo@; vazio processa todos"
         required: false
         default: ""
-  schedule:
-    # UTC. Sao Paulo = UTC-3. Check every 15 minutes from 07:00 to 22:59 BRT.
-    - cron: "*/15 10-23 * * *"
-    - cron: "*/15 0-1 * * *"
+  # Hostinger dispatches command=all every 15 minutes during operating hours.
+  # Keep one scheduler; GitHub schedule was delayed and overlapped the host cron.
 
 concurrency:
   group: verbo-vivo-editorial-agent
@@ -98,11 +96,11 @@ jobs:
               raise SystemExit("Missing required secrets: " + ", ".join(missing))
 
       - name: Process publicar inbox
-        if: ${{ github.event_name == 'schedule' || inputs.command == 'all' || inputs.command == 'publicar' }}
+        if: ${{ inputs.command == 'all' || inputs.command == 'publicar' }}
         run: python -m automation.editorial_agent.worker publish-once
 
       - name: Process artigo inbox
-        if: ${{ github.event_name == 'schedule' || inputs.command == 'all' || inputs.command == 'artigo' }}
+        if: ${{ inputs.command == 'all' || inputs.command == 'artigo' }}
         shell: bash
         run: |
           if [ -n "${{ inputs.artigo_limit }}" ]; then

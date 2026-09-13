@@ -1,0 +1,57 @@
+name: Switch private scheduler mode
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Scheduler command (email-audit pauses processing for rollback)
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - email-audit
+permissions:
+  contents: read
+concurrency:
+  group: verbo-vivo-editorial-agent
+  cancel-in-progress: false
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+      HOSTINGER_FTP_PORT: ${{ secrets.HOSTINGER_FTP_PORT }}
+      HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+      HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+      HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - run: php -l automation/hostinger-scheduler/set-mode-once.php
+      - run: python automation/hostinger-scheduler/test_mode.py -v
+      - run: python automation/hostinger-scheduler/activate_https.py prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-activation-before-${{ github.run_id }}
+          path: automation/_backups/scheduler-activation
+          if-no-files-found: error
+          retention-days: 30
+      - name: Back up private config and atomically switch mode over HTTPS
+        env:
+          EDITORIAL_ADMIN_TOKEN: ${{ secrets.EDITORIAL_ADMIN_TOKEN }}
+          SCHEDULER_COMMAND: ${{ inputs.command }}
+        run: python automation/hostinger-scheduler/activate_https.py activate "$SCHEDULER_COMMAND"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scheduler-activation-result-${{ github.run_id }}
+          path: |
+            automation/_backups/scheduler-activation/result.json
+            automation/_backups/scheduler-activation/after.json
+          if-no-files-found: ignore
+          retention-days: 30
