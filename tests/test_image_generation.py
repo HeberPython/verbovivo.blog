@@ -2,7 +2,7 @@ import unittest
 import urllib.error
 from io import BytesIO
 
-from automation.editorial_agent.ai import build_image_generation_prompt, first_gemini_image_base64, gemini_http_error_message
+from automation.editorial_agent.ai import IMAGE_ERA_GUARDRAILS, SYSTEM_PROMPT, build_image_generation_prompt, first_gemini_image_base64, gemini_http_error_message
 from automation.editorial_agent.models import ArticleDraft
 
 
@@ -68,6 +68,30 @@ class GeminiImageResponseTests(unittest.TestCase):
         self.assertIn("Proibido usar por padrao", prompt)
         self.assertIn("imediatamente distinguivel", prompt)
         self.assertIn("pessoa isolada orando em paisagem bonita", prompt)
+
+    def test_era_rules_reach_scene_editor_and_image_generator(self):
+        self.assertIn(IMAGE_ERA_GUARDRAILS, SYSTEM_PROMPT)
+        self.assertNotIn("ressurreicao, use arquitetura antiga", SYSTEM_PROMPT)
+        for scene in (
+            "Familias com roupas atuais reunidas em uma igreja no bairro.",
+            "Comunidade crista dos primeiros seculos reunida em uma casa antiga.",
+        ):
+            with self.subTest(scene=scene):
+                draft = ArticleDraft(
+                    id="era-test", token="test-only", sender="autor@example.com",
+                    source_subject="Comunidade", source_text=scene, title="Comunidade",
+                    slug="comunidade", excerpt=scene, category="Reflexao", author="Autor",
+                    body_html=f"<p>{scene}</p>", image_prompt=scene, image_filename="test.png",
+                )
+                before = draft.__dict__.copy()
+                prompt = build_image_generation_prompt(draft)
+                self.assertIn(IMAGE_ERA_GUARDRAILS, prompt)
+                self.assertIn(scene, prompt)
+                self.assertIn("igreja contemporanea semelhante as de hoje", prompt)
+                self.assertIn("mantenha a ambientacao historica", prompt)
+                self.assertIn("Nao modernize essas cenas", prompt)
+                self.assertIn("Preserve os simbolos centrais", prompt)
+                self.assertEqual(before, draft.__dict__)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,18 @@ from .content import extract_submission_metadata, fallback_refine, slugify, subm
 from .models import ArticleDraft
 
 
+IMAGE_ERA_GUARDRAILS = """
+
+COERENCIA DE EPOCA DA CENA (apenas direcao de imagem, sem alterar o artigo):
+- Defina a epoca pela cena e pelo contexto do artigo, nao apenas por haver uma citacao biblica ou um simbolo cristao.
+- Quando a cena representar os dias atuais, uma aplicacao contemporanea ou pessoas com roupas atuais, use ambientes modernos coerentes: arquitetura, mobiliario, objetos, ruas e casas da mesma epoca das roupas.
+- Se uma cena atual ocorrer em um templo, represente uma igreja contemporanea semelhante as de hoje, com arquitetura e mobiliario atuais; nao use igrejas antigas de pedra, ruinas, mosteiros ou cenarios dos primeiros seculos como fundo padrao para personagens modernos.
+- Quando o contexto da cena for historico, biblico ou dos primeiros seculos da igreja, mantenha a ambientacao historica: roupas, construcoes, templos e objetos coerentes com aquela epoca. Nao modernize essas cenas.
+- Nao misture roupas atuais com ambientacao antiga sem uma justificativa historica explicita no artigo. Uma simples referencia biblica nao obriga a ambientar a aplicacao atual na Antiguidade.
+- Preserve os simbolos centrais e a identidade visual especifica do artigo dentro da epoca escolhida. Exemplos anteriores de arquitetura antiga ou biblica so se aplicam quando a cena for historica.
+"""
+
+
 SYSTEM_PROMPT = """
 VocÃª Ã© o editor cristÃ£o do blog Verbo Vivo.
 Recebe textos brutos escritos por humanos e transforma em uma reflexÃ£o curta,
@@ -45,8 +57,8 @@ Regras:
 - NÃ£o use image_prompt genÃ©rico como "pessoas caminhando", "homem orando", "paisagem bÃ­blica", "luz dourada", "estrada ao pÃ´r do sol", "cruz no horizonte", "mesa com BÃ­blia" sem uma razÃ£o direta no texto.
 - Evite image_prompt com objetos isolados como coroa, pedra, pergaminho, coraÃ§Ã£o, espada, chave, raio de luz ou cruz como protagonista literal. Esses elementos sÃ³ podem aparecer discretamente como apoio da cena, se forem necessÃ¡rios.
 - Quando o titulo ou o texto tiver um simbolo teologico central, como pedra angular, fundamento, videira, pao da vida, caminho, luz, coroa, armadura ou cruz, preserve esse simbolo como parte organica da cena. Nao substitua o simbolo central por uma cena generica de caminhada, grupo ou comunidade.
-- Para temas sobre pedra angular, fundamento ou ressurreicao, use arquitetura antiga, base de pedra, tumulo vazio, amanhecer, caminho e pessoas em contemplacao como cena integrada, sem teatralidade, brilho magico ou literalidade cafona.
-"""
+- Para temas sobre pedra angular, fundamento ou ressurreicao, quando a cena for historica, use arquitetura antiga, base de pedra, tumulo vazio, amanhecer, caminho e pessoas em contemplacao como cena integrada, sem teatralidade, brilho magico ou literalidade cafona. Se a cena for uma aplicacao atual, integre o simbolo a um ambiente contemporaneo coerente.
+""" + IMAGE_ERA_GUARDRAILS
 
 
 IMAGE_STYLE_PROMPT = (
@@ -101,6 +113,7 @@ def build_image_generation_prompt(draft: ArticleDraft) -> str:
     return (
         IMAGE_STYLE_PROMPT
         + GENERIC_IMAGE_GUARDRAILS
+        + IMAGE_ERA_GUARDRAILS
         + "\nCONTEXTO ESPECIFICO DO ARTIGO:\n"
         + article_context
         + "\n\nAntes de imaginar a imagem, escolha mentalmente qual detalhe torna este artigo diferente dos demais e faça esse detalhe aparecer na cena."
