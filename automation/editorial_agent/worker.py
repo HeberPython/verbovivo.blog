@@ -173,7 +173,9 @@ def publish_once() -> None:
         publication_status = article_publication_status(slug)
         if publication_status is True:
             print(f"Already published and indexed: {slug}")
-            mark_seen("publicar@verbovivo.blog", message.uid)
+            # Recent-message recovery also includes read mail; avoid redundant IMAP writes.
+            if uid in unread_uids:
+                mark_seen("publicar@verbovivo.blog", message.uid)
             continue
         if publication_status is None and uid not in unread_uids:
             print(f"Deferred read-message recovery because site verification is unavailable: {slug}")
