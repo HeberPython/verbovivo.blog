@@ -9,6 +9,7 @@ import json
 import os
 import secrets
 from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.error import HTTPError
 
 from PIL import Image
 from .ai import generate_cover_image_with_gemini
@@ -56,6 +57,17 @@ def load_target(ftp, subject):
 
 def model(data):
     return ArticleDraft(**{field.name: data[field.name] for field in fields(ArticleDraft) if field.name in data})
+
+
+def png_bytes(payload):
+    # Gemini can return JPEG bytes even when the requested local filename is PNG.
+    with Image.open(BytesIO(payload)) as image:
+        image.load()
+        if image.format == 'PNG':
+            return payload
+        output = BytesIO()
+        image.convert('RGB').save(output, format='PNG')
+        return output.getvalue()
 
 
 def fingerprints(ftp):
@@ -120,8 +132,7 @@ def main():
     image_bytes = image_path.read_bytes()
     if hashlib.sha256(image_bytes).hexdigest() != plan['image_sha256']:
         raise RuntimeError('Image artifact changed')
-    with Image.open(BytesIO(image_bytes)) as image:
-        image.verify()
+    image_bytes = png_bytes(image_bytes)
     bootstrap = Path('automation/review-image-update.php').read_bytes()
     target = 'review-image-' + secrets.token_hex(12) + '.php'
     with connect() as ftp:
@@ -165,4 +176,6 @@ if __name__ == '__main__':
         main()
     except Exception as error:
         print('Image operation stopped:', type(error).__name__, flush=True)
+        if isinstance(error, HTTPError):
+            print('HTTP status:', error.code, flush=True)
         raise SystemExit(1)

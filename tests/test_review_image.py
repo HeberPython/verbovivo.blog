@@ -13,10 +13,20 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from PIL import Image
-from automation.editorial_agent.review_image import choose
+from automation.editorial_agent.review_image import choose, png_bytes
 
 
 class ReviewImageTests(unittest.TestCase):
+    def test_normalizes_gemini_jpeg_without_changing_decoded_pixels(self):
+        buffer = BytesIO()
+        Image.new('RGB', (16, 12), 'blue').save(buffer, format='JPEG')
+        jpeg = buffer.getvalue()
+        encoded = png_bytes(jpeg)
+        with Image.open(BytesIO(jpeg)) as original, Image.open(BytesIO(encoded)) as converted:
+            self.assertEqual(converted.format, 'PNG')
+            self.assertEqual(original.tobytes(), converted.tobytes())
+        self.assertEqual(png_bytes(encoded), encoded)
+
     def test_selects_only_exact_pending_subject(self):
         target = ('one', b'one', {'source_subject': 'EXPERIMENTARAM', 'status': 'pending_review'})
         others = [('other', b'other', {'source_subject': 'EXPERIMENTARAM', 'status': 'approved'}),
