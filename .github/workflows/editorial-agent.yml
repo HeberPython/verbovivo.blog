@@ -125,7 +125,7 @@ jobs:
 
       - name: Audit email queues without changes
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'email-audit' }}
-        run: python -m automation.editorial_agent.email_audit
+        run: python -m automation.editorial_agent.latest_five_audit
 
       - name: Save Gemini diagnostic image
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}
