@@ -67,6 +67,9 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual((result['before_count'], result['after_count']), (8, 4))
                 self.assertEqual(call(), result)
                 self.assertEqual(call('inspect'), result)
+                if __import__('os').name != 'nt':
+                    for name in ['index.html', 'artigos.html', 'feed.xml', 'sitemap.xml']:
+                        self.assertEqual((root / name).stat().st_mode & 0o777, 0o644)
                 backup = Path(temp) / result['backup'] / 'files'
                 for name, data in original.items():
                     if name.startswith('_private/'):

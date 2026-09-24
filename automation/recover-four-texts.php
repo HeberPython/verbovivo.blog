@@ -13,7 +13,8 @@ $targets = [
 ];
 function write_checked(string $path, string $bytes): void {
     $temp = tempnam(dirname($path), '.recovery-');
-    if (!$temp || file_put_contents($temp, $bytes) !== strlen($bytes) || !rename($temp, $path)) {
+    $mode = dirname($path) === __DIR__ ? 0644 : 0600;
+    if (!$temp || file_put_contents($temp, $bytes) !== strlen($bytes) || !chmod($temp, $mode) || !rename($temp, $path)) {
         throw new RuntimeException('Write failed');
     }
 }
@@ -44,6 +45,10 @@ try {
     $action = $input['action'] ?? '';
     if (is_file($statePath)) {
         $state = json_decode((string)file_get_contents($statePath), true, 512, JSON_THROW_ON_ERROR);
+        // Restore nginx readability after the first recovery version used tempnam's 0600 mode.
+        foreach (['index.html', 'artigos.html', 'feed.xml', 'sitemap.xml'] as $name) {
+            if (!chmod(__DIR__ . '/' . $name, 0644)) { throw new RuntimeException('Public index permissions failed'); }
+        }
     } else { $state = null; }
     if ($action === 'remember') {
         $id = (string)($input['id'] ?? '');
