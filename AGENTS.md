@@ -29,6 +29,7 @@ Estas regras sao obrigatorias em qualquer manutencao deste projeto.
 13. Recursos presentes em todas as paginas de artigo devem ser mantidos nos tres caminhos de geracao: template Python, aprovacao em `revisao.php` e edicao em `gestor-artigos.php`.
 14. Aprovacao, edicao e recebimento de index.html usam `home-catalog.php`: selecionar quatro URLs distintas por datePublished do catalogo fisico. Nunca limitar uma lista ja truncada nem repetir o destaque nos cards. Testar esses caminhos antes de implantar.
 15. O agendamento editorial pertence a Hostinger: a cada 15 minutos, com `command=all`, das 07:00 as 22:59 em America/Sao_Paulo. Nao reintroduzir `schedule` no workflow editorial enquanto esse cron estiver ativo. `email-audit` apenas le e-mails e nao substitui o processamento. Ao intervir no agendamento, preservar a exclusao mutua, o backup privado e confirmar nos logs que as duas caixas foram processadas; consultar `automation/hostinger-scheduler/README.md` para reversao.
+16. Falha no servico de texto nunca pode produzir um rascunho de emergencia com trechos do original. Preservar o e-mail nao lido, registrar a classificacao da falha sem segredos e exigir validacao do texto completo antes de gerar imagem ou enviar aprovacao. Ao recuperar artigos, preservar imagens existentes e solicitar nova aprovacao; nunca republicar automaticamente o texto recuperado.
 
 Comandos seguros no GitHub Actions:
 
