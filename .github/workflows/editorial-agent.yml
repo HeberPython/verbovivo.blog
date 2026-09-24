@@ -18,6 +18,7 @@ on:
           - backup-content
           - repair-content
           - audit-content
+          - recover-four-texts
       artigo_limit:
         description: "Limite opcional para artigo@; vazio processa todos"
         required: false
@@ -126,6 +127,12 @@ jobs:
       - name: Audit email queues without changes
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'email-audit' }}
         run: python -m automation.editorial_agent.email_audit
+
+      - name: Recover four truncated reflections without regenerating images
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'recover-four-texts' }}
+        run: |
+          php -l automation/recover-four-texts.php
+          python -m automation.editorial_agent.recover_four_texts
 
       - name: Save Gemini diagnostic image
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.command == 'test-image' }}

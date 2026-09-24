@@ -4,6 +4,7 @@ import base64
 import json
 import re
 import secrets
+import time
 import urllib.error
 import urllib.request
 from html import escape
@@ -13,8 +14,9 @@ from openai import OpenAI
 from openai import OpenAIError
 
 from .config import settings
-from .content import extract_submission_metadata, fallback_refine, slugify, submission_author, submission_socials
+from .content import extract_submission_metadata, slugify, submission_author, submission_socials
 from .models import ArticleDraft
+from .text_quality import EditorialTextError, validate_reflection
 
 
 IMAGE_ERA_GUARDRAILS = """
@@ -123,11 +125,10 @@ def build_image_generation_prompt(draft: ArticleDraft) -> str:
 def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDraft:
     metadata, article_text = extract_submission_metadata(source_text)
     if not settings.openai_api_key:
-        return fallback_refine(source_text, subject, sender)
+        raise EditorialTextError('Text service key missing; original remains pending.')
 
-    client = OpenAI(api_key=settings.openai_api_key)
-    try:
-        response = client.chat.completions.create(
+    client = OpenAI(api_key=settings.openai_api_key, max_retries=0, timeout=90)
+    response = request_editorial_completion(client,
             model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -144,24 +145,31 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
             ],
             response_format={"type": "json_object"},
             temperature=0.7,
-        )
-    except OpenAIError as exc:
-        print(f"OpenAI unavailable, using fallback draft: {exc.__class__.__name__}")
-        return fallback_refine(source_text, subject, sender)
+    )
+    if response.choices[0].finish_reason != 'stop':
+        raise EditorialTextError('Text response did not finish normally; draft blocked.')
     raw = response.choices[0].message.content or "{}"
-    data = json.loads(raw)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise EditorialTextError('Invalid structured text response; draft blocked.') from None
+    if not isinstance(data, dict) or not isinstance(data.get('sections'), list):
+        raise EditorialTextError('Missing editorial sections; draft blocked.')
     title = data.get("title") or subject or "Nova reflexÃ£o"
     sections = data.get("sections") or []
     body_parts = []
     if data.get("quote"):
         body_parts.append(f"<blockquote>{escape(str(data['quote']))}</blockquote>")
     for section in sections:
+        if not isinstance(section, dict) or not isinstance(section.get('paragraphs'), list):
+            raise EditorialTextError('Invalid editorial section; draft blocked.')
         heading = str(section.get("heading", "")).strip()
         if heading:
             body_parts.append(f"<h2>{escape(heading)}</h2>")
         for paragraph in section.get("paragraphs", []):
             body_parts.append(f"<p>{escape(str(paragraph))}</p>")
 
+    validate_reflection(article_text, "\n".join(body_parts))
     slug = slugify(title)
     draft_id = secrets.token_hex(8)
     return ArticleDraft(
@@ -183,6 +191,24 @@ def refine_with_openai(source_text: str, subject: str, sender: str) -> ArticleDr
         seo_description=data.get("seo_description") or data.get("excerpt") or "",
         seo_keywords=data.get("seo_keywords") or "",
     )
+
+
+def request_editorial_completion(client, **kwargs):
+    for attempt in range(3):
+        try:
+            return client.chat.completions.create(**kwargs)
+        except OpenAIError as exc:
+            code = getattr(exc, 'code', None)
+            status = getattr(exc, 'status_code', None)
+            quota = code in {'insufficient_quota', 'billing_hard_limit_reached'}
+            transient = status == 429 or (isinstance(status, int) and status >= 500)
+            transient = transient or exc.__class__.__name__ in {'APIConnectionError', 'APITimeoutError'}
+            # Log classification only, never request bodies, credentials or full provider errors.
+            reason = 'quota_or_billing' if quota else ('temporary_limit_or_connection' if transient else 'provider_error')
+            print(f'Text generation blocked: {exc.__class__.__name__}; reason={reason}; attempt={attempt + 1}')
+            if quota or not transient or attempt == 2:
+                raise EditorialTextError(f'Text generation failed ({reason}); no approval draft created.') from None
+            time.sleep(5 * (attempt + 1))
 
 
 def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:

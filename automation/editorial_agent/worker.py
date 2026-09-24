@@ -23,6 +23,7 @@ from .mail import (
 from .publisher import article_publication_status, publish_article, upload_review_draft
 from .security import request_authorization_if_needed
 from .store import save_draft
+from .text_quality import EditorialTextError
 
 
 class EmailHTMLTextExtractor(HTMLParser):
@@ -133,8 +134,15 @@ def poll_once(limit: int | None = None) -> None:
         print("No unread messages in artigo@verbovivo.blog.")
         return
     print(f"Found {len(messages)} unread message(s) in artigo@verbovivo.blog.")
+    failed = 0
     for message in messages:
-        process_article_message(message)
+        try:
+            process_article_message(message)
+        except EditorialTextError as exc:
+            failed += 1
+            print(f'Article remains unread for retry: {exc}')
+    if failed:
+        raise EditorialTextError(f'{failed} article(s) awaiting valid text; not sent for approval.')
 
 
 def recover_article_reviews(limit: int | None = None) -> None:

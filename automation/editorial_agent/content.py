@@ -715,36 +715,8 @@ def seo_keywords_from_title(title: str) -> str:
 
 
 def fallback_refine(source_text: str, subject: str, sender: str) -> ArticleDraft:
-    metadata, article_text = extract_submission_metadata(source_text)
-    blocks = paragraphs_from_text(article_text)
-    title = subject.strip() or "Nova reflexão"
-    selected = blocks[:8]
-    body = ["<h2>Reflexão</h2>"]
-    for paragraph in selected:
-        body.append(f"<p>{escape(paragraph)}</p>")
-    body.append("<h2>Para meditar</h2>")
-    body.append("<p>Que esta palavra seja lida com calma, oração e abertura diante de Deus.</p>")
-    slug = slugify(title)
-    draft_id = secrets.token_hex(8)
-    return ArticleDraft(
-        id=draft_id,
-        token=secrets.token_urlsafe(24),
-        sender=sender,
-        source_subject=subject,
-        source_text=article_text,
-        title=title,
-        slug=slug,
-        excerpt="Uma reflexão cristã preparada para leitura, meditação e fortalecimento da fé.",
-        category="Reflexão",
-        author=submission_author(metadata),
-        body_html="\n".join(body),
-        image_prompt=f"Imagem editorial cristã, reverente e simbólica para o tema: {title}",
-        image_filename=f"{slug}-{draft_id}.png",
-        author_socials=submission_socials(metadata),
-        seo_title=seo_title_from_text(title, article_text),
-        seo_description=seo_description_from_text(article_text),
-        seo_keywords=seo_keywords_from_title(title),
-    )
+    from .text_quality import EditorialTextError
+    raise EditorialTextError('Emergency excerpts are disabled; retry from the complete original.')
 
 
 def render_article_page(draft: ArticleDraft) -> str:
