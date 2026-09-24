@@ -205,7 +205,7 @@ def request_editorial_completion(client, **kwargs):
             code = getattr(exc, 'code', None) or details.get('code')
             status = getattr(exc, 'status_code', None)
             message = str(details.get('message', '')).lower()
-            quota = code in {'insufficient_quota', 'billing_hard_limit_reached'} or 'exceeded your current quota' in message
+            quota = code in {'insufficient_quota', 'billing_hard_limit_reached', 'credit_balance_exhausted'} or 'exceeded your current quota' in message
             transient = status == 429 or (isinstance(status, int) and status >= 500)
             transient = transient or exc.__class__.__name__ in {'APIConnectionError', 'APITimeoutError'}
             # Log classification only, never request bodies, credentials or full provider errors.

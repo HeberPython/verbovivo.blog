@@ -42,6 +42,15 @@ class TextQualityTests(unittest.TestCase):
         with patch('automation.editorial_agent.ai.time.sleep'):
             self.assertEqual(request_editorial_completion(client), 'ok')
 
+    def test_exhausted_credit_is_not_retried_as_a_temporary_limit(self):
+        client = Mock()
+        client.chat.completions.create.side_effect = rate_error('credit_balance_exhausted')
+        with patch('automation.editorial_agent.ai.time.sleep') as sleep:
+            with self.assertRaisesRegex(EditorialTextError, 'quota_or_billing'):
+                request_editorial_completion(client)
+        sleep.assert_not_called()
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
     def test_temporary_failure_is_bounded(self):
         client = Mock()
         client.chat.completions.create.side_effect = rate_error('rate_limit_exceeded')
