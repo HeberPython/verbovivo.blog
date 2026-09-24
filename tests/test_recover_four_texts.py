@@ -8,6 +8,7 @@ import time
 import unittest
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+from automation.editorial_agent.recover_four_texts import recovery_state
 
 
 TARGETS = {'a4bf10017c3d3fd5': 'a-boa-obra', '3f1963bd6735c1d6': 'deus-da-presenca',
@@ -15,6 +16,11 @@ TARGETS = {'a4bf10017c3d3fd5': 'a-boa-obra', '3f1963bd6735c1d6': 'deus-da-presen
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_php_empty_maps_are_safe_for_resuming_recovery(self):
+        self.assertEqual(recovery_state({'replacements': [], 'notified': []}), {'replacements': {}, 'notified': {}})
+        with self.assertRaises(RuntimeError):
+            recovery_state({'replacements': ['unexpected']})
+
     @unittest.skipUnless(shutil.which('php'), 'PHP integration runs in GitHub')
     def test_withdraws_only_four_and_preserves_backup_images_and_other_content(self):
         with tempfile.TemporaryDirectory() as temp:

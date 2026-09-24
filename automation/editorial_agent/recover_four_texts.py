@@ -28,6 +28,16 @@ def connect():
     return ftp
 
 
+def recovery_state(data):
+    # PHP serializes an empty associative array as []; normalize only empty maps.
+    for key in ['replacements', 'notified']:
+        if data.get(key) == []:
+            data[key] = {}
+        if key in data and not isinstance(data[key], dict):
+            raise RuntimeError('Invalid recovery state')
+    return data
+
+
 def main():
     name = 'recover-text-' + secrets.token_hex(16) + '.php'
     payload = Path('automation/recover-four-texts.php').read_bytes()
@@ -43,7 +53,7 @@ def main():
                           data=json.dumps(dict(action=action, **data)).encode(),
                           headers={'Content-Type': 'application/json', 'X-Editorial-Token': settings.admin_token})
         with prefer_ipv4(), build_opener(NoRedirect()).open(request, timeout=180) as response:
-            return json.load(response)
+            return recovery_state(json.load(response))
 
     try:
         state = call('withdraw')
