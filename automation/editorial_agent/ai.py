@@ -198,17 +198,28 @@ def request_editorial_completion(client, **kwargs):
         try:
             return client.chat.completions.create(**kwargs)
         except OpenAIError as exc:
-            code = getattr(exc, 'code', None)
+            details = getattr(exc, 'body', None)
+            details = details if isinstance(details, dict) else {}
+            details = details.get('error', details)
+            details = details if isinstance(details, dict) else {}
+            code = getattr(exc, 'code', None) or details.get('code')
             status = getattr(exc, 'status_code', None)
-            quota = code in {'insufficient_quota', 'billing_hard_limit_reached'}
+            message = str(details.get('message', '')).lower()
+            quota = code in {'insufficient_quota', 'billing_hard_limit_reached'} or 'exceeded your current quota' in message
             transient = status == 429 or (isinstance(status, int) and status >= 500)
             transient = transient or exc.__class__.__name__ in {'APIConnectionError', 'APITimeoutError'}
             # Log classification only, never request bodies, credentials or full provider errors.
             reason = 'quota_or_billing' if quota else ('temporary_limit_or_connection' if transient else 'provider_error')
-            print(f'Text generation blocked: {exc.__class__.__name__}; reason={reason}; attempt={attempt + 1}')
+            safe_code = str(code) if re.fullmatch('[a-z_]{1,80}', str(code)) else 'unknown'
+            limits = re.findall(r'\b(limit|used|requested)\s*:?\s*([0-9.,]+)', message)
+            units = [unit for unit in ['tokens per min', 'requests per min', 'tokens per day', 'requests per day'] if unit in message]
+            print(f'Text generation blocked: {exc.__class__.__name__}; reason={reason}; code={safe_code}; limits={limits}; units={units}; attempt={attempt + 1}', flush=True)
             if quota or not transient or attempt == 2:
                 raise EditorialTextError(f'Text generation failed ({reason}); no approval draft created.') from None
-            time.sleep(5 * (attempt + 1))
+            headers = getattr(getattr(exc, 'response', None), 'headers', {})
+            retry_after = headers.get('retry-after', '')
+            delay = min(60, max(5, float(retry_after))) if re.fullmatch(r'\d+(?:\.\d+)?', retry_after) else 5 * (attempt + 1)
+            time.sleep(delay)
 
 
 def generate_cover_image(draft: ArticleDraft, output_dir: Path) -> Path | None:
