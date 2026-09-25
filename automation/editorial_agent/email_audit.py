@@ -9,9 +9,10 @@ import hashlib
 import json
 import re
 
-from imap_tools import AND, MailBox
+from imap_tools import AND
 
 from .config import settings
+from .mail import _fetch_read_only
 from .content import slugify
 from .content_audit import download, title_from_html
 from .security import is_sender_allowed
@@ -74,10 +75,9 @@ def message_line(
 
 
 def fetch_messages(host: str, port: int, user: str, password: str, *, unread_only: bool, limit: int):
-    with MailBox(host, port).login(user, password) as mailbox:
-        if unread_only:
-            return list(mailbox.fetch(AND(seen=False), limit=limit, mark_seen=False, headers_only=True))
-        return list(mailbox.fetch(limit=limit, reverse=True, mark_seen=False, headers_only=True))
+    if unread_only:
+        return _fetch_read_only(host, port, user, password, criteria=AND(seen=False), limit=limit, headers_only=True)
+    return _fetch_read_only(host, port, user, password, limit=limit, reverse=True, headers_only=True)
 
 
 def remote_published_slugs() -> set[str]:

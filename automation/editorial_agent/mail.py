@@ -3,6 +3,7 @@ from __future__ import annotations
 import smtplib
 import imaplib
 import ssl
+import time
 from email.message import EmailMessage
 from html import escape
 
@@ -16,17 +17,31 @@ from .models import ArticleDraft
 IMAP_CLOSE_ERRORS = (imaplib.IMAP4.abort, ssl.SSLError, OSError)
 
 
-def _fetch_unread(host: str, port: int, user: str, password: str, limit: int | None = None):
-    mailbox = MailBox(host, port).login(user, password)
-    try:
-        # Fetch everything up front, then close IMAP before OpenAI/FTP work starts.
-        # Hostinger can close long-lived idle IMAP sockets while articles/images are processed.
-        return list(mailbox.fetch(AND(seen=False), limit=limit, mark_seen=False))
-    finally:
+def _fetch_read_only(host: str, port: int, user: str, password: str, **options):
+    # Retry only fully buffered, read-only operations; never repeat SMTP or publication.
+    for attempt in range(3):
+        mailbox = None
         try:
-            mailbox.logout()
+            mailbox = MailBox(host, port, timeout=30)
+            mailbox.login(user, password)
+            return list(mailbox.fetch(mark_seen=False, **options))
+        except ssl.SSLCertVerificationError:
+            raise
         except IMAP_CLOSE_ERRORS as exc:
-            print(f"Warning: IMAP logout ignored after fetch: {exc.__class__.__name__}")
+            print(f'IMAP read connection interrupted: {exc.__class__.__name__}; attempt={attempt + 1}/3', flush=True)
+            if attempt == 2:
+                raise
+        finally:
+            if mailbox is not None:
+                try:
+                    mailbox.logout()
+                except IMAP_CLOSE_ERRORS as exc:
+                    print(f'Warning: IMAP logout ignored after read: {exc.__class__.__name__}')
+        time.sleep(3 * (attempt + 1))
+
+
+def _fetch_unread(host: str, port: int, user: str, password: str, limit: int | None = None):
+    return _fetch_read_only(host, port, user, password, criteria=AND(seen=False), limit=limit)
 
 
 def unread_messages(limit: int | None = None):
@@ -34,19 +49,8 @@ def unread_messages(limit: int | None = None):
 
 
 def recent_article_messages(limit: int = 25):
-    mailbox = MailBox(settings.imap_host, settings.imap_port).login(
-        settings.imap_user,
-        settings.imap_password,
-    )
-    try:
-        # Recovery path for artigo@: if a previous run sent an approval email but
-        # the remote draft was not persisted, the source email may already be read.
-        return list(mailbox.fetch(limit=limit, reverse=True, mark_seen=False))
-    finally:
-        try:
-            mailbox.logout()
-        except IMAP_CLOSE_ERRORS as exc:
-            print(f"Warning: IMAP logout ignored after article recovery fetch: {exc.__class__.__name__}")
+    return _fetch_read_only(settings.imap_host, settings.imap_port, settings.imap_user,
+                           settings.imap_password, limit=limit, reverse=True)
 
 
 def unread_publish_messages():
@@ -59,34 +63,16 @@ def unread_publish_messages():
 
 
 def recent_publish_messages(limit: int = 25):
-    mailbox = MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
-        settings.publish_imap_user,
-        settings.publish_imap_password,
-    )
-    try:
-        # Recovery path: Hostinger/webmail can show a message as read even when
-        # the site update failed. Looking at recent messages prevents silent loss.
-        return list(mailbox.fetch(limit=limit, reverse=True, mark_seen=False, headers_only=True))
-    finally:
-        try:
-            mailbox.logout()
-        except IMAP_CLOSE_ERRORS as exc:
-            print(f"Warning: IMAP logout ignored after recent fetch: {exc.__class__.__name__}")
+    return _fetch_read_only(settings.publish_imap_host, settings.publish_imap_port,
+                           settings.publish_imap_user, settings.publish_imap_password,
+                           limit=limit, reverse=True, headers_only=True)
 
 
 def publish_message_by_uid(uid: str | int):
-    mailbox = MailBox(settings.publish_imap_host, settings.publish_imap_port).login(
-        settings.publish_imap_user,
-        settings.publish_imap_password,
-    )
-    try:
-        messages = list(mailbox.fetch(AND(uid=str(uid)), limit=1, mark_seen=False))
-        return messages[0] if messages else None
-    finally:
-        try:
-            mailbox.logout()
-        except IMAP_CLOSE_ERRORS as exc:
-            print(f"Warning: IMAP logout ignored after uid fetch: {exc.__class__.__name__}")
+    messages = _fetch_read_only(settings.publish_imap_host, settings.publish_imap_port,
+                               settings.publish_imap_user, settings.publish_imap_password,
+                               criteria=AND(uid=str(uid)), limit=1)
+    return messages[0] if messages else None
 
 
 def mark_seen(inbox: str, uid: str | int) -> None:
