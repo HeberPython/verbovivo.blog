@@ -7,13 +7,14 @@ from html import escape
 from io import BytesIO
 from contextlib import contextmanager
 import base64
+import hashlib
 import json
 from pathlib import Path
 import re
 import socket
 import time
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
 from urllib.error import URLError
 
 from .config import settings
@@ -271,6 +272,38 @@ def write_local_article(draft: ArticleDraft, html: bytes) -> list[Path]:
     return changed
 
 
+class UploadNoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise RuntimeError('Editorial upload redirect rejected.')
+
+
+def validate_upload_receipt(receipt, remote_path: str, payload: bytes) -> None:
+    expected_hash = hashlib.sha256(payload).hexdigest()
+    if (not isinstance(receipt, dict) or receipt.get('ok') is not True
+            or type(receipt.get('version')) is not int or receipt['version'] != 1
+            or receipt.get('path') != remote_path
+            or type(receipt.get('size')) is not int or receipt['size'] <= 0
+            or not isinstance(receipt.get('sha256'), str)
+            or not re.fullmatch(r'[0-9a-f]{64}', receipt['sha256'])):
+        raise RuntimeError('Invalid editorial upload receipt.')
+    if remote_path == 'index.html':
+        if (receipt.get('operation') != 'rebuild_home'
+                or type(receipt.get('request_size')) is not int
+                or receipt['request_size'] != len(payload)
+                or receipt.get('request_sha256') != expected_hash):
+            raise RuntimeError('Invalid home rebuild receipt.')
+        request = Request(f'{DOMAIN}/?upload_check={time.time_ns()}',
+                          headers={'Cache-Control': 'no-cache', 'User-Agent': 'VerboVivoEditorialAgent/1.0'})
+        with build_opener(UploadNoRedirect()).open(request, timeout=45) as response:
+            if response.status != 200:
+                raise RuntimeError('Home receipt readback failed.')
+            stored = response.read()
+        if len(stored) != receipt['size'] or hashlib.sha256(stored).hexdigest() != receipt['sha256']:
+            raise RuntimeError('Home receipt readback mismatch.')
+    elif receipt['size'] != len(payload) or receipt['sha256'] != expected_hash:
+        raise RuntimeError('Editorial upload receipt does not match payload.')
+
+
 def http_upload(remote_path: str, payload: bytes) -> None:
     if not settings.editorial_upload_url:
         raise RuntimeError("EDITORIAL_UPLOAD_URL is not configured.")
@@ -293,15 +326,20 @@ def http_upload(remote_path: str, payload: bytes) -> None:
     last_error: Exception | None = None
     for attempt in range(3):
         try:
-            with prefer_ipv4(), urlopen(request, timeout=45) as response:
-                if response.status >= 400:
+            with prefer_ipv4(), build_opener(UploadNoRedirect()).open(request, timeout=45) as response:
+                if response.status != 200:
                     raise RuntimeError(f"HTTP upload failed for {remote_path}: {response.status}")
+                try:
+                    receipt = json.loads(response.read())
+                except (ValueError, UnicodeError) as exc:
+                    raise RuntimeError('Editorial upload returned no valid JSON receipt.') from exc
+                validate_upload_receipt(receipt, remote_path, payload)
                 return
         except (OSError, URLError, RuntimeError) as exc:
             last_error = exc
             if attempt < 2:
                 time.sleep(5 * (attempt + 1))
-    raise RuntimeError(f"HTTP upload failed for {remote_path} after 3 attempts: {last_error}")
+    raise RuntimeError(f"HTTP upload failed for {remote_path} after 3 attempts: {type(last_error).__name__}") from last_error
 
 
 def remote_text(path: str) -> str:

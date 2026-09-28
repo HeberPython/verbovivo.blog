@@ -44,7 +44,7 @@ class RecoveryTests(unittest.TestCase):
             (root / 'index.html').write_text('<article class="featured">old</article><section class="article-grid">old</section>')
             (root / 'feed.xml').write_text('<rss><channel>' + ''.join(f'<item><link>https://verbovivo.blog/artigos/{s}.html</link></item>' for s in slugs) + '</channel></rss>')
             (root / 'sitemap.xml').write_text('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + ''.join(f'<url><loc>https://verbovivo.blog/artigos/{s}.html</loc></url>' for s in slugs) + '</urlset>')
-            original = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob('*') if p.is_file()}
+            original = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob('*') if p.is_file()}
             with socket.socket() as sock:
                 sock.bind(('127.0.0.1', 0))
                 port = sock.getsockname()[1]
@@ -71,6 +71,8 @@ class RecoveryTests(unittest.TestCase):
                     for name in ['index.html', 'artigos.html', 'feed.xml', 'sitemap.xml']:
                         self.assertEqual((root / name).stat().st_mode & 0o777, 0o644)
                 backup = Path(temp) / result['backup'] / 'files'
+                self.assertEqual((root / '_private/editorial-config.php').read_bytes(), original['_private/editorial-config.php'])
+                self.assertFalse((backup / '_private').exists())
                 for name, data in original.items():
                     if name.startswith('_private/'):
                         continue
