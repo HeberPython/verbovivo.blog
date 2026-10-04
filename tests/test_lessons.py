@@ -6,7 +6,9 @@ from automation.editorial_agent.lessons import (
     DailyReading,
     LessonSummary,
     LessonTopic,
+    active_lesson_cycle,
     is_lesson_subject,
+    lesson_cycle_from_subject,
     lesson_card,
     lesson_card_from_html,
     lesson_number_from_subject,
@@ -99,6 +101,49 @@ class LessonWorkflowTests(unittest.TestCase):
         )
         self.assertIn("Ciclo antigo", updated)
         self.assertIn("Ciclo novo", updated)
+        self.assertEqual(updated.count('data-lesson-number="1"'), 2)
+
+
+    def test_active_cycle_defaults_to_2026_q4(self) -> None:
+        self.assertEqual(active_lesson_cycle("Lição 01"), (2026, 4))
+
+    def test_explicit_matching_cycle_is_accepted(self) -> None:
+        self.assertEqual(lesson_cycle_from_subject("Lição 01 - 4º Trimestre 2026"), (2026, 4))
+        self.assertEqual(active_lesson_cycle("Lição 01 - 4º Trimestre 2026"), (2026, 4))
+
+    def test_explicit_conflicting_cycle_aborts(self) -> None:
+        with self.assertRaises(RuntimeError):
+            active_lesson_cycle("Lição 01 - 3º Trimestre 2026")
+
+    def test_quarterly_slug_prevents_same_number_collision(self) -> None:
+        old = LessonSummary(number=1, title="Mesmo título", year=2026, quarter=3)
+        new = LessonSummary(number=1, title="Mesmo título", year=2026, quarter=4)
+        future = LessonSummary(number=1, title="Mesmo título", year=2027, quarter=1)
+        self.assertNotEqual(old.slug, new.slug)
+        self.assertNotEqual(new.slug, future.slug)
+        self.assertTrue(new.slug.startswith("2026-t4-licao-01-"))
+
+    def test_legacy_page_is_classified_as_2026_q3_without_changing_url(self) -> None:
+        html = """
+        <html><head><title>Lição 1: Antiga | Lições Escola Dominical</title></head>
+        <body><h1>Lição 1: Antiga</h1></body></html>
+        """
+        card = lesson_card_from_html("licao-1-antiga", html) or ""
+        self.assertIn('data-lesson-year="2026"', card)
+        self.assertIn('data-lesson-quarter="3"', card)
+        self.assertIn('href="licoes/licao-1-antiga.html"', card)
+
+    def test_catalog_groups_q4_before_q3_and_preserves_both_lesson_ones(self) -> None:
+        html = """
+        <section class="lesson-list" aria-label="Lições publicadas">
+          <article class="lesson-card" data-lesson-number="1" data-lesson-year="2026" data-lesson-quarter="3" data-lesson-slug="licao-1-antiga"><h2>Antiga</h2></article>
+        </section>
+        """
+        current = LessonSummary(number=1, title="Nova", year=2026, quarter=4)
+        updated = merge_lesson_card(html, lesson_card(current), 1)
+        self.assertIn("4º Trimestre de 2026 — Atual", updated)
+        self.assertIn("Lições anteriores — 3º Trimestre de 2026", updated)
+        self.assertLess(updated.index("4º Trimestre"), updated.index("3º Trimestre"))
         self.assertEqual(updated.count('data-lesson-number="1"'), 2)
 
 
