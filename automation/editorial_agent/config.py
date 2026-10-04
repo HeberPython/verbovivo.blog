@@ -48,6 +48,8 @@ class Settings:
     ftp_password: str = os.getenv("HOSTINGER_FTP_PASSWORD", "")
     ftp_dir: str = os.getenv("HOSTINGER_FTP_DIR", "/")
     editorial_upload_url: str = os.getenv("EDITORIAL_UPLOAD_URL", "")
+    lesson_year: int = int(os.getenv("EDITORIAL_LESSON_YEAR", "2026"))
+    lesson_quarter: int = int(os.getenv("EDITORIAL_LESSON_QUARTER", "4"))
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
