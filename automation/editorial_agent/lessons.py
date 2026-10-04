@@ -50,6 +50,8 @@ class LessonTopic:
 class LessonSummary:
     number: int
     title: str
+    year: int = 0
+    quarter: int = 0
     series: str = ""
     month_or_period: str = ""
     lesson_author: str = ""
@@ -66,7 +68,9 @@ class LessonSummary:
 
     @property
     def slug(self) -> str:
-        return slugify(f"licao-{self.number}-{self.title}")
+        year = self.year or settings.lesson_year
+        quarter = self.quarter or settings.lesson_quarter
+        return slugify(f"{year}-t{quarter}-licao-{self.number:02d}-{self.title}")
 
 
 def strip_accents(value: str) -> str:
@@ -79,6 +83,28 @@ def lesson_number_from_subject(subject: str) -> int | None:
     if not match:
         return None
     return int(match.group(1))
+
+
+def lesson_cycle_from_subject(subject: str) -> tuple[int, int] | None:
+    normalized = strip_accents(subject or "").lower()
+    match = re.search(r"\b([1-4])\s*(?:o|º)?\s*trimestre\s*(?:de\s*)?(20\d{2})\b", normalized)
+    if match:
+        return int(match.group(2)), int(match.group(1))
+    match = re.search(r"\b(20\d{2})\s*[-/]?\s*t([1-4])\b", normalized)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    return None
+
+
+def active_lesson_cycle(subject: str) -> tuple[int, int]:
+    explicit = lesson_cycle_from_subject(subject)
+    configured = (settings.lesson_year, settings.lesson_quarter)
+    if explicit and explicit != configured:
+        raise RuntimeError(
+            f"Assunto indica {explicit[0]}/T{explicit[1]}, mas o ciclo ativo é "
+            f"{configured[0]}/T{configured[1]}. Publicação abortada."
+        )
+    return configured
 
 
 def is_lesson_subject(subject: str) -> bool:
@@ -252,6 +278,8 @@ def lesson_from_data(data: dict, fallback_number: int) -> LessonSummary:
     return LessonSummary(
         number=number,
         title=title,
+        year=settings.lesson_year,
+        quarter=settings.lesson_quarter,
         series=as_text(data.get("series")),
         month_or_period=as_text(data.get("month_or_period")),
         lesson_author=as_text(data.get("lesson_author")),
@@ -371,6 +399,8 @@ def render_lesson_page(lesson: LessonSummary) -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lição {lesson.number}: {escape(lesson.title)} | Lições Escola Dominical</title>
     <meta name="description" content="{escape(description)}" />
+    <meta name="lesson-year" content="{lesson.year or settings.lesson_year}" />
+    <meta name="lesson-quarter" content="{lesson.quarter or settings.lesson_quarter}" />
     <link rel="canonical" href="{page_url}" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Lição {lesson.number}: {escape(lesson.title)} | Verbo Vivo" />
@@ -516,7 +546,7 @@ def lesson_card(lesson: LessonSummary) -> str:
         f"Compêndio retrospectivo da Lição {lesson.number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
     return f"""
-          <article class="lesson-card" data-lesson-number="{lesson.number}" data-lesson-slug="{escape(lesson.slug)}">
+          <article class="lesson-card" data-lesson-number="{lesson.number}" data-lesson-year="{lesson.year or settings.lesson_year}" data-lesson-quarter="{lesson.quarter or settings.lesson_quarter}" data-lesson-slug="{escape(lesson.slug)}">
             <div>
               <p class="category">Lição {lesson.number}</p>
               <h2><a href="licoes/{escape(lesson.slug)}.html">{escape(lesson.title)}</a></h2>
@@ -549,8 +579,17 @@ def lesson_card_from_html(slug: str, html: str) -> str | None:
     excerpt = html_text(description_match.group(1)) if description_match else (
         f"Compêndio retrospectivo da Lição {number}, com texto-chave, leitura bíblica e síntese por tópicos do estudo realizado."
     )
+    year_match = re.search(r'<meta\\s+name="lesson-year"\\s+content="(20\\d{2})"', html, flags=re.IGNORECASE)
+    quarter_match = re.search(r'<meta\\s+name="lesson-quarter"\\s+content="([1-4])"', html, flags=re.IGNORECASE)
+    slug_cycle = re.match(r"(20\\d{2})-t([1-4])-licao-", slug, flags=re.IGNORECASE)
+    if year_match and quarter_match:
+        year, quarter = int(year_match.group(1)), int(quarter_match.group(1))
+    elif slug_cycle:
+        year, quarter = int(slug_cycle.group(1)), int(slug_cycle.group(2))
+    else:
+        year, quarter = 2026, 3
     return f"""
-          <article class="lesson-card" data-lesson-number="{number}" data-lesson-slug="{escape(slug)}">
+          <article class="lesson-card" data-lesson-number="{number}" data-lesson-year="{year}" data-lesson-quarter="{quarter}" data-lesson-slug="{escape(slug)}">
             <div>
               <p class="category">Lição {number}</p>
               <h2><a href="licoes/{escape(slug)}.html">{escape(title)}</a></h2>
@@ -580,6 +619,33 @@ def card_number(card: str) -> int:
     return int(slug_match.group(1)) if slug_match else 999
 
 
+def card_cycle(card: str) -> tuple[int, int]:
+    year_match = re.search(r'data-lesson-year="(20\\d{2})"', card)
+    quarter_match = re.search(r'data-lesson-quarter="([1-4])"', card)
+    if year_match and quarter_match:
+        return int(year_match.group(1)), int(quarter_match.group(1))
+    return 2026, 3
+
+
+def render_grouped_lesson_cards(cards: list[str]) -> str:
+    groups: dict[tuple[int, int], list[str]] = {}
+    for card in cards:
+        groups.setdefault(card_cycle(card), []).append(card)
+    parts: list[str] = []
+    active = (settings.lesson_year, settings.lesson_quarter)
+    for year, quarter in sorted(groups, reverse=True):
+        current = (year, quarter) == active
+        prefix = "" if current else "Lições anteriores — "
+        suffix = " — Atual" if current else ""
+        parts.append(
+            f'<h2 class="lesson-quarter-heading" data-lesson-year="{year}" '
+            f'data-lesson-quarter="{quarter}">{prefix}{quarter}º Trimestre de {year}{suffix}</h2>'
+        )
+        ordered = sorted(groups[(year, quarter)], key=lambda card: (card_number(card), card_slug(card)))
+        parts.extend(card.strip() for card in ordered)
+    return "\n".join("          " + part for part in parts)
+
+
 def merge_lesson_cards(index_html: str, card_htmls: list[str]) -> str:
     match = re.search(r'(<section class="lesson-list"[^>]*>)(.*?)(\s*</section>)', index_html, flags=re.DOTALL)
     if not match:
@@ -595,8 +661,7 @@ def merge_lesson_cards(index_html: str, card_htmls: list[str]) -> str:
         if slug:
             cards_by_slug[slug] = card.strip()
 
-    ordered = sorted(cards_by_slug.values(), key=lambda card: (card_number(card), card_slug(card)))
-    new_body = "\n".join("          " + card.strip() for card in ordered)
+    new_body = render_grouped_lesson_cards(list(cards_by_slug.values()))
     return index_html[: match.start(2)] + "\n" + new_body + "\n        " + index_html[match.end(2) :]
 
 
@@ -750,12 +815,16 @@ def upload_lesson_files(paths: list[Path]) -> None:
 
 
 def publish_lesson_from_message(message) -> LessonSummary:
-    number = lesson_number_from_subject(message.subject or "")
+    subject = message.subject or ""
+    number = lesson_number_from_subject(subject)
     if number is None:
         raise RuntimeError("Assunto não contém número de lição válido.")
+    year, quarter = active_lesson_cycle(subject)
     raw = gemini_json_from_images(message, number)
     lesson = lesson_from_data(raw, number)
     lesson.number = number
+    lesson.year = year
+    lesson.quarter = quarter
 
     LESSON_DIR.mkdir(parents=True, exist_ok=True)
     page_path = LESSON_DIR / f"{lesson.slug}.html"
