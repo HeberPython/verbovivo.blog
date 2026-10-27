@@ -22,6 +22,7 @@ from .mail import (
 )
 from .publisher import article_publication_status, publish_article, upload_review_draft
 from .security import request_authorization_if_needed
+from .social_preview import sync_remote_home_social_preview
 from .store import save_draft
 from .text_quality import EditorialTextError
 
@@ -181,7 +182,6 @@ def publish_once() -> None:
         publication_status = article_publication_status(slug)
         if publication_status is True:
             print(f"Already published and indexed: {slug}")
-            # Recent-message recovery also includes read mail; avoid redundant IMAP writes.
             if uid in unread_uids:
                 mark_seen("publicar@verbovivo.blog", message.uid)
             continue
@@ -198,6 +198,7 @@ def publish_once() -> None:
         publish_article(draft)
         mark_seen("publicar@verbovivo.blog", message.uid)
         print(f"Published directly: {draft.slug}")
+    sync_remote_home_social_preview()
 
 
 def main() -> None:
