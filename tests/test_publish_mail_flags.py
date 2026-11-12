@@ -18,6 +18,7 @@ class PublishMailFlagTests(unittest.TestCase):
                     patch.object(worker, 'mark_seen') as mark,
                     patch.object(worker, 'publish_message_by_uid') as fetch_body,
                     patch.object(worker, 'publish_article') as publish,
+                    patch.object(worker, 'sync_remote_home_social_preview') as social_preview,
                 ):
                     worker.publish_once()
                     self.assertEqual(mark.call_count, expected_calls)
@@ -25,3 +26,4 @@ class PublishMailFlagTests(unittest.TestCase):
                         mark.assert_called_once_with('publicar@verbovivo.blog', '42')
                     fetch_body.assert_not_called()
                     publish.assert_not_called()
+                    social_preview.assert_called_once_with()
