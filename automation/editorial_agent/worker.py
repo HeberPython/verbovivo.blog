@@ -198,7 +198,12 @@ def publish_once() -> None:
         publish_article(draft)
         mark_seen("publicar@verbovivo.blog", message.uid)
         print(f"Published directly: {draft.slug}")
-    sync_remote_home_social_preview()
+    try:
+        sync_remote_home_social_preview()
+    except (OSError, RuntimeError, UnicodeError, ValueError) as exc:
+        # Social preview is best-effort; publication and mail flags must not
+        # be retried solely because the optional FTP preview sync failed.
+        print(f"WARNING: social preview synchronization failed: {type(exc).__name__}: {exc}")
 
 
 def main() -> None:
