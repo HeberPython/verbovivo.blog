@@ -16,7 +16,7 @@ from openai import OpenAIError
 from .config import settings
 from .content import extract_submission_metadata, slugify, submission_author, submission_socials
 from .models import ArticleDraft
-from .text_quality import EditorialTextError, validate_reflection
+from .text_quality import EditorialQuotaUnavailableError, EditorialTextError, validate_reflection
 
 
 IMAGE_ERA_GUARDRAILS = """
@@ -214,7 +214,9 @@ def request_editorial_completion(client, **kwargs):
             limits = re.findall(r'\b(limit|used|requested)\s*:?\s*([0-9.,]+)', message)
             units = [unit for unit in ['tokens per min', 'requests per min', 'tokens per day', 'requests per day'] if unit in message]
             print(f'Text generation blocked: {exc.__class__.__name__}; reason={reason}; code={safe_code}; limits={limits}; units={units}; attempt={attempt + 1}', flush=True)
-            if quota or not transient or attempt == 2:
+            if quota:
+                raise EditorialQuotaUnavailableError('Text generation paused (quota_or_billing); original remains unread.') from None
+            if not transient or attempt == 2:
                 raise EditorialTextError(f'Text generation failed ({reason}); no approval draft created.') from None
             headers = getattr(getattr(exc, 'response', None), 'headers', {})
             retry_after = headers.get('retry-after', '')
