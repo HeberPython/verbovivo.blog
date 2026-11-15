@@ -24,7 +24,7 @@ from .publisher import article_publication_status, publish_article, upload_revie
 from .security import request_authorization_if_needed
 from .social_preview import sync_remote_home_social_preview
 from .store import save_draft
-from .text_quality import EditorialTextError
+from .text_quality import EditorialQuotaUnavailableError, EditorialTextError
 
 
 class EmailHTMLTextExtractor(HTMLParser):
@@ -139,6 +139,9 @@ def poll_once(limit: int | None = None) -> None:
     for message in messages:
         try:
             process_article_message(message)
+        except EditorialQuotaUnavailableError:
+            print('WARNING: Editorial text provider credits exhausted; remaining messages stay unread. Restore billing to resume.')
+            break
         except EditorialTextError as exc:
             failed += 1
             print(f'Article remains unread for retry: {exc}')
