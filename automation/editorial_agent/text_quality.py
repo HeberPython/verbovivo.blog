@@ -7,6 +7,11 @@ class EditorialTextError(RuntimeError):
     pass
 
 
+class EditorialQuotaUnavailableError(EditorialTextError):
+    """Non-retryable until the text provider's billing quota is restored."""
+    pass
+
+
 def validate_reflection(source: str, body: str) -> None:
     paragraphs = re.findall(r'<p>(.*?)</p>', body, re.DOTALL)
     prose = [unescape(re.sub(r'<[^>]+>', '', part)).strip() for part in paragraphs]
