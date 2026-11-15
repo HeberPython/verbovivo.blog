@@ -108,7 +108,31 @@ def process_article_message(message) -> bool:
         return False
     if not request_authorization_if_needed(message.from_, message.subject or "Nova reflexão", "artigo@verbovivo.blog", str(message.uid)):
         return False
-    if is_lesson_subject(message.subject or ""):
+    lesson_hint = (message.subject or "").strip()
+    if not is_lesson_subject(lesson_hint):
+        # Mobile email clients may put "Lição 07" in the body and leave
+        # Subject empty. Only route to the lesson publisher with images.
+        body_hint = (message.text or "").strip()
+        if not body_hint and message.html:
+            body_hint = text_from_html(message.html).strip()
+        if (
+            not lesson_hint
+            and is_lesson_subject(body_hint)
+            and len(body_hint.split()) <= 12
+            and any(
+                (getattr(a, "content_type", "") or "").lower().startswith("image/")
+                or (getattr(a, "filename", "") or "").lower().endswith((".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"))
+                for a in (getattr(message, "attachments", None) or [])
+            )
+        ):
+            lesson_hint = body_hint
+    if is_lesson_subject(lesson_hint):
+        if not is_lesson_subject(message.subject or ""):
+            # The lesson publisher reads message.subject to establish number
+            # and cycle; supply a copy without mutating the original email.
+            from copy import copy
+            message = copy(message)
+            message.subject = lesson_hint
         lesson = publish_lesson_from_message(message)
         mark_seen("artigo@verbovivo.blog", message.uid)
         print(f"Lesson published from images: Lição {lesson.number} -> {lesson.slug}")
